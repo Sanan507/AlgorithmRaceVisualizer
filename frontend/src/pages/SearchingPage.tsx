@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Controls } from '../components/Controls';
 import { ExplanationPanel } from '../components/ExplanationPanel';
 import { LaneCard } from '../components/LaneCard';
@@ -18,31 +18,58 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
   const [loading, setLoading] = useState(false);
   const playback = usePlayback(response, speed);
 
-  async function startRace() {
+  async function startRace(autoplay = true) {
     setLoading(true);
     try {
       const data = await api.searching({ algorithms, size, target });
       setResponse(data);
-      playback.setPlaying(true);
+      if (autoplay) {
+        playback.setPlaying(true);
+      }
     } finally {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    startRace(false);
+  }, []);
 
   const activeFrames = useMemo(
     () => response?.lanes.map((lane) => lane.frames[Math.min(playback.frameIndex, lane.frames.length - 1)]),
     [response, playback.frameIndex]
   );
 
+  const isCompleted = response && playback.frameIndex === playback.maxFrames - 1 && playback.maxFrames > 0;
+  const winnerLane = response?.lanes.find(l => l.name === response.winner);
+
   return (
     <main className="page">
       <header className="page-header">
         <div>
-          <h1>Searching Algorithm Race</h1>
-          <p>Binary and Jump Search receive sorted private copies only when the race starts.</p>
+          <h1>Search Arena</h1>
+          <p>Real-time benchmarking of search algorithms</p>
         </div>
-        {response?.target && <div className="winner-pill">Target: {response.target}</div>}
+        {response?.target && <div className="winner-pill target-pill">Target: {response.target}</div>}
       </header>
+
+      {isCompleted && response?.winner && (
+        <div className="winner-banner">
+          <div className="winner-trophy">🏆</div>
+          <div className="winner-details">
+            <h3>{response.winner} Wins!</h3>
+            <p>
+              Completed search in <strong>{winnerLane?.stats.timeMs ?? 0} ms</strong> performing{' '}
+              <strong>{winnerLane?.stats.comparisons?.toLocaleString() ?? 0}</strong> comparisons.{' '}
+              {winnerLane?.stats.found ? (
+                <span>Target found at index <strong>{winnerLane?.stats.foundIndex}</strong>.</span>
+              ) : (
+                <span>Target not found in dataset.</span>
+              )}
+            </p>
+          </div>
+        </div>
+      )}
 
       <section className="panel config-panel">
         {algorithms.map((value, index) => (
@@ -69,10 +96,9 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
         disabled={loading}
         onStart={startRace}
         onToggle={() => playback.setPlaying(!playback.playing)}
-        onReset={startRace}
+        onReset={playback.reset}
         speed={speed}
         onSpeedChange={setSpeed}
-        resetLabel="Random Data"
       />
 
       <section className="lane-grid">

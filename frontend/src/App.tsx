@@ -16,6 +16,7 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [darkMode, setDarkMode] = useState(true);
   const [sound, setSound] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     api.catalog().then(setCatalog).catch((err: Error) => setError(err.message));
@@ -34,8 +35,13 @@ export default function App() {
   }
 
   return (
-    <div className="app-shell">
-      <Sidebar active={active} onChange={setActive} />
+    <div className={`app-shell ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+      <Sidebar
+        active={active}
+        onChange={setActive}
+        collapsed={sidebarCollapsed}
+        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+      />
       <div className="content-shell">
         {active === 'sorting' && <SortingPage catalog={catalog} />}
         {active === 'searching' && <SearchingPage catalog={catalog} />}

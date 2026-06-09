@@ -20,13 +20,18 @@ export function HistoryPage({ catalog }: { catalog: CatalogResponse }) {
           <article className="panel" key={group.title}>
             <div className="section-title">{group.title}</div>
             <div className="matrix-list">
+              <div className="matrix-row matrix-header">
+                <strong>Algorithm</strong>
+                <span>Avg Complexity</span>
+                <span>Space Complexity</span>
+              </div>
               {group.items.map((name) => {
                 const info = catalog.complexity[name];
                 return (
                   <div className="matrix-row" key={name}>
                     <strong>{name}</strong>
-                    <span>{info?.average}</span>
-                    <span>{info?.space}</span>
+                    <span>{info?.average || '-'}</span>
+                    <span>{info?.space || '-'}</span>
                   </div>
                 );
               })}

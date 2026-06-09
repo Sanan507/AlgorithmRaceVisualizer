@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Controls } from '../components/Controls';
 import { ExplanationPanel } from '../components/ExplanationPanel';
 import { LaneCard } from '../components/LaneCard';
@@ -20,7 +20,7 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
   const playback = usePlayback(response, speed);
   const firstInfo = catalog.complexity[algorithms[0]];
 
-  async function startRace() {
+  async function startRace(autoplay = true) {
     setLoading(true);
     try {
       const body = {
@@ -31,26 +31,48 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
       };
       const data = await api.sorting(body);
       setResponse(data);
-      playback.setPlaying(true);
+      if (autoplay) {
+        playback.setPlaying(true);
+      }
     } finally {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    startRace(false);
+  }, []);
 
   const activeFrames = useMemo(
     () => response?.lanes.map((lane) => lane.frames[Math.min(playback.frameIndex, lane.frames.length - 1)]),
     [response, playback.frameIndex]
   );
 
+  const isCompleted = response && playback.frameIndex === playback.maxFrames - 1 && playback.maxFrames > 0;
+  const winnerLane = response?.lanes.find(l => l.name === response.winner);
+
   return (
     <main className="page">
       <header className="page-header">
         <div>
-          <h1>Sorting Algorithm Race</h1>
-          <p>Compare real step-by-step sorting models running on identical data.</p>
+          <h1>Algorithm Race Arena</h1>
+          <p>Real-time benchmarking of sorting algorithms</p>
         </div>
-        {response?.winner && <div className="winner-pill">Winner: {response.winner}</div>}
       </header>
+
+      {isCompleted && response?.winner && (
+        <div className="winner-banner">
+          <div className="winner-trophy">🏆</div>
+          <div className="winner-details">
+            <h3>{response.winner} Wins!</h3>
+            <p>
+              Completed sorting in <strong>{winnerLane?.stats.timeMs ?? 0} ms</strong> with{' '}
+              <strong>{winnerLane?.stats.comparisons?.toLocaleString() ?? 0}</strong> comparisons and{' '}
+              <strong>{winnerLane?.stats.swaps?.toLocaleString() ?? 0}</strong> swaps.
+            </p>
+          </div>
+        </div>
+      )}
 
       <section className="panel config-panel">
         {algorithms.map((value, index) => (

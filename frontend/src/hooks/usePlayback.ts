@@ -12,7 +12,6 @@ export function usePlayback(response: RaceResponse | null, speed: number) {
 
   useEffect(() => {
     setFrameIndex(0);
-    setPlaying(false);
   }, [response]);
 
   useEffect(() => {

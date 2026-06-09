@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Controls } from '../components/Controls';
 import { ExplanationPanel } from '../components/ExplanationPanel';
 import { LaneCard } from '../components/LaneCard';
@@ -17,31 +17,52 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
   const [loading, setLoading] = useState(false);
   const playback = usePlayback(response, speed);
 
-  async function startRace() {
+  async function startRace(autoplay = true) {
     setLoading(true);
     try {
       const data = await api.pathfinding({ algorithms, rows: 18, cols: 28, mazeType });
       setResponse(data);
-      playback.setPlaying(true);
+      if (autoplay) {
+        playback.setPlaying(true);
+      }
     } finally {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    startRace(false);
+  }, []);
 
   const activeFrames = useMemo(
     () => response?.lanes.map((lane) => lane.frames[Math.min(playback.frameIndex, lane.frames.length - 1)]),
     [response, playback.frameIndex]
   );
 
+  const isCompleted = response && playback.frameIndex === playback.maxFrames - 1 && playback.maxFrames > 0;
+  const winnerLane = response?.lanes.find(l => l.name === response.winner);
+
   return (
     <main className="page">
       <header className="page-header">
         <div>
-          <h1>Pathfinding Algorithm Race</h1>
-          <p>BFS, DFS, Dijkstra, and A* explore the same maze in parallel lanes.</p>
+          <h1>Pathfinder Arena</h1>
+          <p>Real-time benchmarking of pathfinding algorithms</p>
         </div>
-        {response?.winner && <div className="winner-pill">Winner: {response.winner}</div>}
       </header>
+
+      {isCompleted && response?.winner && (
+        <div className="winner-banner">
+          <div className="winner-trophy">🏆</div>
+          <div className="winner-details">
+            <h3>{response.winner} Wins!</h3>
+            <p>
+              Found shortest path in <strong>{winnerLane?.stats.timeMs ?? 0} ms</strong> taking{' '}
+              <strong>{winnerLane?.stats.steps?.toLocaleString() ?? 0}</strong> steps.
+            </p>
+          </div>
+        </div>
+      )}
 
       <section className="panel config-panel">
         {algorithms.map((value, index) => (
