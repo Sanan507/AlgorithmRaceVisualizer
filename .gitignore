@@ -1,0 +1,10 @@
+bin/
+target/
+node_modules/
+dist/
+*.class
+*.log
+.env
+.DS_Store
+docx_render_oop/
+docx_render_oop_final/

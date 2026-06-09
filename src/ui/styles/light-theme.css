@@ -1,0 +1,320 @@
+.root {
+    -fx-font-family: "Segoe UI", "Inter", Arial, sans-serif;
+    -fx-background-color: #F4F7FB;
+}
+
+.root-layout,
+.content-area,
+.content-panel,
+.main-scroll,
+.main-scroll .viewport {
+    -fx-background-color: #F6F8FB;
+}
+
+.content-panel {
+    -fx-background-color: linear-gradient(to bottom right, #F8FBFF, #EEF4FB);
+}
+
+.sidebar {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: transparent #E2E8F0 transparent transparent;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.08), 14, 0, 2, 0);
+}
+
+.sidebar-logo {
+    -fx-background-color: #F8FAFC;
+    -fx-border-color: transparent transparent #E2E8F0 transparent;
+}
+
+.brand-mark {
+    -fx-background-color: linear-gradient(to bottom right, #2563EB, #7C3AED);
+    -fx-background-radius: 14;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 18px;
+    -fx-padding: 12 13 12 13;
+}
+
+.sidebar-title,
+.panel-header,
+.race-pane-title,
+.settings-card-title {
+    -fx-text-fill: #172033;
+    -fx-font-weight: bold;
+}
+
+.sidebar-title { -fx-font-size: 17px; }
+.panel-header { -fx-font-size: 25px; }
+
+.sidebar-title-sub,
+.sidebar-version,
+.panel-subheader,
+.settings-card-desc,
+.about-text {
+    -fx-text-fill: #64748B;
+}
+
+.nav-btn {
+    -fx-background-color: transparent;
+    -fx-cursor: hand;
+    -fx-background-radius: 9;
+}
+
+.nav-btn-text {
+    -fx-font-size: 14px;
+    -fx-text-fill: #475569;
+}
+
+.nav-icon {
+    -fx-background-color: #E0F2FE;
+    -fx-background-radius: 8;
+    -fx-text-fill: #2563EB;
+    -fx-font-weight: bold;
+    -fx-alignment: center;
+    -fx-min-width: 28;
+    -fx-min-height: 28;
+}
+
+.nav-btn-active {
+    -fx-background-color: linear-gradient(to right, #EAF3FF, #F4F8FF);
+    -fx-border-color: #2563EB;
+    -fx-border-width: 0 0 0 3;
+}
+
+.nav-btn-hover {
+    -fx-background-color: #F1F6FD;
+}
+
+.nav-btn-active .nav-btn-text {
+    -fx-text-fill: #2563EB;
+    -fx-font-weight: bold;
+}
+
+.config-row,
+.race-pane,
+.metric-chart,
+.settings-card {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #DDE5F0;
+    -fx-border-radius: 14;
+    -fx-background-radius: 14;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.07), 16, 0, 0, 4);
+}
+
+.config-row {
+    -fx-border-width: 1;
+}
+
+.form-field {
+    -fx-min-width: 126;
+}
+
+.config-label {
+    -fx-text-fill: #475569;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+.styled-combo,
+.styled-spinner {
+    -fx-background-color: #F8FAFC;
+    -fx-border-color: #CBD5E1;
+    -fx-border-width: 1;
+    -fx-border-radius: 9;
+    -fx-background-radius: 9;
+}
+
+.styled-combo:hover,
+.styled-spinner:hover {
+    -fx-border-color: #93C5FD;
+}
+
+.styled-combo .list-cell,
+.styled-spinner .text-field {
+    -fx-text-fill: #172033;
+    -fx-background-color: transparent;
+}
+
+.styled-check {
+    -fx-text-fill: #334155;
+    -fx-font-weight: bold;
+}
+
+.styled-slider .track {
+    -fx-background-color: #E2E8F0;
+    -fx-pref-height: 5;
+    -fx-background-radius: 5;
+}
+
+.styled-slider .thumb {
+    -fx-background-color: #2563EB;
+}
+
+.styled-btn {
+    -fx-padding: 10 22 10 22;
+    -fx-background-radius: 9;
+    -fx-border-radius: 9;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+
+.styled-btn:hover {
+    -fx-effect: dropshadow(gaussian, rgba(37,99,235,0.22), 12, 0, 0, 3);
+}
+
+.btn-primary {
+    -fx-background-color: linear-gradient(to bottom right, #2563EB, #5B5FF0);
+    -fx-text-fill: white;
+}
+
+.btn-secondary {
+    -fx-background-color: #EEF2F7;
+    -fx-text-fill: #334155;
+    -fx-border-color: #CBD5E1;
+}
+
+.btn-secondary:hover {
+    -fx-background-color: #E4ECF7;
+}
+
+.btn-primary:disabled,
+.btn-secondary:disabled {
+    -fx-opacity: 0.42;
+}
+
+.canvas-row {
+    -fx-background-color: #F8FAFC;
+    -fx-border-color: #DDE5F0;
+    -fx-border-radius: 15;
+    -fx-background-radius: 15;
+}
+
+.race-pane {
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.08), 12, 0, 0, 4);
+}
+
+.race-pane-header {
+    -fx-background-color: #F8FAFC;
+    -fx-border-color: transparent transparent #DDE5F0 transparent;
+    -fx-background-radius: 14 14 0 0;
+}
+
+.canvas-wrap {
+    -fx-background-color: #101827;
+}
+
+.complexity-badge {
+    -fx-background-color: #EFF6FF;
+    -fx-text-fill: #2563EB;
+    -fx-border-color: #BFDBFE;
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
+    -fx-font-weight: bold;
+    -fx-padding: 3 11 3 11;
+}
+
+.status-label,
+.stat-name {
+    -fx-text-fill: #64748B;
+}
+
+.status-running {
+    -fx-text-fill: #2563EB;
+}
+
+.status-done {
+    -fx-text-fill: #059669;
+    -fx-font-weight: bold;
+}
+
+.stats-bar {
+    -fx-background-color: #F8FAFC;
+    -fx-border-color: #DDE5F0 transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+    -fx-background-radius: 0 0 14 14;
+}
+
+.stat-value {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #172033;
+}
+
+.stat-divider {
+    -fx-background-color: #DDE5F0;
+}
+
+.winner-label {
+    -fx-text-fill: #D97706;
+    -fx-font-weight: bold;
+}
+
+.metric-chart .chart-title,
+.metric-chart .axis-label,
+.metric-chart .axis {
+    -fx-text-fill: #172033;
+    -fx-tick-label-fill: #475569;
+}
+
+.metric-chart .chart-plot-background {
+    -fx-background-color: #F6F9FD;
+}
+
+.metric-chart .default-color0.chart-bar {
+    -fx-bar-fill: #2563EB;
+}
+
+.explanation-area {
+    -fx-control-inner-background: #FFFFFF;
+    -fx-background-color: #FFFFFF;
+    -fx-text-fill: #172033;
+    -fx-border-color: #DDE5F0;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+    -fx-font-family: "Consolas", "Cascadia Mono", monospace;
+    -fx-font-size: 13px;
+}
+
+.main-scroll .scroll-bar:vertical .track {
+    -fx-background-color: transparent;
+}
+
+.main-scroll .scroll-bar:vertical .thumb {
+    -fx-background-color: #CBD5E1;
+    -fx-background-radius: 6;
+}
+
+.styled-table {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E2E8F0;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 14, 0, 0, 4);
+    -fx-padding: 5;
+}
+.styled-table .column-header-background {
+    -fx-background-color: #F8FAFC;
+    -fx-background-radius: 10 10 0 0;
+}
+.styled-table .column-header {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent transparent #E2E8F0 transparent;
+}
+.styled-table .column-header .label {
+    -fx-text-fill: #64748B;
+    -fx-font-weight: bold;
+}
+.styled-table .table-cell {
+    -fx-text-fill: #1E293B;
+    -fx-border-color: transparent transparent #F1F5F9 transparent;
+}
+.styled-table .table-row-cell {
+    -fx-background-color: transparent;
+}
+.styled-table .table-row-cell:odd {
+    -fx-background-color: #F8FAFC;
+}
+.styled-table .table-row-cell:selected {
+    -fx-background-color: #DBEAFE;
+    -fx-text-fill: #1E3A8A;
+}
