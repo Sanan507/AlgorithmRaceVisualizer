@@ -7,4 +7,4 @@ spring:
 
 app:
   cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,https://algorithm-race-visualizer.vercel.app}
