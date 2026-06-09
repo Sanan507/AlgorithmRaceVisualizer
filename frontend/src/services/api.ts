@@ -13,7 +13,6 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   }
   return response.json() as Promise<T>;
 }
-
 export const api = {
   catalog: () => request<CatalogResponse>('/api/catalog'),
   sorting: (body: unknown) =>
