@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Controls } from '../components/Controls';
 import { ExplanationPanel } from '../components/ExplanationPanel';
 import { LaneCard } from '../components/LaneCard';
-import { MetricChart } from '../components/MetricChart';
+import { PerformanceComparison } from '../components/PerformanceComparison';
+import { VisualizationLegend } from '../components/VisualizationLegend';
 import { SearchCanvas } from '../components/SearchCanvas';
 import { SelectField } from '../components/SelectField';
 import { useAudio } from '../context/AudioContext';
@@ -56,7 +57,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
     [response, playback.frameIndex]
   );
 
-  const isCompleted = response && playback.frameIndex === playback.maxFrames - 1 && playback.maxFrames > 0;
+  const isCompleted = !!(response && playback.frameIndex === playback.maxFrames - 1 && playback.maxFrames > 0);
   const winnerLane = response?.lanes.find(l => l.name === response.winner);
 
   useEffect(() => {
@@ -133,15 +134,24 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
           const frame = activeFrames?.[index] ?? lane.frames[0];
           return (
             <LaneCard key={lane.name} lane={lane} frame={frame}>
-              <SearchCanvas frame={frame} />
+              <SearchCanvas frame={frame} algorithm={lane.name} />
             </LaneCard>
           );
         })}
       </section>
 
-      <div className="bottom-grid">
-        <MetricChart response={response} metric="comparisons" />
-        <ExplanationPanel title={algorithms[0]} info={catalog.complexity[algorithms[0]]} />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginTop: '24px' }}>
+        <PerformanceComparison
+          response={response}
+          activeFrames={activeFrames}
+          type="searching"
+          isCompleted={isCompleted}
+          catalog={catalog}
+        />
+        <div className="bottom-grid">
+          <ExplanationPanel title={algorithms[0]} info={catalog.complexity[algorithms[0]]} />
+          <VisualizationLegend type="searching" />
+        </div>
       </div>
     </main>
   );

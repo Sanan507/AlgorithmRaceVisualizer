@@ -2,9 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Controls } from '../components/Controls';
 import { ExplanationPanel } from '../components/ExplanationPanel';
 import { LaneCard } from '../components/LaneCard';
-import { MetricChart } from '../components/MetricChart';
 import { PathCanvas } from '../components/PathCanvas';
 import { SelectField } from '../components/SelectField';
+import { PerformanceComparison } from '../components/PerformanceComparison';
+import { VisualizationLegend } from '../components/VisualizationLegend';
 import { useAudio } from '../context/AudioContext';
 import { usePlayback } from '../hooks/usePlayback';
 import type { CatalogResponse, RaceResponse } from '../models/types';
@@ -54,7 +55,7 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
     [response, playback.frameIndex]
   );
 
-  const isCompleted = response && playback.frameIndex === playback.maxFrames - 1 && playback.maxFrames > 0;
+  const isCompleted = !!(response && playback.frameIndex === playback.maxFrames - 1 && playback.maxFrames > 0);
   const winnerLane = response?.lanes.find(l => l.name === response.winner);
 
   useEffect(() => {
@@ -124,9 +125,18 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
         })}
       </section>
 
-      <div className="bottom-grid">
-        <MetricChart response={response} metric="steps" />
-        <ExplanationPanel title={algorithms[0]} info={catalog.complexity[algorithms[0]]} />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginTop: '24px' }}>
+        <PerformanceComparison
+          response={response}
+          activeFrames={activeFrames}
+          type="pathfinding"
+          isCompleted={isCompleted}
+          catalog={catalog}
+        />
+        <div className="bottom-grid">
+          <ExplanationPanel title={algorithms[0]} info={catalog.complexity[algorithms[0]]} />
+          <VisualizationLegend type="pathfinding" />
+        </div>
       </div>
     </main>
   );

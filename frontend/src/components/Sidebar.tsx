@@ -1,4 +1,4 @@
-import { BarChart3, Binary, GitBranch, History, Settings, Trophy, ChevronLeft, ChevronRight, Zap } from 'lucide-react';
+import { BarChart3, Binary, GitBranch, History, Settings, ChevronLeft, ChevronRight, Zap } from 'lucide-react';
 import { useAudio } from '../context/AudioContext';
 
 type Page = 'sorting' | 'searching' | 'pathfinding' | 'history' | 'settings';
@@ -41,12 +41,10 @@ export function Sidebar({
           <div className="brand-mark">
             <Zap size={22} />
           </div>
-          {!collapsed && (
-            <div className="brand-text">
-              <strong>AlgoRace</strong>
-              <span>Visualize. Compare. Benchmark.</span>
-            </div>
-          )}
+          <div className="brand-text">
+            <strong>AlgoRace</strong>
+            <span>Visualize. Compare. Benchmark.</span>
+          </div>
         </div>
 
         <nav className="nav-list">
@@ -57,25 +55,32 @@ export function Sidebar({
               onClick={() => handleNav(id)}
               title={collapsed ? label : undefined}
             >
-              <Icon size={18} />
-              {!collapsed && <span>{label}</span>}
+              <Icon size={18} className="nav-icon" />
+              <span className="nav-label">{label}</span>
             </button>
           ))}
         </nav>
       </div>
 
       <div className="sidebar-bottom">
-        <button className="sidebar-toggle-btn" onClick={handleToggle} title={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}>
-          {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-          {!collapsed && <span>Collapse Sidebar</span>}
+        <button 
+          className="nav-item sidebar-toggle-item" 
+          onClick={handleToggle} 
+          title={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+          style={{ 
+            border: '1px dashed var(--line)', 
+            background: 'rgba(255,255,255,0.02)',
+            marginTop: '10px'
+          }}
+        >
+          {collapsed ? <ChevronRight size={18} className="nav-icon" /> : <ChevronLeft size={18} className="nav-icon" />}
+          <span className="nav-label">Collapse Sidebar</span>
         </button>
 
-        {!collapsed && (
-          <div className="sidebar-footer">
-            <span className="footer-brand">AlgoRace</span>
-            <span>React · Spring Boot · Web Audio</span>
-          </div>
-        )}
+        <div className="sidebar-footer">
+          <span className="footer-brand">AlgoRace</span>
+          <span>React · Spring Boot · Web Audio</span>
+        </div>
       </div>
     </aside>
   );

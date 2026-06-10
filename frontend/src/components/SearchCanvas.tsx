@@ -6,10 +6,11 @@ const colors = {
   bar: '#4f46e5',
   visit: '#7c3aed',
   current: '#f59e0b',
-  found: '#10b981'
+  found: '#10b981',
+  eliminated: '#1e293b'
 };
 
-export function SearchCanvas({ frame }: { frame: SimulationFrame }) {
+export function SearchCanvas({ frame, algorithm }: { frame?: SimulationFrame | null; algorithm?: string }) {
   const ref = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
@@ -26,11 +27,22 @@ export function SearchCanvas({ frame }: { frame: SimulationFrame }) {
     ctx.fillStyle = '#0f172a';
     ctx.fillRect(0, 0, rect.width, rect.height);
 
+    if (!frame) return;
+
     const arr = frame.array ?? [];
     if (!arr.length) return;
     const max = Math.max(...arr, 100);
     const barW = Math.max(3, (rect.width - arr.length) / arr.length);
     const gap = Math.max(1, (rect.width - barW * arr.length) / (arr.length + 1));
+
+    const isBinarySearch = algorithm?.includes('Binary');
+    let low = 0;
+    let mid = -1;
+    let high = arr.length - 1;
+
+    if (isBinarySearch && frame.highlight && frame.highlight.length === 3) {
+      [low, mid, high] = frame.highlight;
+    }
     
     arr.forEach((value, index) => {
       const h = (value / max) * (rect.height - 30);
@@ -40,15 +52,24 @@ export function SearchCanvas({ frame }: { frame: SimulationFrame }) {
       let color = colors.bar;
       let isGlow = false;
       let glowColor = '';
+      let isEliminated = false;
+
+      if (isBinarySearch && frame.highlight && frame.highlight.length === 3) {
+        if (index < low || index > high) {
+          isEliminated = true;
+        }
+      }
 
       if (index === frame.foundIndex) {
         color = colors.found;
         isGlow = true;
         glowColor = colors.found;
-      } else if (frame.highlight?.includes(index)) {
+      } else if (frame.highlight?.includes(index) && (!isBinarySearch || index === mid)) {
         color = colors.current;
         isGlow = true;
         glowColor = colors.current;
+      } else if (isEliminated) {
+        color = colors.eliminated;
       } else if (frame.searchPath?.includes(index)) {
         color = colors.visit;
       }
@@ -74,18 +95,23 @@ export function SearchCanvas({ frame }: { frame: SimulationFrame }) {
       } else if (color === colors.found) {
         grad.addColorStop(0, '#34d399'); // Emerald top
         grad.addColorStop(1, '#059669');
+      } else if (color === colors.eliminated) {
+        grad.addColorStop(0, '#334155'); // Dimmed slate top
+        grad.addColorStop(1, '#1e293b');
       } else {
         grad.addColorStop(0, color);
         grad.addColorStop(1, color);
       }
 
       ctx.fillStyle = grad;
+      ctx.globalAlpha = isEliminated ? 0.35 : 1.0;
       ctx.beginPath();
       ctx.roundRect(x, y, barW, h, Math.min(barW / 2, 5));
       ctx.fill();
+      ctx.globalAlpha = 1.0;
       ctx.shadowBlur = 0; // Reset shadow
     });
-  }, [frame]);
+  }, [frame, algorithm]);
 
   return <canvas className="race-canvas" ref={ref} />;
 }
