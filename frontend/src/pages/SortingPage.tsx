@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Controls } from '../components/Controls';
 import { ExplanationPanel } from '../components/ExplanationPanel';
 import { LaneCard } from '../components/LaneCard';
 import { MetricChart } from '../components/MetricChart';
 import { SelectField } from '../components/SelectField';
 import { SortingCanvas } from '../components/SortingCanvas';
+import { useAudio } from '../context/AudioContext';
 import { usePlayback } from '../hooks/usePlayback';
 import type { CatalogResponse, RaceResponse } from '../models/types';
 import { api } from '../services/api';
@@ -17,11 +18,25 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
   const [response, setResponse] = useState<RaceResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [speed, setSpeed] = useState(6);
-  const playback = usePlayback(response, speed);
+
+  const { play } = useAudio();
+  const winnerAnnouncedRef = useRef(false);
+
+  const onFrame = useCallback(
+    (event: 'compare' | 'swap' | 'hit' | 'miss' | 'step') => {
+      if (event === 'swap') play('swap');
+      else if (event === 'compare') play('compare');
+    },
+    [play]
+  );
+
+  const playback = usePlayback(response, speed, onFrame);
   const firstInfo = catalog.complexity[algorithms[0]];
 
   async function startRace(autoplay = true) {
     setLoading(true);
+    winnerAnnouncedRef.current = false;
+    play('start');
     try {
       const body = {
         algorithms,
@@ -51,11 +66,23 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
   const isCompleted = response && playback.frameIndex === playback.maxFrames - 1 && playback.maxFrames > 0;
   const winnerLane = response?.lanes.find(l => l.name === response.winner);
 
+  // Fire winner / race complete sound once when animation finishes
+  useEffect(() => {
+    if (isCompleted && response && !winnerAnnouncedRef.current) {
+      winnerAnnouncedRef.current = true;
+      if (response.winner) {
+        setTimeout(() => play('winner'), 120);
+      } else {
+        setTimeout(() => play('raceComplete'), 120);
+      }
+    }
+  }, [isCompleted, response, play]);
+
   return (
     <main className="page">
       <header className="page-header">
         <div>
-          <h1>Algorithm Race Arena</h1>
+          <h1>Sorting Arena</h1>
           <p>Real-time benchmarking of sorting algorithms</p>
         </div>
       </header>

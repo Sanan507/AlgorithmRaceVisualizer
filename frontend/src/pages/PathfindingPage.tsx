@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Controls } from '../components/Controls';
 import { ExplanationPanel } from '../components/ExplanationPanel';
 import { LaneCard } from '../components/LaneCard';
 import { MetricChart } from '../components/MetricChart';
 import { PathCanvas } from '../components/PathCanvas';
 import { SelectField } from '../components/SelectField';
+import { useAudio } from '../context/AudioContext';
 import { usePlayback } from '../hooks/usePlayback';
 import type { CatalogResponse, RaceResponse } from '../models/types';
 import { api } from '../services/api';
@@ -15,10 +16,24 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
   const [response, setResponse] = useState<RaceResponse | null>(null);
   const [speed, setSpeed] = useState(6);
   const [loading, setLoading] = useState(false);
-  const playback = usePlayback(response, speed);
+
+  const { play } = useAudio();
+  const winnerAnnouncedRef = useRef(false);
+
+  const onFrame = useCallback(
+    (event: 'compare' | 'swap' | 'hit' | 'miss' | 'step') => {
+      if (event === 'hit') play('pathFound');
+      else play('compare');
+    },
+    [play]
+  );
+
+  const playback = usePlayback(response, speed, onFrame);
 
   async function startRace(autoplay = true) {
     setLoading(true);
+    winnerAnnouncedRef.current = false;
+    play('start');
     try {
       const data = await api.pathfinding({ algorithms, rows: 18, cols: 28, mazeType });
       setResponse(data);
@@ -42,11 +57,22 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
   const isCompleted = response && playback.frameIndex === playback.maxFrames - 1 && playback.maxFrames > 0;
   const winnerLane = response?.lanes.find(l => l.name === response.winner);
 
+  useEffect(() => {
+    if (isCompleted && response && !winnerAnnouncedRef.current) {
+      winnerAnnouncedRef.current = true;
+      if (response.winner) {
+        setTimeout(() => play('winner'), 120);
+      } else {
+        setTimeout(() => play('raceComplete'), 120);
+      }
+    }
+  }, [isCompleted, response, play]);
+
   return (
     <main className="page">
       <header className="page-header">
         <div>
-          <h1>Pathfinder Arena</h1>
+          <h1>Pathfinding Arena</h1>
           <p>Real-time benchmarking of pathfinding algorithms</p>
         </div>
       </header>

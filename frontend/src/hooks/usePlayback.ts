@@ -1,7 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { RaceResponse } from '../models/types';
 
-export function usePlayback(response: RaceResponse | null, speed: number) {
+export type FrameEvent = 'compare' | 'swap' | 'hit' | 'miss' | 'step';
+
+export function usePlayback(
+  response: RaceResponse | null,
+  speed: number,
+  onFrame?: (event: FrameEvent, frameIndex: number) => void
+) {
   const [playing, setPlaying] = useState(false);
   const [frameIndex, setFrameIndex] = useState(0);
 
@@ -23,11 +29,26 @@ export function usePlayback(response: RaceResponse | null, speed: number) {
           setPlaying(false);
           return current;
         }
-        return current + 1;
+        const next = current + 1;
+        // Fire frame event for audio hooks — pick first lane's frame type if available
+        if (onFrame && response?.lanes[0]?.frames[next]) {
+          const frame = response.lanes[0].frames[next] as Record<string, unknown>;
+          // Detect frame type from common sentinel fields set by the backend
+          if (frame.swapped === true) {
+            onFrame('swap', next);
+          } else if (frame.found === true) {
+            onFrame('hit', next);
+          } else if (frame.found === false && frame.done === true) {
+            onFrame('miss', next);
+          } else {
+            onFrame('compare', next);
+          }
+        }
+        return next;
       });
     }, delay);
     return () => window.clearInterval(id);
-  }, [playing, maxFrames, speed]);
+  }, [playing, maxFrames, speed, onFrame, response]);
 
   return {
     playing,
@@ -38,6 +59,6 @@ export function usePlayback(response: RaceResponse | null, speed: number) {
     reset: () => {
       setPlaying(false);
       setFrameIndex(0);
-    }
+    },
   };
 }

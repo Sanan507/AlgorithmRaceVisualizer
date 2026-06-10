@@ -1,43 +1,216 @@
-# Algorithm Race Visualizer
+# AlgoRace
 
-A professional algorithm visualization project with two implementations:
+**Visualize. Compare. Benchmark.**
 
-- Original JavaFX desktop application in `src/`
-- Modern portfolio-ready web application in `frontend/` and `backend/`
+A full-stack platform for visualizing, comparing, and benchmarking classic algorithms in real time.
 
-The web version migrates the project to React + TypeScript + Vite on the frontend and Spring Boot 3 + Java 21 on the backend.
+## Live Demo
 
-## Web Architecture
+Frontend: https://algorithm-race-visualizer.vercel.app
 
-```text
-frontend/
-  src/components/       Sidebar, controls, charts, canvas visualizers
-  src/pages/            Sorting, Searching, Pathfinding, Comparison, Settings
-  src/hooks/            Playback and animation state
-  src/services/         REST API client
-  src/models/           TypeScript DTOs
+Backend: Railway (Spring Boot API)
 
-backend/
-  controller/           REST endpoints
-  service/              Simulation orchestration
-  algorithms/           JavaFX-free algorithm implementations
-  model/                Backend data models
-  dto/                  API contracts
-  utils/                Array, maze, and complexity utilities
-```
+---
 
-The backend generates deterministic simulation frames from real Java algorithm models. React animates those frames with Canvas, preserving pause, resume, reset, speed control, winner detection, metrics, and complexity explanations.
+## Overview
 
-## Web Local Setup
+AlgoRace allows users to:
+
+* Compare multiple algorithms side-by-side in dedicated arenas
+* Visualize algorithm execution step-by-step with live animation
+* Benchmark performance metrics with real-time charts
+* Explore algorithm complexity (best / average / worst case)
+* Learn algorithm theory and pseudocode
+* Hear audio feedback during races via the built-in sound engine
+
+---
+
+## Features
+
+### Sorting Arena
+
+Compare multiple sorting algorithms simultaneously:
+
+* Bubble Sort
+* Selection Sort
+* Insertion Sort
+* Merge Sort
+* Quick Sort
+* Heap Sort
+* Comb Sort
+
+Features:
+
+* Live animation
+* Execution timing
+* Comparison count
+* Swap count
+* Complexity information
+* Audio cues on compare and swap events
+
+---
+
+### Search Arena
+
+Visualize searching algorithms on the same dataset:
+
+* Linear Search
+* Binary Search
+* Jump Search
+
+Features:
+
+* Target search simulation
+* Real-time comparisons
+* Search hit / miss audio cues
+* Complexity analysis
+* Execution benchmarking
+
+---
+
+### Pathfinding Arena
+
+Visualize graph traversal and shortest-path algorithms:
+
+* Breadth First Search (BFS)
+* Depth First Search (DFS)
+* Dijkstra's Algorithm
+* A* Search
+
+Features:
+
+* Interactive maze generation
+* Path exploration animation
+* Shortest-path visualization
+* Path found audio cue
+* Performance comparison
+
+---
+
+### Benchmarks
+
+Centralized complexity reference displaying:
+
+* Time complexity (best / average / worst)
+* Space complexity
+* Algorithm family comparison
+
+---
+
+### Audio System
+
+Professional Web Audio engine ported from the original JavaFX MIDI SoundManager:
+
+* Vibraphone-style oscillator tones (sine / triangle waves + exponential decay)
+* Per-event throttling (compare: 95 ms, swap: 120 ms, UI: 45 ms)
+* No arcade sounds — short, clean, modern
+* Graceful degradation if AudioContext is unavailable
+
+Sound events:
+
+| Event | Sound |
+|-------|-------|
+| Race Start | Rising two-chord sequence |
+| Compare | Soft high ping |
+| Swap | Low bass chord |
+| Search Hit | Bright ding |
+| Search Miss | Soft descending tone |
+| Path Found | Gentle resolution |
+| Race Complete | Warm chord pair |
+| Winner | Three-chord fanfare |
+| Button Click | Subtle vibraphone tap |
+
+---
+
+### Settings
+
+* Dark / Light mode toggle
+* Enable / Disable Sound Effects
+* Master Volume slider
+* Effects Volume slider
+* All audio settings persisted via localStorage
+
+---
+
+## Technology Stack
+
+### Frontend
+
+* React 18
+* TypeScript
+* Vite
+* CSS3 (Vanilla)
+* Web Audio API
+
+### Backend
+
+* Java 21
+* Spring Boot
+* Maven
+
+### Deployment
+
+Frontend:
+
+* Vercel
 
 Backend:
+
+* Railway
+
+---
+
+## Project Structure
+
+```text
+AlgoRace/
+│
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── context/        ← AudioContext
+│   │   ├── hooks/          ← useSound, useAudioSettings, usePlayback
+│   │   ├── pages/
+│   │   ├── services/
+│   │   └── models/
+│   │
+│   └── package.json
+│
+├── backend/
+│   └── src/main/java/
+│
+└── README.md
+```
+
+---
+
+## Local Setup
+
+### 1. Clone Repository
+
+```bash
+git clone https://github.com/Sanan507/AlgorithmRaceVisualizer.git
+cd AlgorithmRaceVisualizer
+```
+
+---
+
+### 2. Run Backend
 
 ```bash
 cd backend
 mvn spring-boot:run
 ```
 
-Frontend:
+Backend runs on:
+
+```text
+http://localhost:8080
+```
+
+---
+
+### 3. Run Frontend
 
 ```bash
 cd frontend
@@ -45,98 +218,74 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:5173`.
-
-## Web Build
-
-```bash
-cd backend
-mvn clean package
-
-cd ../frontend
-npm run build
-```
-
-## Docker
-
-```bash
-docker compose up --build
-```
-
-Frontend runs at `http://localhost:3000`; backend runs at `http://localhost:8080`.
-
-## Deployment
-
-Backend on Render:
-
-- Root directory: `backend`
-- Build command: `mvn clean package -DskipTests`
-- Start command: `java -jar target/algorithm-race-backend-1.0.0.jar`
-- Environment:
-  - `PORT`
-  - `CORS_ALLOWED_ORIGINS=https://your-vercel-app.vercel.app`
-
-Frontend on Vercel:
-
-- Root directory: `frontend`
-- Build command: `npm run build`
-- Output directory: `dist`
-- Environment:
-  - `VITE_API_BASE_URL=https://your-render-backend.onrender.com`
-
-## Portfolio Highlights
-
-- Data Structures & Algorithms: sorting, searching, pathfinding, maze generation
-- Java and OOP: reusable algorithm classes and Spring Boot services
-- React and TypeScript: responsive dashboard with Canvas animation
-- System design: API contracts, frontend/backend separation, Docker, CI/CD
-
-## Project Structure
+Frontend runs on:
 
 ```text
-src/
-  main/                 JavaFX application entry point
-  ui/                   Main layout, sidebar, dashboard panels, CSS
-  controller/           Race orchestration and multithreaded execution
-  model/                Observable base algorithm model
-  algorithms/
-    sorting/            Bubble, Selection, Insertion, Merge, Quick, Heap
-    searching/          Linear, Binary, Jump
-    pathfinding/        BFS, DFS, Dijkstra, A*
-  utils/                Settings, data generation, complexity explanations
+http://localhost:5173
 ```
 
-## Core Features
+---
 
-- JavaFX dashboard interface with dark and light themes
-- Sidebar navigation for Sorting, Searching, Pathfinding, and Settings
-- Sorting race mode with side-by-side canvas lanes
-- Worker-thread execution through `ExecutorService`
-- Pause, resume, reset, speed control, and random data generation
-- Live metrics for time, comparisons, swaps, and completion status
-- Bar chart for performance comparison
-- Searching and pathfinding visualizers with animated highlights
-- Obstacle drawing for pathfinding grids
-- Algorithm explanation and pseudocode panels
-- Sound toggle, fullscreen mode, and save/load configuration support
+## Environment Variables
 
-## Running
+### Frontend
 
-This Eclipse project is configured with the JavaFX container/user library in `.classpath`.
-
-Open the project in Eclipse, make sure the JavaFX user library points to your local JavaFX SDK, then run:
+Create:
 
 ```text
-main.Main
+frontend/.env
 ```
 
-For command-line runs, install the JavaFX SDK and provide its `lib` folder as the module path:
-
-```text
-javac --module-path /path/to/javafx/lib --add-modules javafx.controls,javafx.fxml,javafx.graphics -d bin src/module-info.java
-java --enable-native-access=javafx.graphics --module-path /path/to/javafx/lib --add-modules javafx.controls,javafx.fxml,javafx.graphics -m algorithmvisualizer/main.Main
+```env
+VITE_API_BASE_URL=http://localhost:8080
 ```
 
-On Java 25+, the `--enable-native-access=javafx.graphics` VM argument suppresses the JavaFX native access warning.
+### Production
 
-More migration detail is available in `README_WEB_MIGRATION.md`.
+```env
+VITE_API_BASE_URL=https://your-backend-url.up.railway.app
+```
+
+---
+
+## API Endpoints
+
+### Catalog
+
+```http
+GET /api/catalog
+```
+
+Returns available algorithms and metadata.
+
+### Sorting Simulation
+
+```http
+POST /api/simulations/sorting
+```
+
+### Searching Simulation
+
+```http
+POST /api/simulations/searching
+```
+
+### Pathfinding Simulation
+
+```http
+POST /api/simulations/pathfinding
+```
+
+---
+
+## Author
+
+Muhammad Sanan Sarwar
+
+GitHub: https://github.com/Sanan507
+
+---
+
+## License
+
+This project is intended for educational and portfolio purposes.

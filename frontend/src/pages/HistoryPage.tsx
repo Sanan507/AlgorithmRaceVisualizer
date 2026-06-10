@@ -11,8 +11,8 @@ export function HistoryPage({ catalog }: { catalog: CatalogResponse }) {
     <main className="page">
       <header className="page-header">
         <div>
-          <h1>Algorithm Comparison Matrix</h1>
-          <p>A compact reference view for portfolio reviewers and DSA discussions.</p>
+          <h1>Benchmarks</h1>
+          <p>Algorithm complexity reference — time, space, and case-by-case analysis.</p>
         </div>
       </header>
       <section className="matrix">
