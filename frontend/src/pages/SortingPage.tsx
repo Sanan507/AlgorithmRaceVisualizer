@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { LaneState } from '../components/LaneCard';
 import { Controls } from '../components/Controls';
 import { ExplanationPanel } from '../components/ExplanationPanel';
 import { LaneCard } from '../components/LaneCard';
@@ -139,8 +140,14 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
       <section className="lane-grid">
         {response?.lanes.map((lane, index) => {
           const frame = activeFrames?.[index] ?? lane.frames[0];
+          let laneState: LaneState;
+          if (!response) laneState = 'ready';
+          else if (isCompleted || frame.done) laneState = 'finished';
+          else if (!playback.playing && playback.frameIndex > 0) laneState = 'paused';
+          else if (playback.playing) laneState = 'running';
+          else laneState = 'ready';
           return (
-            <LaneCard key={lane.name} lane={lane} frame={frame}>
+            <LaneCard key={lane.name} lane={lane} frame={frame} laneState={laneState}>
               <SortingCanvas frame={frame} />
             </LaneCard>
           );

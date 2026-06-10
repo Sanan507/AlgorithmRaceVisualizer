@@ -556,23 +556,58 @@ select:focus, input:focus {
   margin-top: 2px;
 }
 
-.lane-header em {
+/* ── Status Badge ──────────────────────────────────────────────────────────── */
+.lane-header em,
+.status-badge {
   font-style: normal;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   padding: 4px 10px;
-  border-radius: 6px;
-  background: var(--panel-2);
-  color: var(--muted);
-  border: 1px solid var(--line);
+  border-radius: 20px;
+  transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  white-space: nowrap;
 }
 
-.lane-card.done .lane-header em {
+/* READY — neutral gray */
+.status-badge--ready {
+  background: rgba(100, 116, 139, 0.15);
+  color: #94a3b8;
+  border: 1px solid rgba(100, 116, 139, 0.3);
+}
+
+/* RUNNING — purple/blue pulse */
+.status-badge--running {
+  background: rgba(139, 92, 246, 0.18);
+  color: #a78bfa;
+  border: 1px solid rgba(139, 92, 246, 0.4);
+  animation: badge-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes badge-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0); }
+  50%       { box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.18); }
+}
+
+/* PAUSED — amber/orange */
+.status-badge--paused {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+/* FINISHED — green */
+.status-badge--finished {
   background: rgba(16, 185, 129, 0.15);
   color: #34d399;
-  border-color: rgba(16, 185, 129, 0.3);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+/* legacy: keep done-card green border */
+.lane-card.done {
+  border-color: rgba(16, 185, 129, 0.5);
+  box-shadow: 0 0 25px rgba(16, 185, 129, 0.08);
 }
 
 /* Visualization Canvas Area */
@@ -585,6 +620,84 @@ select:focus, input:focus {
 
 .path-canvas {
   height: 280px;
+}
+
+/* ── Lane Canvas Wrapper ───────────────────────────────────────────────────── */
+.lane-canvas-container {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ── Progress Bar ─────────────────────────────────────────────────────────── */
+.lane-progress-container {
+  height: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.lane-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent, #7c3aed), #a78bfa);
+  transition: width 0.35s ease;
+  border-radius: 0 2px 2px 0;
+}
+
+.lane-progress-bar--animated {
+  background: linear-gradient(90deg, #7c3aed, #a78bfa, #7c3aed);
+  background-size: 200% 100%;
+  animation: progress-shimmer 1.4s linear infinite;
+}
+
+@keyframes progress-shimmer {
+  0%   { background-position: 200% center; }
+  100% { background-position: 0% center; }
+}
+
+/* ── Metric Chips Footer ──────────────────────────────────────────────────── */
+.lane-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid var(--line);
+  background: rgba(6, 8, 15, 0.15);
+}
+
+.metric-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 8px;
+  gap: 4px;
+  border-right: 1px solid var(--line);
+  transition: background 0.2s ease;
+}
+
+.metric-card:last-child {
+  border-right: none;
+}
+
+.metric-card:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.metric-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.metric-value {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  line-height: 1;
 }
 
 /* Statistics Footer */

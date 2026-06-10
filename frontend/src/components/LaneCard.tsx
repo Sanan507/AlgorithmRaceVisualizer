@@ -2,42 +2,72 @@ import type { ReactNode } from 'react';
 import type { RaceLaneResponse, SimulationFrame } from '../models/types';
 import { Clock, Activity, RotateCw, CheckCircle2, AlertCircle, Percent } from 'lucide-react';
 
+/** Which overall race state the parent arena is in */
+export type LaneState = 'ready' | 'running' | 'paused' | 'finished';
+
 export function LaneCard({
   lane,
   frame,
+  laneState = 'ready',
   children
 }: {
   lane: RaceLaneResponse;
   frame: SimulationFrame;
+  /** Drives the status badge: ready | running | paused | finished */
+  laneState?: LaneState;
   children: ReactNode;
 }) {
   const totalFrames = lane.frames.length;
   const progress = totalFrames > 1 ? Math.min(100, Math.round((frame.frame / (totalFrames - 1)) * 100)) : 0;
 
-  // Determine operations label & value
+  // ── Per-lane finished state ────────────────────────────────────────────────
+  // A lane is individually done when its last frame has done=true
+  const laneFinished = frame.done;
+
+  // Derive the per-lane badge state
+  let badgeState: LaneState;
+  if (laneState === 'ready') {
+    badgeState = 'ready';
+  } else if (laneState === 'finished' || laneFinished) {
+    badgeState = 'finished';
+  } else if (laneState === 'paused') {
+    badgeState = 'paused';
+  } else {
+    badgeState = 'running';
+  }
+
+  // ── Badge label & CSS class ───────────────────────────────────────────────
+  const badgeLabels: Record<LaneState, string> = {
+    ready: 'READY',
+    running: 'RUNNING',
+    paused: 'PAUSED',
+    finished: 'FINISHED',
+  };
+
+  // ── Operations label & value ──────────────────────────────────────────────
   const opLabel = frame.steps !== undefined && frame.steps > 0 ? 'Steps' : 'Comparisons';
   const opValue = frame.comparisons || frame.steps || 0;
 
-  // Determine action status based on simulation content
+  // ── Action metric (Swaps / Status) ───────────────────────────────────────
   let actionLabel = 'Swaps';
   let actionValue: string | number = frame.swaps ?? 0;
   let ActionIcon = RotateCw;
 
-  // Check if this is pathfinding (has grid state)
   const isPathfinding = frame.grid !== undefined && frame.grid !== null;
-  // Check if this is searching (has foundIndex property)
   const isSearching = frame.foundIndex !== undefined;
 
   if (isPathfinding) {
     actionLabel = 'Status';
     ActionIcon = CheckCircle2;
     if (frame.pathFound) {
-      actionValue = 'Found';
+      actionValue = 'Path Found';
     } else if (frame.done) {
       actionValue = 'No Path';
       ActionIcon = AlertCircle;
+    } else if (laneState === 'ready') {
+      actionValue = 'Ready';
     } else {
-      actionValue = 'Searching';
+      actionValue = 'Exploring';
     }
   } else if (isSearching) {
     actionLabel = 'Status';
@@ -47,19 +77,32 @@ export function LaneCard({
     } else if (frame.done) {
       actionValue = 'Not Found';
       ActionIcon = AlertCircle;
+    } else if (laneState === 'ready') {
+      actionValue = 'Ready';
     } else {
       actionValue = 'Searching';
     }
   }
 
+  // ── Sorting status label for display ─────────────────────────────────────
+  let sortingStatus = '';
+  if (!isPathfinding && !isSearching) {
+    if (laneState === 'ready') sortingStatus = 'Ready';
+    else if (badgeState === 'finished') sortingStatus = 'Completed';
+    else if (laneState === 'paused') sortingStatus = 'Paused';
+    else sortingStatus = 'Sorting';
+  }
+
   return (
-    <article className={`lane-card ${frame.done ? 'done' : ''}`}>
+    <article className={`lane-card ${badgeState === 'finished' ? 'done' : ''}`}>
       <header className="lane-header">
         <div>
           <strong>{lane.name}</strong>
           <span>{lane.complexity}</span>
         </div>
-        <em>{frame.done ? 'Done' : 'Running'}</em>
+        <em className={`status-badge status-badge--${badgeState}`}>
+          {badgeLabels[badgeState]}
+        </em>
       </header>
 
       <div className="lane-canvas-container">
@@ -67,7 +110,10 @@ export function LaneCard({
       </div>
 
       <div className="lane-progress-container" title={`Progress: ${progress}%`}>
-        <div className="lane-progress-bar" style={{ width: `${progress}%` }} />
+        <div
+          className={`lane-progress-bar ${badgeState === 'running' ? 'lane-progress-bar--animated' : ''}`}
+          style={{ width: `${progress}%` }}
+        />
       </div>
 
       <footer className="lane-stats-grid">
@@ -81,13 +127,17 @@ export function LaneCard({
           <span className="metric-label">
             <Activity size={12} /> {opLabel}
           </span>
-          <strong className="metric-value">{opValue}</strong>
+          <strong className="metric-value">{opValue.toLocaleString()}</strong>
         </div>
         <div className="metric-card">
           <span className="metric-label">
             <ActionIcon size={12} /> {actionLabel}
           </span>
-          <strong className="metric-value">{actionValue}</strong>
+          <strong className="metric-value">
+            {isPathfinding || isSearching
+              ? actionValue
+              : sortingStatus || actionValue}
+          </strong>
         </div>
         <div className="metric-card">
           <span className="metric-label">
