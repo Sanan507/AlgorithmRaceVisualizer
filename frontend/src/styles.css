@@ -739,6 +739,305 @@ select:focus, input:focus {
   margin-top: 24px;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   ALGORITHM COMPARISON CENTER
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.algo-comparison-center {
+  margin-top: 0;
+}
+
+/* Header area */
+.cmp-header {
+  margin-bottom: 20px;
+}
+
+.cmp-subtitle {
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin-top: 4px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Two-column body: table left, tabs right */
+.cmp-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  align-items: start;
+}
+
+.cmp-section-heading {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+/* ── Comparison Table ──────────────────────────────────────────────────────── */
+.cmp-table-wrapper {
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+}
+
+.cmp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  min-width: 320px;
+}
+
+.cmp-table thead tr {
+  background: rgba(139, 92, 246, 0.08);
+}
+
+.cmp-table th {
+  padding: 10px 14px;
+  text-align: left;
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: #a78bfa;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.cmp-prop-col {
+  color: var(--muted) !important;
+  width: 120px;
+  min-width: 110px;
+}
+
+.cmp-table tbody tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  transition: background 0.15s ease;
+}
+
+.cmp-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.cmp-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.cmp-prop-label {
+  padding: 9px 14px;
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.cmp-value-cell {
+  padding: 9px 14px;
+  vertical-align: middle;
+}
+
+/* Complexity code chips */
+.cmp-code {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 5px;
+  white-space: nowrap;
+}
+
+.cmp-code--best    { background: rgba(16,185,129,0.12); color: #34d399; }
+.cmp-code--avg     { background: rgba(245,158,11,0.12); color: #fbbf24; }
+.cmp-code--worst   { background: rgba(239,68,68,0.12); color: #f87171; }
+.cmp-code--space   { background: rgba(99,102,241,0.12); color: #818cf8; }
+.cmp-code--neutral { background: rgba(148,163,184,0.1); color: #94a3b8; }
+
+/* Yes / No badges */
+.yn-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.yn-yes {
+  background: rgba(16, 185, 129, 0.14);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.yn-no {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+/* Text cells */
+.cmp-use-case {
+  color: var(--text);
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.cmp-strength {
+  color: #86efac;
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.cmp-weakness {
+  color: #fca5a5;
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+/* ── Algorithm Tab Section ──────────────────────────────────────────────────── */
+.algo-tab-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.algo-tab-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.algo-tab-btn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.algo-tab-btn:hover {
+  border-color: rgba(139, 92, 246, 0.4);
+  color: #c4b5fd;
+  background: rgba(139, 92, 246, 0.08);
+}
+
+.algo-tab-btn--active {
+  background: rgba(139, 92, 246, 0.18);
+  color: #a78bfa;
+  border-color: rgba(139, 92, 246, 0.5);
+}
+
+.algo-tab-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.algo-theory-text {
+  font-size: 0.875rem;
+  color: #cbd5e1;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Strengths / Weaknesses cards */
+.algo-sw-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.algo-sw-card {
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.algo-sw-card--strength {
+  background: rgba(16, 185, 129, 0.07);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.algo-sw-card--weakness {
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.18);
+}
+
+.algo-sw-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.algo-sw-card--strength .algo-sw-label { color: #34d399; }
+.algo-sw-card--weakness .algo-sw-label { color: #f87171; }
+
+.algo-sw-card p {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--text);
+}
+
+/* Pseudocode block */
+.algo-pseudocode-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.algo-pseudocode-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+}
+
+.algo-pseudocode {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px 16px;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 0.78rem;
+  line-height: 1.65;
+  color: #e2e8f0;
+  overflow-x: auto;
+  margin: 0;
+  max-height: 260px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(139, 92, 246, 0.4) transparent;
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .cmp-body {
+    grid-template-columns: 1fr;
+  }
+
+  .algo-sw-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .compact {
   padding: 24px;
 }

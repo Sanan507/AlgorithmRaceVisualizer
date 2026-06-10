@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { LaneState } from '../components/LaneCard';
 import { Controls } from '../components/Controls';
-import { ExplanationPanel } from '../components/ExplanationPanel';
+import { AlgorithmComparisonCenter } from '../components/AlgorithmComparisonCenter';
 import { LaneCard } from '../components/LaneCard';
 import { PathCanvas } from '../components/PathCanvas';
 import { SelectField } from '../components/SelectField';
@@ -140,10 +140,8 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
           isCompleted={isCompleted}
           catalog={catalog}
         />
-        <div className="bottom-grid">
-          <ExplanationPanel title={algorithms[0]} info={catalog.complexity[algorithms[0]]} />
-          <VisualizationLegend type="pathfinding" />
-        </div>
+        <AlgorithmComparisonCenter algorithms={algorithms} type="pathfinding" catalog={catalog} />
+        <VisualizationLegend type="pathfinding" />
       </div>
     </main>
   );

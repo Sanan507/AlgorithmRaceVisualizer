@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { LaneState } from '../components/LaneCard';
 import { Controls } from '../components/Controls';
-import { ExplanationPanel } from '../components/ExplanationPanel';
+import { AlgorithmComparisonCenter } from '../components/AlgorithmComparisonCenter';
 import { LaneCard } from '../components/LaneCard';
 import { PerformanceComparison } from '../components/PerformanceComparison';
 import { VisualizationLegend } from '../components/VisualizationLegend';
@@ -33,7 +33,6 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
   );
 
   const playback = usePlayback(response, speed, onFrame);
-  const firstInfo = catalog.complexity[algorithms[0]];
 
   async function startRace(autoplay = true) {
     setLoading(true);
@@ -162,10 +161,8 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
           isCompleted={isCompleted}
           catalog={catalog}
         />
-        <div className="bottom-grid">
-          <ExplanationPanel title={algorithms[0]} info={firstInfo} />
-          <VisualizationLegend type="sorting" />
-        </div>
+        <AlgorithmComparisonCenter algorithms={algorithms} type="sorting" catalog={catalog} />
+        <VisualizationLegend type="sorting" />
       </div>
     </main>
   );

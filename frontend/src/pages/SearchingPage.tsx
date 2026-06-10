@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { LaneState } from '../components/LaneCard';
 import { Controls } from '../components/Controls';
-import { ExplanationPanel } from '../components/ExplanationPanel';
+import { AlgorithmComparisonCenter } from '../components/AlgorithmComparisonCenter';
 import { LaneCard } from '../components/LaneCard';
 import { PerformanceComparison } from '../components/PerformanceComparison';
 import { VisualizationLegend } from '../components/VisualizationLegend';
@@ -155,10 +155,8 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
           isCompleted={isCompleted}
           catalog={catalog}
         />
-        <div className="bottom-grid">
-          <ExplanationPanel title={algorithms[0]} info={catalog.complexity[algorithms[0]]} />
-          <VisualizationLegend type="searching" />
-        </div>
+        <AlgorithmComparisonCenter algorithms={algorithms} type="searching" catalog={catalog} />
+        <VisualizationLegend type="searching" />
       </div>
     </main>
   );
