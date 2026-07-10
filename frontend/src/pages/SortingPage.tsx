@@ -146,7 +146,7 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
           else if (playback.playing) laneState = 'running';
           else laneState = 'ready';
           return (
-            <LaneCard key={lane.name} lane={lane} frame={frame} laneState={laneState}>
+            <LaneCard key={lane.name} lane={lane} frame={frame} laneState={laneState} arenaType="sorting">
               <SortingCanvas frame={frame} />
             </LaneCard>
           );

@@ -4,17 +4,20 @@ import { Clock, Activity, RotateCw, CheckCircle2, AlertCircle, Percent } from 'l
 
 /** Which overall race state the parent arena is in */
 export type LaneState = 'ready' | 'running' | 'paused' | 'finished';
+export type ArenaType = 'sorting' | 'searching' | 'pathfinding';
 
 export function LaneCard({
   lane,
   frame,
   laneState = 'ready',
+  arenaType,
   children
 }: {
   lane: RaceLaneResponse;
   frame: SimulationFrame;
   /** Drives the status badge: ready | running | paused | finished */
   laneState?: LaneState;
+  arenaType: ArenaType;
   children: ReactNode;
 }) {
   const totalFrames = lane.frames.length;
@@ -37,12 +40,23 @@ export function LaneCard({
   }
 
   // ── Badge label & CSS class ───────────────────────────────────────────────
-  const badgeLabels: Record<LaneState, string> = {
+  const sortingStatusLabels: Record<LaneState, string> = {
+    ready: 'Ready',
+    running: 'Sorting',
+    paused: 'Paused',
+    finished: 'Completed',
+  };
+
+  const defaultStatusLabels: Record<LaneState, string> = {
     ready: 'READY',
     running: 'RUNNING',
     paused: 'PAUSED',
     finished: 'FINISHED',
   };
+
+  const badgeLabel = arenaType === 'sorting'
+    ? sortingStatusLabels[badgeState]
+    : defaultStatusLabels[badgeState];
 
   // ── Operations label & value ──────────────────────────────────────────────
   const opLabel = frame.steps !== undefined && frame.steps > 0 ? 'Steps' : 'Comparisons';
@@ -53,8 +67,9 @@ export function LaneCard({
   let actionValue: string | number = frame.swaps ?? 0;
   let ActionIcon = RotateCw;
 
-  const isPathfinding = frame.grid !== undefined && frame.grid !== null;
-  const isSearching = frame.foundIndex !== undefined;
+  const isPathfinding = arenaType === 'pathfinding';
+  const isSearching = arenaType === 'searching';
+  const isSorting = arenaType === 'sorting';
 
   if (isPathfinding) {
     actionLabel = 'Status';
@@ -85,12 +100,10 @@ export function LaneCard({
   }
 
   // ── Sorting status label for display ─────────────────────────────────────
-  let sortingStatus = '';
-  if (!isPathfinding && !isSearching) {
-    if (laneState === 'ready') sortingStatus = 'Ready';
-    else if (badgeState === 'finished') sortingStatus = 'Completed';
-    else if (laneState === 'paused') sortingStatus = 'Paused';
-    else sortingStatus = 'Sorting';
+  if (isSorting) {
+    actionLabel = 'Status';
+    actionValue = sortingStatusLabels[badgeState];
+    ActionIcon = badgeState === 'finished' ? CheckCircle2 : Activity;
   }
 
   return (
@@ -101,7 +114,7 @@ export function LaneCard({
           <span>{lane.complexity}</span>
         </div>
         <em className={`status-badge status-badge--${badgeState}`}>
-          {badgeLabels[badgeState]}
+          {badgeLabel}
         </em>
       </header>
 
@@ -134,9 +147,7 @@ export function LaneCard({
             <ActionIcon size={12} /> {actionLabel}
           </span>
           <strong className="metric-value">
-            {isPathfinding || isSearching
-              ? actionValue
-              : sortingStatus || actionValue}
+            {actionValue}
           </strong>
         </div>
         <div className="metric-card">
