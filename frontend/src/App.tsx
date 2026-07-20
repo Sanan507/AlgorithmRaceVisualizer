@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import { Sidebar } from './components/Sidebar';
 import { HistoryPage } from './pages/HistoryPage';
 import { PathfindingPage } from './pages/PathfindingPage';
@@ -78,6 +80,8 @@ export default function App() {
           )}
         </div>
       </div>
+      <Analytics />
+      <SpeedInsights />
     </AudioCtx.Provider>
   );
 }
