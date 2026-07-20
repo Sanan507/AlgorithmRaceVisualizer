@@ -160,6 +160,7 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
           type="sorting"
           isCompleted={isCompleted}
           catalog={catalog}
+          playing={playback.playing}
         />
         <AlgorithmComparisonCenter algorithms={algorithms} type="sorting" catalog={catalog} />
         <VisualizationLegend type="sorting" />

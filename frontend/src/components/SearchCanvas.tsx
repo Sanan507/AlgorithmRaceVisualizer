@@ -136,6 +136,24 @@ export function SearchCanvas({ frame, algorithm }: { frame?: SimulationFrame | n
       ctx.fill();
       ctx.globalAlpha = 1.0;
       ctx.shadowBlur = 0;
+
+      // Draw top glowing highlight line on active items
+      if (isGlow) {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(x, y, barW, 2);
+      }
+
+      // Draw text label on top of bar in Searching Arena
+      if (arr.length <= 50 || barW >= 8) {
+        if (isLight) {
+          ctx.fillStyle = isGlow ? '#006591' : '#131b2e';
+        } else {
+          ctx.fillStyle = isGlow ? '#ffffff' : 'rgba(243, 244, 246, 0.85)';
+        }
+        ctx.font = '10px "JetBrains Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(String(value), x + barW / 2, y - 4);
+      }
     });
   }, [frame, algorithm]);
 

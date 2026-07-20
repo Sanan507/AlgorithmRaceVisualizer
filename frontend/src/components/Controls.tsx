@@ -49,8 +49,16 @@ export function Controls({
         {resetLabel.includes('Random') ? <Shuffle size={17} /> : <RotateCcw size={17} />} {resetLabel}
       </button>
       <label className="speed-control">
-        <span>Speed</span>
-        <input type="range" min="1" max="10" value={speed} onChange={(event) => onSpeedChange(Number(event.target.value))} />
+        <span className="speed-label">Speed</span>
+        <input
+          type="range"
+          min="1"
+          max="10"
+          value={speed}
+          onChange={(event) => onSpeedChange(Number(event.target.value))}
+          className="speed-slider"
+        />
+        <span className="speed-value">{speed}x</span>
       </label>
     </div>
   );

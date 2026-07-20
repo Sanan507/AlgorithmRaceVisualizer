@@ -19,7 +19,14 @@ export default function App() {
   const [active, setActive] = useState<Page>('sorting');
   const [catalog, setCatalog] = useState<CatalogResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [darkMode, setDarkMode] = useState(true);
+  const [darkMode, setDarkMode] = useState(() => {
+    try {
+      const saved = localStorage.getItem('algorace_dark_mode');
+      return saved !== null ? JSON.parse(saved) : false;
+    } catch {
+      return false;
+    }
+  });
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const { settings: audioSettings, setSettings: setAudioSettings } = useAudioSettings();
@@ -31,6 +38,11 @@ export default function App() {
 
   useEffect(() => {
     document.documentElement.dataset.theme = darkMode ? 'dark' : 'light';
+    try {
+      localStorage.setItem('algorace_dark_mode', JSON.stringify(darkMode));
+    } catch {
+      // ignore
+    }
   }, [darkMode]);
 
   if (error) {

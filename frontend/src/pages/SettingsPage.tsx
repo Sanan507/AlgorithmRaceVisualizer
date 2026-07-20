@@ -1,4 +1,4 @@
-import { Moon, Volume2, VolumeX, Music } from 'lucide-react';
+import { Moon, Volume2, VolumeX, SlidersHorizontal, AudioWaveform, Volume } from 'lucide-react';
 import { useAudio } from '../context/AudioContext';
 
 export function SettingsPage({
@@ -76,12 +76,12 @@ export function SettingsPage({
 
         {/* Master Volume */}
         <div className="settings-card settings-card--slider">
-          <Music size={22} className={audioSettings.soundEnabled ? '' : 'icon-muted'} />
+          <SlidersHorizontal size={22} className={audioSettings.soundEnabled ? '' : 'icon-muted'} />
           <div className="settings-slider-body">
             <strong>Master Volume</strong>
             <span>Overall output level for all AlgoRace audio.</span>
             <div className="settings-slider-row">
-              <VolumeX size={14} className="icon-muted" />
+              <Volume size={14} className="icon-muted" />
               <input
                 type="range"
                 min="0"
@@ -102,12 +102,12 @@ export function SettingsPage({
 
         {/* Effects Volume */}
         <div className="settings-card settings-card--slider">
-          <Volume2 size={22} className={audioSettings.soundEnabled ? '' : 'icon-muted'} />
+          <AudioWaveform size={22} className={audioSettings.soundEnabled ? '' : 'icon-muted'} />
           <div className="settings-slider-body">
             <strong>Effects Volume</strong>
             <span>Level for per-event sounds — comparisons, swaps, and hits.</span>
             <div className="settings-slider-row">
-              <VolumeX size={14} className="icon-muted" />
+              <Volume size={14} className="icon-muted" />
               <input
                 type="range"
                 min="0"

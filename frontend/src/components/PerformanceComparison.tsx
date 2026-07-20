@@ -9,6 +9,7 @@ interface PerformanceComparisonProps {
   type: 'sorting' | 'searching' | 'pathfinding';
   isCompleted: boolean;
   catalog: CatalogResponse;
+  playing?: boolean;
 }
 
 function getWinnerExplanation(winnerName: string, type: 'sorting' | 'searching' | 'pathfinding') {
@@ -57,7 +58,8 @@ export function PerformanceComparison({
   activeFrames,
   type,
   isCompleted,
-  catalog
+  catalog,
+  playing = false
 }: PerformanceComparisonProps) {
   useEffect(() => {
     if (isCompleted && response?.winner) {
@@ -166,7 +168,7 @@ export function PerformanceComparison({
     } else {
       efficiencyText = `${fastest.name} demonstrated optimal efficiency in this run.`;
     }
-  } else if (laneData.length >= 2) {
+  } else if (laneData.length >= 2 && playing) {
     const currentFastest = [...laneData].sort((a, b) => a.timeMs - b.timeMs)[0];
     const currentSlowest = [...laneData].sort((a, b) => b.timeMs - a.timeMs)[0];
     if (currentFastest.timeMs > 0 && currentSlowest.timeMs > currentFastest.timeMs) {
@@ -264,6 +266,18 @@ export function PerformanceComparison({
               }
 
               if (type === 'searching') {
+                const isReady = lane.timeMs === 0 && lane.opValue === 0 && !isCompleted;
+                const searchStatusText = lane.foundIndex !== null && lane.foundIndex >= 0 
+                  ? `Target found at index ${lane.foundIndex}` 
+                  : (lane.done 
+                      ? 'Target not found' 
+                      : (isReady 
+                          ? 'Ready' 
+                          : (playing ? 'Searching...' : 'Paused')));
+                const searchStatusColor = lane.foundIndex !== null && lane.foundIndex >= 0 
+                  ? '#10b981' 
+                  : (lane.done ? '#ef4444' : (isReady ? '#a855f7' : (playing ? '#fbbf24' : '#60a5fa')));
+
                 return (
                   <div className="lane-perf-row" key={lane.name}>
                     <div className="lane-perf-meta">
@@ -300,10 +314,8 @@ export function PerformanceComparison({
 
                     <div style={{ marginTop: '8px', fontSize: '0.85rem' }}>
                       Status:{' '}
-                      <strong style={{ color: lane.foundIndex !== null && lane.foundIndex >= 0 ? '#10b981' : (lane.done ? '#ef4444' : '#fbbf24') }}>
-                        {lane.foundIndex !== null && lane.foundIndex >= 0 
-                          ? `Target found at index ${lane.foundIndex}` 
-                          : (lane.done ? 'Target not found' : 'Searching...')}
+                      <strong style={{ color: searchStatusColor }}>
+                        {searchStatusText}
                       </strong>
                     </div>
                   </div>
@@ -364,23 +376,32 @@ export function PerformanceComparison({
         <div className="perf-leaderboard-section">
           <h4>Leaderboard Ranking</h4>
           <div className="ranking-list">
-            {rankedLanes.map((lane, idx) => (
-              <div 
-                className={`ranking-item ${idx === 0 && lane.done ? 'gold-rank' : ''} ${lane.done ? 'completed-rank' : ''}`} 
-                key={lane.name}
-              >
-                <div className="rank-badge">{idx + 1}</div>
-                <div className="rank-details">
-                  <span className="rank-name">{lane.name}</span>
-                  <span className="rank-status">
-                    {lane.done ? 'Finished' : 'Running...'}
-                  </span>
+            {rankedLanes.map((lane, idx) => {
+              const isReady = lane.timeMs === 0 && lane.opValue === 0 && !isCompleted;
+              const statusText = lane.done || isCompleted
+                ? 'Finished'
+                : (isReady
+                    ? 'Ready'
+                    : (playing ? 'Running...' : 'Paused'));
+
+              return (
+                <div 
+                  className={`ranking-item ${idx === 0 && lane.done ? 'gold-rank' : ''} ${lane.done ? 'completed-rank' : ''}`} 
+                  key={lane.name}
+                >
+                  <div className="rank-badge">{idx + 1}</div>
+                  <div className="rank-details">
+                    <span className="rank-name">{lane.name}</span>
+                    <span className="rank-status">
+                      {statusText}
+                    </span>
+                  </div>
+                  <div className="rank-score">
+                    {lane.timeMs} ms
+                  </div>
                 </div>
-                <div className="rank-score">
-                  {lane.timeMs} ms
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Winner announcement / Efficiency insight card */}

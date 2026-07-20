@@ -132,13 +132,7 @@ export function SortingCanvas({ frame }: { frame: SimulationFrame }) {
         ctx.fillRect(x, y, barW, 2);
       }
 
-      // Draw text label on top of bar if array length is small
-      if (arr.length <= 40 && barW >= 12) {
-        ctx.fillStyle = isGlow ? '#ffffff' : 'rgba(243, 244, 246, 0.7)';
-        ctx.font = '10px "JetBrains Mono", monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText(String(value), x + barW / 2, y - 4);
-      }
+
     });
   }, [frame]);
 

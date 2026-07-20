@@ -139,6 +139,7 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
           type="pathfinding"
           isCompleted={isCompleted}
           catalog={catalog}
+          playing={playback.playing}
         />
         <AlgorithmComparisonCenter algorithms={algorithms} type="pathfinding" catalog={catalog} />
         <VisualizationLegend type="pathfinding" />
