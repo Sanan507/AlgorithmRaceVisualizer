@@ -11,5 +11,16 @@ export default defineConfig({
         changeOrigin: true
       }
     }
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          lucide: ['lucide-react'],
+          vercel: ['@vercel/analytics', '@vercel/speed-insights']
+        }
+      }
+    }
   }
 });

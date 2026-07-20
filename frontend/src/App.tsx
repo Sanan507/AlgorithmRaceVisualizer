@@ -13,11 +13,13 @@ import { AudioCtx } from './context/AudioContext';
 import { useAudioSettings } from './hooks/useAudioSettings';
 import { useSound } from './hooks/useSound';
 
+import { fallbackCatalog } from './data/fallbackCatalog';
+
 type Page = 'sorting' | 'searching' | 'pathfinding' | 'history' | 'settings';
 
 export default function App() {
   const [active, setActive] = useState<Page>('sorting');
-  const [catalog, setCatalog] = useState<CatalogResponse | null>(null);
+  const [catalog, setCatalog] = useState<CatalogResponse>(fallbackCatalog);
   const [error, setError] = useState<string | null>(null);
   const [darkMode, setDarkMode] = useState(() => {
     try {
@@ -33,7 +35,11 @@ export default function App() {
   const { play } = useSound(audioSettings);
 
   useEffect(() => {
-    api.catalog().then(setCatalog).catch((err: Error) => setError(err.message));
+    api.catalog()
+      .then(setCatalog)
+      .catch((err: Error) => {
+        console.warn('Catalog API background fetch warning (using fallback catalog):', err.message);
+      });
   }, []);
 
   useEffect(() => {
@@ -57,17 +63,6 @@ export default function App() {
           <button className="btn btn-secondary" onClick={() => window.location.reload()}>
             Retry Connection
           </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!catalog) {
-    return (
-      <div className="boot-state">
-        <div className="boot-card loading-card">
-          <div className="cyber-spinner" />
-          <p className="boot-loading-text">Initialising AlgoRace Engine...</p>
         </div>
       </div>
     );
