@@ -2,12 +2,13 @@ import { useEffect, useRef } from 'react';
 import type { SimulationFrame } from '../models/types';
 
 const colors = {
-  bg: '#0f172a',
+  bg: '#0b0b1e',
+  gridLine: 'rgba(255, 255, 255, 0.03)',
   bar: '#4f46e5',
   visit: '#7c3aed',
-  current: '#f59e0b',
-  found: '#10b981',
-  eliminated: '#1e293b'
+  current: '#ff9e00',
+  found: '#00f5d4',
+  eliminated: '#11112d'
 };
 
 export function SearchCanvas({ frame, algorithm }: { frame?: SimulationFrame | null; algorithm?: string }) {
@@ -18,14 +19,27 @@ export function SearchCanvas({ frame, algorithm }: { frame?: SimulationFrame | n
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+
     const rect = canvas.getBoundingClientRect();
     const ratio = window.devicePixelRatio || 1;
     canvas.width = rect.width * ratio;
     canvas.height = rect.height * ratio;
     ctx.scale(ratio, ratio);
     
-    ctx.fillStyle = '#0f172a';
+    const isLight = document.documentElement.dataset.theme === 'light';
+    
+    ctx.fillStyle = isLight ? '#f2f7ff' : colors.bg;
     ctx.fillRect(0, 0, rect.width, rect.height);
+
+    // Draw ambient horizontal grid lines
+    ctx.strokeStyle = isLight ? 'rgba(0, 101, 145, 0.08)' : colors.gridLine;
+    ctx.lineWidth = 1;
+    for (let y = 40; y < rect.height; y += 40) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(rect.width, y);
+      ctx.stroke();
+    }
 
     if (!frame) return;
 
@@ -45,11 +59,11 @@ export function SearchCanvas({ frame, algorithm }: { frame?: SimulationFrame | n
     }
     
     arr.forEach((value, index) => {
-      const h = (value / max) * (rect.height - 30);
+      const h = Math.max(4, (value / max) * (rect.height - 32));
       const x = gap + index * (barW + gap);
       const y = rect.height - h - 12;
       
-      let color = colors.bar;
+      let baseColor = colors.bar;
       let isGlow = false;
       let glowColor = '';
       let isEliminated = false;
@@ -61,55 +75,67 @@ export function SearchCanvas({ frame, algorithm }: { frame?: SimulationFrame | n
       }
 
       if (index === frame.foundIndex) {
-        color = colors.found;
+        baseColor = colors.found;
         isGlow = true;
-        glowColor = colors.found;
+        glowColor = 'rgba(0, 245, 212, 0.9)';
       } else if (frame.highlight?.includes(index) && (!isBinarySearch || index === mid)) {
-        color = colors.current;
+        baseColor = colors.current;
         isGlow = true;
-        glowColor = colors.current;
+        glowColor = 'rgba(255, 158, 0, 0.9)';
       } else if (isEliminated) {
-        color = colors.eliminated;
+        baseColor = colors.eliminated;
       } else if (frame.searchPath?.includes(index)) {
-        color = colors.visit;
+        baseColor = colors.visit;
       }
 
       if (isGlow) {
-        ctx.shadowBlur = 14;
+        ctx.shadowBlur = 18;
         ctx.shadowColor = glowColor;
       } else {
         ctx.shadowBlur = 0;
       }
 
-      // Create Linear Gradients for premium styling
+      // Linear Gradients
       const grad = ctx.createLinearGradient(x, y, x, y + h);
-      if (color === colors.bar) {
-        grad.addColorStop(0, '#818cf8'); // Indigo top
-        grad.addColorStop(1, '#4f46e5');
-      } else if (color === colors.visit) {
-        grad.addColorStop(0, '#a78bfa'); // Purple top
+      if (baseColor === colors.bar) {
+        if (isLight) {
+          grad.addColorStop(0, '#22d3ee');
+          grad.addColorStop(1, '#006591');
+        } else {
+          grad.addColorStop(0, '#a855f7');
+          grad.addColorStop(1, '#4f46e5');
+        }
+      } else if (baseColor === colors.visit) {
+        grad.addColorStop(0, '#c084fc');
         grad.addColorStop(1, '#7c3aed');
-      } else if (color === colors.current) {
-        grad.addColorStop(0, '#fbbf24'); // Amber top
+      } else if (baseColor === colors.current) {
+        grad.addColorStop(0, '#ffffff');
+        grad.addColorStop(0.3, '#ff9e00');
         grad.addColorStop(1, '#d97706');
-      } else if (color === colors.found) {
-        grad.addColorStop(0, '#34d399'); // Emerald top
+      } else if (baseColor === colors.found) {
+        grad.addColorStop(0, '#ffffff');
+        grad.addColorStop(0.3, '#00f5d4');
         grad.addColorStop(1, '#059669');
-      } else if (color === colors.eliminated) {
-        grad.addColorStop(0, '#334155'); // Dimmed slate top
-        grad.addColorStop(1, '#1e293b');
+      } else if (baseColor === colors.eliminated) {
+        if (isLight) {
+          grad.addColorStop(0, '#dae2fd');
+          grad.addColorStop(1, '#c9d6f5');
+        } else {
+          grad.addColorStop(0, '#1e293b');
+          grad.addColorStop(1, '#0f172a');
+        }
       } else {
-        grad.addColorStop(0, color);
-        grad.addColorStop(1, color);
+        grad.addColorStop(0, baseColor);
+        grad.addColorStop(1, baseColor);
       }
 
       ctx.fillStyle = grad;
-      ctx.globalAlpha = isEliminated ? 0.35 : 1.0;
+      ctx.globalAlpha = isEliminated ? 0.25 : 1.0;
       ctx.beginPath();
-      ctx.roundRect(x, y, barW, h, Math.min(barW / 2, 5));
+      ctx.roundRect(x, y, barW, h, Math.min(barW / 2, 4));
       ctx.fill();
       ctx.globalAlpha = 1.0;
-      ctx.shadowBlur = 0; // Reset shadow
+      ctx.shadowBlur = 0;
     });
   }, [frame, algorithm]);
 

@@ -156,7 +156,7 @@ Frontend:
 
 Backend:
 
-* Railway
+* Render
 
 ---
 
@@ -243,8 +243,7 @@ VITE_API_BASE_URL=http://localhost:8080
 ### Production
 
 ```env
-VITE_API_BASE_URL=https://your-backend-url.up.railway.app
-```
+VITE_API_BASE_URL=https://algorithmracevisualizer.onrender.com/
 
 ---
 

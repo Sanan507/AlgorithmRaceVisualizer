@@ -39,11 +39,11 @@ export function Sidebar({
       <div className="sidebar-top">
         <div className="brand">
           <div className="brand-mark">
-            <Zap size={22} />
+            <Zap size={22} className="brand-icon-zap" />
           </div>
           <div className="brand-text">
-            <strong>AlgoRace</strong>
-            <span>Visualize. Compare. Benchmark.</span>
+            <strong className="brand-title">AlgoRace</strong>
+            <span className="brand-tagline">Cybernetic Benchmark Engine</span>
           </div>
         </div>
 
@@ -55,7 +55,8 @@ export function Sidebar({
               onClick={() => handleNav(id)}
               title={collapsed ? label : undefined}
             >
-              <Icon size={18} className="nav-icon" />
+              <div className="nav-item-glow" />
+              <Icon size={19} className="nav-icon" />
               <span className="nav-label">{label}</span>
             </button>
           ))}

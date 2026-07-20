@@ -32,11 +32,31 @@ export default function App() {
   }, [darkMode]);
 
   if (error) {
-    return <div className="boot-state">Backend unavailable: {error}</div>;
+    return (
+      <div className="boot-state">
+        <div className="boot-card error-card">
+          <div className="boot-icon-ring error-ring">
+            <span className="boot-dot">!</span>
+          </div>
+          <h2>Backend Sync Failure</h2>
+          <p className="boot-error-text">{error}</p>
+          <button className="btn btn-secondary" onClick={() => window.location.reload()}>
+            Retry Connection
+          </button>
+        </div>
+      </div>
+    );
   }
 
   if (!catalog) {
-    return <div className="boot-state">Loading AlgoRace...</div>;
+    return (
+      <div className="boot-state">
+        <div className="boot-card loading-card">
+          <div className="cyber-spinner" />
+          <p className="boot-loading-text">Initialising AlgoRace Engine...</p>
+        </div>
+      </div>
+    );
   }
 
   return (

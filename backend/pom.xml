@@ -17,7 +17,7 @@
     <description>Spring Boot API for algorithm race simulations.</description>
 
     <properties>
-        <java.version>25</java.version>
+        <java.version>21</java.version>
     </properties>
 
     <dependencies>

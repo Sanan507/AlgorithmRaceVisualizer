@@ -2,13 +2,13 @@ import { useEffect, useRef } from 'react';
 import type { SimulationFrame } from '../models/types';
 
 const stateColor: Record<string, string> = {
-  EMPTY: '#0f172a',
-  WALL: '#1e293b',
+  EMPTY: '#0b0b1e',
+  WALL: '#1e1e31',
   START: '#10b981',
-  END: '#ef4444',
-  VISITED: '#312e81',
-  FRONTIER: '#4c1d95',
-  PATH: '#fbbf24'
+  END: '#ff0055',
+  VISITED: '#1e1b4b',
+  FRONTIER: '#6366f1',
+  PATH: '#ffd166'
 };
 
 export function PathCanvas({ frame }: { frame: SimulationFrame }) {
@@ -19,14 +19,17 @@ export function PathCanvas({ frame }: { frame: SimulationFrame }) {
     if (!canvas || !frame.grid) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+
     const rect = canvas.getBoundingClientRect();
     const ratio = window.devicePixelRatio || 1;
     canvas.width = rect.width * ratio;
     canvas.height = rect.height * ratio;
     ctx.scale(ratio, ratio);
     
+    const isLight = document.documentElement.dataset.theme === 'light';
+    
     // Draw canvas container base
-    ctx.fillStyle = '#0f172a';
+    ctx.fillStyle = isLight ? '#f2f7ff' : '#0b0b1e';
     ctx.fillRect(0, 0, rect.width, rect.height);
     
     const rows = frame.grid.length;
@@ -41,31 +44,41 @@ export function PathCanvas({ frame }: { frame: SimulationFrame }) {
 
         if (state === 'START') {
           isGlow = true;
-          glowColor = '#10b981';
+          glowColor = 'rgba(16, 185, 129, 0.9)';
         } else if (state === 'END') {
           isGlow = true;
-          glowColor = '#ef4444';
+          glowColor = 'rgba(255, 0, 85, 0.9)';
         } else if (state === 'PATH') {
           isGlow = true;
-          glowColor = '#fbbf24';
+          glowColor = 'rgba(255, 209, 102, 0.9)';
+        } else if (state === 'FRONTIER') {
+          isGlow = true;
+          glowColor = 'rgba(14, 165, 233, 0.5)';
         }
 
         if (isGlow) {
-          ctx.shadowBlur = state === 'PATH' ? 12 : 8;
+          ctx.shadowBlur = state === 'PATH' ? 14 : 10;
           ctx.shadowColor = glowColor;
         } else {
           ctx.shadowBlur = 0;
         }
 
-        ctx.fillStyle = stateColor[state] ?? stateColor.EMPTY;
+        let cellColor = stateColor[state] ?? stateColor.EMPTY;
+        if (isLight) {
+          if (state === 'EMPTY') cellColor = '#f2f7ff';
+          else if (state === 'WALL') cellColor = '#dae2fd';
+          else if (state === 'VISITED') cellColor = '#c0e8ff';
+          else if (state === 'FRONTIER') cellColor = '#0ea5e9';
+        }
+
+        ctx.fillStyle = cellColor;
         ctx.beginPath();
-        // Give cells round borders for modern dashboard styling
         ctx.roundRect(
           c * cellW + 1.5,
           r * cellH + 1.5,
           Math.max(1, cellW - 3),
           Math.max(1, cellH - 3),
-          4
+          Math.min(cellW / 3, 4)
         );
         ctx.fill();
         ctx.shadowBlur = 0; // Reset shadow

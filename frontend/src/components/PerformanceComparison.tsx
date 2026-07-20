@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import type { CatalogResponse, RaceResponse, SimulationFrame } from '../models/types';
 import { Trophy, Clock, Zap } from 'lucide-react';
+import { triggerConfetti } from '../utils/confetti';
 
 interface PerformanceComparisonProps {
   response: RaceResponse | null;
@@ -57,6 +59,12 @@ export function PerformanceComparison({
   isCompleted,
   catalog
 }: PerformanceComparisonProps) {
+  useEffect(() => {
+    if (isCompleted && response?.winner) {
+      triggerConfetti();
+    }
+  }, [isCompleted, response?.winner]);
+
   if (!response) {
     return (
       <section className="panel compact">
