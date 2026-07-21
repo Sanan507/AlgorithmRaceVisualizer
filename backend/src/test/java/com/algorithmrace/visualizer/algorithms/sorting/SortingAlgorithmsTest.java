@@ -89,14 +89,14 @@ class SortingAlgorithmsTest {
         RaceResponse response = simulationService.simulateSorting(request);
 
         assertNotNull(response, "Simulation response should not be null");
-        assertEquals("sorting", response.category());
+        assertEquals("sorting", response.type());
         assertEquals(algorithms.size(), response.lanes().size(), "Should contain lane responses for all requested algorithms");
         assertNotNull(response.winner(), "A winner lane should be determined");
 
         response.lanes().forEach(lane -> {
-            assertFalse(lane.frames().isEmpty(), lane.algorithm() + " frames should not be empty");
-            assertTrue(lane.stats().comparisons() >= 0, lane.algorithm() + " comparisons count should be non-negative");
-            assertTrue(lane.stats().swaps() >= 0, lane.algorithm() + " swaps count should be non-negative");
+            assertFalse(lane.frames().isEmpty(), lane.name() + " frames should not be empty");
+            assertTrue(lane.stats().comparisons() >= 0, lane.name() + " comparisons count should be non-negative");
+            assertTrue(lane.stats().swaps() >= 0, lane.name() + " swaps count should be non-negative");
         });
     }
 }

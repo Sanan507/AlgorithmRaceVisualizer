@@ -6,6 +6,7 @@ import com.algorithmrace.visualizer.service.SimulationService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -68,23 +69,22 @@ class SearchingAlgorithmsTest {
         int target = 10;
         SearchingSimulationRequest request = new SearchingSimulationRequest(
             algorithms,
-            "Random",
             dataset.length,
             target,
-            dataset
+            Arrays.stream(dataset).boxed().toList()
         );
 
         RaceResponse response = simulationService.simulateSearching(request);
 
         assertNotNull(response);
-        assertEquals("searching", response.category());
+        assertEquals("searching", response.type());
         assertEquals(target, response.target());
         assertEquals(algorithms.size(), response.lanes().size());
 
         response.lanes().forEach(lane -> {
-            assertFalse(lane.frames().isEmpty(), lane.algorithm() + " frames should not be empty");
-            assertTrue(lane.stats().targetFound(), lane.algorithm() + " should find target");
-            assertEquals(4, lane.stats().foundIndex(), lane.algorithm() + " found index mismatch");
+            assertFalse(lane.frames().isEmpty(), lane.name() + " frames should not be empty");
+            assertTrue(lane.stats().targetFound(), lane.name() + " should find target");
+            assertEquals(4, lane.stats().foundIndex(), lane.name() + " found index mismatch");
         });
     }
 }

@@ -94,13 +94,13 @@ class PathfindingAlgorithmsTest {
         RaceResponse response = simulationService.simulatePathfinding(request);
 
         assertNotNull(response);
-        assertEquals("pathfinding", response.category());
+        assertEquals("pathfinding", response.type());
         assertNotNull(response.walls());
         assertEquals(algorithms.size(), response.lanes().size());
 
         response.lanes().forEach(lane -> {
-            assertFalse(lane.frames().isEmpty(), lane.algorithm() + " frames should not be empty");
-            assertNotNull(lane.stats(), lane.algorithm() + " stats should not be null");
+            assertFalse(lane.frames().isEmpty(), lane.name() + " frames should not be empty");
+            assertNotNull(lane.stats(), lane.name() + " stats should not be null");
         });
     }
 }
