@@ -34,7 +34,6 @@ public class MergeSortModel extends AlgorithmModel {
         mergeRegionEnd = op[2];
         merge(op[0], op[1], op[2]);
         highlight = new int[]{op[0], op[2]};
-        sortedBoundary = Math.max(0, op[2]);
     }
 
     private void merge(int l, int m, int r) {

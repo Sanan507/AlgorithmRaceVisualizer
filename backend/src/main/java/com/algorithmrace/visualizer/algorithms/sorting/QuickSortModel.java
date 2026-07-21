@@ -69,7 +69,6 @@ public class QuickSortModel extends AlgorithmModel {
         pivotIndex = op[1];
         doPartition(op[0], op[1]);
         highlight = new int[]{op[0], op[1]};
-        sortedBoundary = Math.max(0, op[1]);
     }
 
     @Override

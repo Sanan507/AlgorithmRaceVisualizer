@@ -1,7 +1,5 @@
 package com.algorithmrace.visualizer.algorithms.sorting;
-
 import com.algorithmrace.visualizer.model.AlgorithmModel;
-
 public class InsertionSortModel extends AlgorithmModel {
     private int i = 1;
     private int j;
@@ -35,7 +33,7 @@ public class InsertionSortModel extends AlgorithmModel {
         } else {
             if (j >= 0) addComparison();
             array[j + 1] = key;
-            sortedBoundary = Math.max(0, array.length - 1 - i);
+            sortedBoundary = i;
             i++;
             picking = true;
             if (i >= array.length) markDone();

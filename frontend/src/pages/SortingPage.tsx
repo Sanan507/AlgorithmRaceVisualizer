@@ -220,7 +220,7 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
           else laneState = 'ready';
           return (
             <LaneCard key={lane.name} lane={lane} frame={frame} laneState={laneState} arenaType="sorting">
-              <SortingCanvas frame={frame} />
+              <SortingCanvas frame={frame} algorithm={lane.name} />
             </LaneCard>
           );
         })}

@@ -12,7 +12,7 @@ const colors = {
   merge: '#00f2fe'
 };
 
-export function SortingCanvas({ frame }: { frame: SimulationFrame }) {
+export function SortingCanvas({ frame }: { frame: SimulationFrame; algorithm?: string }) {
   const ref = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
@@ -49,7 +49,7 @@ export function SortingCanvas({ frame }: { frame: SimulationFrame }) {
     const max = Math.max(...arr, 100);
     const barW = Math.max(3, (rect.width - arr.length) / arr.length);
     const gap = Math.max(1, (rect.width - barW * arr.length) / (arr.length + 1));
-    
+
     arr.forEach((value, index) => {
       const h = Math.max(4, (value / max) * (rect.height - 28));
       const x = gap + index * (barW + gap);
@@ -63,11 +63,11 @@ export function SortingCanvas({ frame }: { frame: SimulationFrame }) {
         baseColor = colors.sorted;
         isGlow = true;
         glowColor = 'rgba(16, 185, 129, 0.6)';
-      } else if (index === frame.pivotIndex) {
+      } else if (index === frame.pivotIndex && frame.pivotIndex >= 0) {
         baseColor = colors.pivot;
         isGlow = true;
         glowColor = 'rgba(247, 37, 133, 0.8)';
-      } else if (index === frame.heapBoundary) {
+      } else if (index === frame.heapBoundary && frame.heapBoundary >= 0) {
         baseColor = colors.heap;
         isGlow = true;
         glowColor = 'rgba(251, 146, 60, 0.8)';
@@ -75,12 +75,10 @@ export function SortingCanvas({ frame }: { frame: SimulationFrame }) {
         baseColor = colors.compare;
         isGlow = true;
         glowColor = 'rgba(255, 158, 0, 0.85)';
-      } else if (index >= frame.mergeRegionStart && index <= frame.mergeRegionEnd) {
+      } else if (frame.mergeRegionStart >= 0 && frame.mergeRegionEnd >= 0 && index >= frame.mergeRegionStart && index <= frame.mergeRegionEnd) {
         baseColor = colors.merge;
         isGlow = true;
         glowColor = 'rgba(0, 242, 254, 0.65)';
-      } else if (index >= frame.sortedBoundary) {
-        baseColor = colors.sorted;
       }
 
       if (isGlow) {
@@ -94,10 +92,10 @@ export function SortingCanvas({ frame }: { frame: SimulationFrame }) {
       const grad = ctx.createLinearGradient(x, y, x, y + h);
       if (baseColor === colors.bar) {
         if (isLight) {
-          grad.addColorStop(0, '#22d3ee'); // Arctic Cyan top
-          grad.addColorStop(1, '#006591'); // Deep Ocean Blue bottom
+          grad.addColorStop(0, '#818cf8'); // Soft Royal Indigo top
+          grad.addColorStop(1, '#3730a3'); // Deep Indigo bottom
         } else {
-          grad.addColorStop(0, '#a855f7'); // Violet top
+          grad.addColorStop(0, '#818cf8'); // Indigo top
           grad.addColorStop(1, '#4f46e5'); // Deep Indigo bottom
         }
       } else if (baseColor === colors.sorted) {
@@ -114,8 +112,8 @@ export function SortingCanvas({ frame }: { frame: SimulationFrame }) {
         grad.addColorStop(0.3, '#ff9e00'); // Neon Yellow/Amber
         grad.addColorStop(1, '#d97706');
       } else if (baseColor === colors.merge) {
-        grad.addColorStop(0, '#70e000'); // Neon Green top
-        grad.addColorStop(1, '#00f2fe'); // Cyan bottom
+        grad.addColorStop(0, '#38bdf8'); // Sky Blue top
+        grad.addColorStop(1, '#0284c7'); // Deep Cyan-Blue bottom
       } else {
         grad.addColorStop(0, baseColor);
         grad.addColorStop(1, baseColor);
@@ -131,8 +129,6 @@ export function SortingCanvas({ frame }: { frame: SimulationFrame }) {
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(x, y, barW, 2);
       }
-
-
     });
   }, [frame]);
 

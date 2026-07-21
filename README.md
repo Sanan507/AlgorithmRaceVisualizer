@@ -2,161 +2,116 @@
 
 **Visualize. Compare. Benchmark.**
 
-A full-stack platform for visualizing, comparing, and benchmarking classic algorithms in real time.
+A full-stack web application for real-time visualization, side-by-side comparison, and benchmarking of classic computer science algorithms.
 
 ## Live Demo
 
-Frontend: https://algorithm-race-visualizer.vercel.app
-
-Backend: Railway (Spring Boot API)
+- **Frontend**: https://algorithm-race-visualizer.vercel.app
+- **Backend**: Spring Boot API (Render / Local)
 
 ---
 
 ## Overview
 
-AlgoRace allows users to:
+AlgoRace provides an interactive playground for exploring algorithms:
 
-* Compare multiple algorithms side-by-side in dedicated arenas
-* Visualize algorithm execution step-by-step with live animation
-* Benchmark performance metrics with real-time charts
-* Explore algorithm complexity (best / average / worst case)
-* Learn algorithm theory and pseudocode
-* Hear audio feedback during races via the built-in sound engine
-
----
-
-## Features
-
-### Sorting Arena
-
-Compare multiple sorting algorithms simultaneously:
-
-* Bubble Sort
-* Selection Sort
-* Insertion Sort
-* Merge Sort
-* Quick Sort
-* Heap Sort
-* Comb Sort
-
-Features:
-
-* Live animation
-* Execution timing
-* Comparison count
-* Swap count
-* Complexity information
-* Audio cues on compare and swap events
+* **Multi-Lane Arenas**: Compare multiple algorithms side-by-side simultaneously.
+* **Live Step Debugger & Frame Scrubbing**: Step forward, step backward, or scrub through execution timelines using an interactive seek bar.
+* **Interactive Pathfinding Editor**: Click and drag directly on the pathfinding canvas to draw or remove custom walls in real time.
+* **Code & Pseudocode Inspector**: Expand inline pseudocode drawers to follow execution logic step-by-step.
+* **Accurate Color Visuals**: Distinct glowing visual indicators for comparisons, swaps, pivots, heap boundaries, merge regions, and sorted boundaries.
+* **Real-time Performance Benchmarking**: Live comparison charts tracking execution time ($ms$), operations ($comparisons / steps$), and swaps.
+* **Web Audio Sound Engine**: Clean, vibraphone-style acoustic feedback for race events.
 
 ---
 
-### Search Arena
+## Features & Arenas
 
-Visualize searching algorithms on the same dataset:
+### 1. Sorting Arena
 
-* Linear Search
-* Binary Search
-* Jump Search
+Compare classic sorting algorithms on uniform datasets:
 
-Features:
-
-* Target search simulation
-* Real-time comparisons
-* Search hit / miss audio cues
-* Complexity analysis
-* Execution benchmarking
-
----
-
-### Pathfinding Arena
-
-Visualize graph traversal and shortest-path algorithms:
-
-* Breadth First Search (BFS)
-* Depth First Search (DFS)
-* Dijkstra's Algorithm
-* A* Search
-
-Features:
-
-* Interactive maze generation
-* Path exploration animation
-* Shortest-path visualization
-* Path found audio cue
-* Performance comparison
+* **Supported Algorithms**: Bubble Sort, Selection Sort, Insertion Sort, Merge Sort, Quick Sort, Heap Sort, Comb Sort.
+* **Dataset Types**: Random, Nearly Sorted, Reversed, Few Unique, Custom Array.
+* **Visual Cues**:
+  * **Royal Indigo / Violet**: Unsorted array elements.
+  * **Amber / Yellow**: Active element comparison / swap.
+  * **Magenta / Pink**: QuickSort pivot element.
+  * **Orange / Heap**: HeapSort heap boundary.
+  * **Cyan**: MergeSort active merging sub-region.
+  * **Emerald Green**: Elements in final sorted position and completed array.
+* **Features**:
+  * Step Debugger & Seek Bar.
+  * Dataset preservation when changing algorithms on the same dataset.
+  * Reset button to instantly generate new random datasets.
 
 ---
 
-### Benchmarks
+### 2. Search Arena
 
-Centralized complexity reference displaying:
+Benchmark searching algorithms on ordered arrays:
 
-* Time complexity (best / average / worst)
-* Space complexity
-* Algorithm family comparison
+* **Supported Algorithms**: Linear Search, Binary Search, Jump Search.
+* **Features**:
+  * Target selection and target hit/miss detection.
+  * Binary Search search-space elimination visualization (darkened inactive ranges).
+  * Direct index highlighting for target match (`Found @ index`).
 
 ---
 
-### Audio System
+### 3. Pathfinding Arena
 
-Professional Web Audio engine ported from the original JavaFX MIDI SoundManager:
+Visualize graph traversal and shortest-path algorithms on 2D grid maps:
 
-* Vibraphone-style oscillator tones (sine / triangle waves + exponential decay)
-* Per-event throttling (compare: 95 ms, swap: 120 ms, UI: 45 ms)
-* No arcade sounds — short, clean, modern
-* Graceful degradation if AudioContext is unavailable
+* **Supported Algorithms**: Breadth First Search (BFS), Depth First Search (DFS), Dijkstra's Algorithm, A* Search.
+* **Maze Generators**: Random Noise, Recursive Division, Simple Spiral, Clear Grid.
+* **Interactive Wall Editor**: Click or drag across the grid canvas to draw/erase custom walls with live path recalculation.
+* **Visual Cues**:
+  * **Emerald Green**: Start Node ($S$).
+  * **Neon Red**: End Node ($E$).
+  * **Indigo / Purple**: Visited nodes.
+  * **Cyan / Blue**: Frontier nodes.
+  * **Glowing Amber**: Shortest path route ($PATH$).
 
-Sound events:
+---
 
-| Event | Sound |
-|-------|-------|
-| Race Start | Rising two-chord sequence |
+### 4. Code & Pseudocode Inspector
+
+* Expandable pseudocode panel on each lane card.
+* Displays theoretical complexity ($O(1)$, $O(n)$, $O(n \log n)$, $O(n^2)$) alongside pseudocode implementation details.
+
+---
+
+### 5. Web Audio Engine
+
+Custom synthesized Web Audio engine providing subtle audio feedback:
+
+| Event | Sound Effect |
+|-------|--------------|
+| Race Start | Ascending two-chord tone |
 | Compare | Soft high ping |
-| Swap | Low bass chord |
-| Search Hit | Bright ding |
+| Swap | Deep bass chord |
+| Search Hit | Bright cyan chime |
 | Search Miss | Soft descending tone |
-| Path Found | Gentle resolution |
-| Race Complete | Warm chord pair |
-| Winner | Three-chord fanfare |
+| Path Found | Gentle resolution chord |
+| Race Complete | Warm dual chord |
+| Winner | Three-tone victory fanfare |
 | Button Click | Subtle vibraphone tap |
-
----
-
-### Settings
-
-* Dark / Light mode toggle
-* Enable / Disable Sound Effects
-* Master Volume slider
-* Effects Volume slider
-* All audio settings persisted via localStorage
 
 ---
 
 ## Technology Stack
 
 ### Frontend
-
-* React 18
-* TypeScript
-* Vite
-* CSS3 (Vanilla)
-* Web Audio API
+* **Framework**: React 18 with TypeScript & Vite
+* **Styling**: Vanilla CSS3 with Cyber Obsidian dark & Light theme design system
+* **Visuals**: HTML5 Canvas (Hardware-accelerated 2D context)
+* **Audio**: Native Web Audio API Synthesizer
 
 ### Backend
-
-* Java 21
-* Spring Boot
-* Maven
-
-### Deployment
-
-Frontend:
-
-* Vercel
-
-Backend:
-
-* Render
+* **Language**: Java 21 / 25
+* **Framework**: Spring Boot 3.4.2
+* **Build Tool**: Maven
 
 ---
 
@@ -165,19 +120,26 @@ Backend:
 ```text
 AlgoRace/
 │
-├── frontend/
+├── frontend/                     # React 18 + TypeScript + Vite Client
 │   ├── src/
-│   │   ├── components/
-│   │   ├── context/        ← AudioContext
-│   │   ├── hooks/          ← useSound, useAudioSettings, usePlayback
-│   │   ├── pages/
-│   │   ├── services/
-│   │   └── models/
-│   │
+│   │   ├── components/           # Canvas renderers, Controls, LaneCards, Selectors
+│   │   ├── context/              # AudioContext state provider
+│   │   ├── data/                 # Fallback algorithm catalogs & metadata
+│   │   ├── hooks/                # usePlayback, useSound, useAudioSettings
+│   │   ├── models/               # TypeScript interfaces & API types
+│   │   ├── pages/                # Sorting, Searching, Pathfinding, History, Settings
+│   │   ├── services/             # API HTTP client
+│   │   └── styles.css            # Cyber Obsidian theme design system
 │   └── package.json
 │
-├── backend/
-│   └── src/main/java/
+├── backend/                      # Spring Boot 3.4 API Engine
+│   └── src/main/java/com/algorithmrace/visualizer/
+│       ├── algorithms/           # Sorting, Searching, Pathfinding step generators
+│       ├── controller/           # REST Controllers
+│       ├── dto/                  # Data Transfer Objects
+│       ├── model/                # Base Algorithm models
+│       ├── service/              # Simulation engine & Catalog services
+│       └── utils/                # Array & Maze generators
 │
 └── README.md
 ```
@@ -193,24 +155,16 @@ git clone https://github.com/Sanan507/AlgorithmRaceVisualizer.git
 cd AlgorithmRaceVisualizer
 ```
 
----
-
-### 2. Run Backend
+### 2. Run Backend (Spring Boot)
 
 ```bash
 cd backend
 mvn spring-boot:run
 ```
 
-Backend runs on:
+The backend server will start on `http://localhost:8080`.
 
-```text
-http://localhost:8080
-```
-
----
-
-### 3. Run Frontend
+### 3. Run Frontend (React + Vite)
 
 ```bash
 cd frontend
@@ -218,73 +172,23 @@ npm install
 npm run dev
 ```
 
-Frontend runs on:
-
-```text
-http://localhost:5173
-```
-
----
-
-## Environment Variables
-
-### Frontend
-
-Create:
-
-```text
-frontend/.env
-```
-
-```env
-VITE_API_BASE_URL=http://localhost:8080
-```
-
-### Production
-
-```env
-VITE_API_BASE_URL=https://algorithmracevisualizer.onrender.com/
+The frontend application will start on `http://localhost:5173`.
 
 ---
 
 ## API Endpoints
 
-### Catalog
-
-```http
-GET /api/catalog
-```
-
-Returns available algorithms and metadata.
-
-### Sorting Simulation
-
-```http
-POST /api/simulations/sorting
-```
-
-### Searching Simulation
-
-```http
-POST /api/simulations/searching
-```
-
-### Pathfinding Simulation
-
-```http
-POST /api/simulations/pathfinding
-```
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/catalog` | `GET` | Returns catalog of algorithms, dataset types, and complexity metadata |
+| `/api/simulations/sorting` | `POST` | Generates step frames for sorting algorithms |
+| `/api/simulations/searching` | `POST` | Generates step frames for searching algorithms |
+| `/api/simulations/pathfinding` | `POST` | Generates step frames for pathfinding algorithms |
 
 ---
 
-## Author
+## Author & License
 
-Muhammad Sanan Sarwar
-
-GitHub: https://github.com/Sanan507
-
----
-
-## License
-
-This project is intended for educational and portfolio purposes.
+- **Author**: Muhammad Sanan Sarwar
+- **GitHub**: [Sanan507](https://github.com/Sanan507)
+- **License**: MIT License (Permissive Open Source)

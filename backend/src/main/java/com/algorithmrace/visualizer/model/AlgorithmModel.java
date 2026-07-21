@@ -50,7 +50,7 @@ public abstract class AlgorithmModel {
 
     public void setArray(int[] arr) {
         array = arr.clone();
-        sortedBoundary = arr.length;
+        sortedBoundary = -1;
     }
 
     public void addComparison() {
@@ -68,6 +68,7 @@ public abstract class AlgorithmModel {
         done = false;
         status = "Ready";
         highlight = new int[0];
+        sortedBoundary = -1;
         pivotIndex = -1;
         mergeRegionStart = -1;
         mergeRegionEnd = -1;

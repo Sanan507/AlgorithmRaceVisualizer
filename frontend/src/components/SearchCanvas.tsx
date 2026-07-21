@@ -8,7 +8,7 @@ const colors = {
   visit: '#7c3aed',
   current: '#ff9e00',
   found: '#00f5d4',
-  eliminated: '#11112d'
+  eliminated: '#475569'
 };
 
 export function SearchCanvas({ frame, algorithm }: { frame?: SimulationFrame | null; algorithm?: string }) {
@@ -68,7 +68,7 @@ export function SearchCanvas({ frame, algorithm }: { frame?: SimulationFrame | n
       let glowColor = '';
       let isEliminated = false;
 
-      if (isBinarySearch && frame.highlight && frame.highlight.length === 3) {
+      if (isBinarySearch && frame.highlight && frame.highlight.length === 3 && !frame.done) {
         if (index < low || index > high) {
           isEliminated = true;
         }
@@ -99,11 +99,11 @@ export function SearchCanvas({ frame, algorithm }: { frame?: SimulationFrame | n
       const grad = ctx.createLinearGradient(x, y, x, y + h);
       if (baseColor === colors.bar) {
         if (isLight) {
-          grad.addColorStop(0, '#22d3ee');
-          grad.addColorStop(1, '#006591');
+          grad.addColorStop(0, '#818cf8'); // Soft Royal Indigo top
+          grad.addColorStop(1, '#3730a3'); // Deep Indigo bottom
         } else {
-          grad.addColorStop(0, '#a855f7');
-          grad.addColorStop(1, '#4f46e5');
+          grad.addColorStop(0, '#818cf8'); // Indigo top
+          grad.addColorStop(1, '#4f46e5'); // Deep Indigo bottom
         }
       } else if (baseColor === colors.visit) {
         grad.addColorStop(0, '#c084fc');
@@ -118,11 +118,11 @@ export function SearchCanvas({ frame, algorithm }: { frame?: SimulationFrame | n
         grad.addColorStop(1, '#059669');
       } else if (baseColor === colors.eliminated) {
         if (isLight) {
-          grad.addColorStop(0, '#dae2fd');
-          grad.addColorStop(1, '#c9d6f5');
+          grad.addColorStop(0, '#94a3b8'); // Muted Slate Gray top
+          grad.addColorStop(1, '#64748b'); // Darker Slate bottom
         } else {
-          grad.addColorStop(0, '#1e293b');
-          grad.addColorStop(1, '#0f172a');
+          grad.addColorStop(0, '#475569');
+          grad.addColorStop(1, '#1e293b');
         }
       } else {
         grad.addColorStop(0, baseColor);
@@ -130,7 +130,7 @@ export function SearchCanvas({ frame, algorithm }: { frame?: SimulationFrame | n
       }
 
       ctx.fillStyle = grad;
-      ctx.globalAlpha = isEliminated ? 0.25 : 1.0;
+      ctx.globalAlpha = isEliminated ? 0.45 : 1.0;
       ctx.beginPath();
       ctx.roundRect(x, y, barW, h, Math.min(barW / 2, 4));
       ctx.fill();
@@ -143,8 +143,8 @@ export function SearchCanvas({ frame, algorithm }: { frame?: SimulationFrame | n
         ctx.fillRect(x, y, barW, 2);
       }
 
-      // Draw text label on top of bar in Searching Arena
-      if (arr.length <= 50 || barW >= 8) {
+      // Draw text label on top of bar only if bars are wide enough to prevent overlap
+      if (barW >= 14 || arr.length <= 20) {
         if (isLight) {
           ctx.fillStyle = isGlow ? '#006591' : '#131b2e';
         } else {
