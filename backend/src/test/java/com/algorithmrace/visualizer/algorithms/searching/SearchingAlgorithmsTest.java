@@ -83,7 +83,7 @@ class SearchingAlgorithmsTest {
 
         response.lanes().forEach(lane -> {
             assertFalse(lane.frames().isEmpty(), lane.name() + " frames should not be empty");
-            assertTrue(lane.stats().targetFound(), lane.name() + " should find target");
+            assertTrue(lane.stats().found(), lane.name() + " should find target");
             assertEquals(4, lane.stats().foundIndex(), lane.name() + " found index mismatch");
         });
     }
