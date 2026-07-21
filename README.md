@@ -11,6 +11,14 @@ A full-stack web application for real-time visualization, side-by-side compariso
 
 ---
 
+## Preview
+
+![AlgoRace Sorting Arena](image.png)
+
+![AlgoRace Pathfinding & Benchmarking](image-1.png)
+
+---
+
 ## Overview
 
 AlgoRace provides an interactive playground for exploring algorithms:

@@ -8,3 +8,18 @@ dist/
 .DS_Store
 docx_render_oop/
 docx_render_oop_final/
+
+# Eclipse & IDE metadata
+.classpath
+.project
+.settings/
+*.launch
+*.fxbuild
+.vscode/
+.idea/
+
+# Temporary debug artifacts & exports
+.temp-*
+user_request_*.txt
+race_history.csv
+
