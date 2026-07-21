@@ -7,8 +7,7 @@ const colors = {
   bar: '#4f46e5',
   visit: '#7c3aed',
   current: '#ff9e00',
-  found: '#00f5d4',
-  eliminated: '#475569'
+  found: '#00f5d4'
 };
 
 export function SearchCanvas({ frame, algorithm }: { frame?: SimulationFrame | null; algorithm?: string }) {
@@ -50,12 +49,10 @@ export function SearchCanvas({ frame, algorithm }: { frame?: SimulationFrame | n
     const gap = Math.max(1, (rect.width - barW * arr.length) / (arr.length + 1));
 
     const isBinarySearch = algorithm?.includes('Binary');
-    let low = 0;
     let mid = -1;
-    let high = arr.length - 1;
 
     if (isBinarySearch && frame.highlight && frame.highlight.length === 3) {
-      [low, mid, high] = frame.highlight;
+      mid = frame.highlight[1];
     }
     
     arr.forEach((value, index) => {
@@ -66,13 +63,6 @@ export function SearchCanvas({ frame, algorithm }: { frame?: SimulationFrame | n
       let baseColor = colors.bar;
       let isGlow = false;
       let glowColor = '';
-      let isEliminated = false;
-
-      if (isBinarySearch && frame.highlight && frame.highlight.length === 3 && !frame.done) {
-        if (index < low || index > high) {
-          isEliminated = true;
-        }
-      }
 
       if (index === frame.foundIndex) {
         baseColor = colors.found;
@@ -82,8 +72,6 @@ export function SearchCanvas({ frame, algorithm }: { frame?: SimulationFrame | n
         baseColor = colors.current;
         isGlow = true;
         glowColor = 'rgba(255, 158, 0, 0.9)';
-      } else if (isEliminated) {
-        baseColor = colors.eliminated;
       } else if (frame.searchPath?.includes(index)) {
         baseColor = colors.visit;
       }
@@ -116,25 +104,15 @@ export function SearchCanvas({ frame, algorithm }: { frame?: SimulationFrame | n
         grad.addColorStop(0, '#ffffff');
         grad.addColorStop(0.3, '#00f5d4');
         grad.addColorStop(1, '#059669');
-      } else if (baseColor === colors.eliminated) {
-        if (isLight) {
-          grad.addColorStop(0, '#94a3b8'); // Muted Slate Gray top
-          grad.addColorStop(1, '#64748b'); // Darker Slate bottom
-        } else {
-          grad.addColorStop(0, '#475569');
-          grad.addColorStop(1, '#1e293b');
-        }
       } else {
         grad.addColorStop(0, baseColor);
         grad.addColorStop(1, baseColor);
       }
 
       ctx.fillStyle = grad;
-      ctx.globalAlpha = isEliminated ? 0.45 : 1.0;
       ctx.beginPath();
       ctx.roundRect(x, y, barW, h, Math.min(barW / 2, 4));
       ctx.fill();
-      ctx.globalAlpha = 1.0;
       ctx.shadowBlur = 0;
 
       // Draw top glowing highlight line on active items
