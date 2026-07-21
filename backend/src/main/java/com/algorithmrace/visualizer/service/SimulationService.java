@@ -123,7 +123,7 @@ public class SimulationService {
     }
 
     private int[] resolveSortingDataset(SortingSimulationRequest request) {
-        if ("Custom".equals(request.datasetType()) && request.customArray() != null && !request.customArray().isEmpty()) {
+        if (request.customArray() != null && !request.customArray().isEmpty()) {
             return request.customArray().stream().mapToInt(Integer::intValue).toArray();
         }
         int size = request.size() <= 0 ? 30 : request.size();

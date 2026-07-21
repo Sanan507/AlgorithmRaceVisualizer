@@ -15,6 +15,8 @@ import { api } from '../services/api';
 export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
   const [algorithms, setAlgorithms] = useState(['BFS', 'Dijkstra', 'A* Search', 'DFS']);
   const [mazeType, setMazeType] = useState('Recursive Backtracker');
+  const [walls, setWalls] = useState<boolean[][] | null>(null);
+  const [hasFreshDataset, setHasFreshDataset] = useState(true);
   const [response, setResponse] = useState<RaceResponse | null>(null);
   const [speed, setSpeed] = useState(6);
   const [loading, setLoading] = useState(false);
@@ -32,24 +34,77 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
 
   const playback = usePlayback(response, speed, onFrame);
 
-  async function startRace(autoplay = true) {
-    setLoading(true);
-    winnerAnnouncedRef.current = false;
-    play('start');
-    try {
-      const data = await api.pathfinding({ algorithms, rows: 18, cols: 28, mazeType });
-      setResponse(data);
-      if (autoplay) {
-        playback.setPlaying(true);
+  const fetchSimulation = useCallback(
+    async (
+      newMaze: boolean,
+      autoplay = false,
+      customParams?: { algos?: string[]; mType?: string }
+    ) => {
+      setLoading(true);
+      winnerAnnouncedRef.current = false;
+      const useAlgos = customParams?.algos ?? algorithms;
+      const useMazeType = customParams?.mType ?? mazeType;
+
+      const sendWalls = !newMaze && walls ? walls : null;
+
+      try {
+        const data = await api.pathfinding({
+          algorithms: useAlgos,
+          rows: 18,
+          cols: 28,
+          mazeType: useMazeType,
+          walls: sendWalls
+        });
+        setResponse(data);
+        if (data.walls) {
+          setWalls(data.walls);
+        }
+        setHasFreshDataset(true);
+        playback.reset();
+        if (autoplay) {
+          play('start');
+          playback.setPlaying(true);
+          setHasFreshDataset(false);
+        }
+      } finally {
+        setLoading(false);
       }
-    } finally {
-      setLoading(false);
+    },
+    [algorithms, mazeType, walls, play, playback]
+  );
+
+  useEffect(() => {
+    fetchSimulation(true, false);
+  }, []);
+
+  async function startRace() {
+    if (hasFreshDataset && response) {
+      winnerAnnouncedRef.current = false;
+      play('start');
+      playback.reset();
+      playback.setPlaying(true);
+      setHasFreshDataset(false);
+    } else {
+      await fetchSimulation(true, true);
+      setHasFreshDataset(false);
     }
   }
 
-  useEffect(() => {
-    startRace(false);
-  }, []);
+  async function handleReset() {
+    await fetchSimulation(true, false);
+    setHasFreshDataset(true);
+  }
+
+  function handleAlgorithmChange(index: number, nextAlgo: string) {
+    const nextAlgos = algorithms.map((item, i) => (i === index ? nextAlgo : item));
+    setAlgorithms(nextAlgos);
+    fetchSimulation(false, false, { algos: nextAlgos });
+  }
+
+  function handleMazeTypeChange(nextMazeType: string) {
+    setMazeType(nextMazeType);
+    fetchSimulation(true, false, { mType: nextMazeType });
+  }
 
   const activeFrames = useMemo(
     () => response?.lanes.map((lane) => lane.frames[Math.min(playback.frameIndex, lane.frames.length - 1)]),
@@ -99,10 +154,10 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
             label={`Lane ${index + 1}`}
             value={value}
             options={catalog.pathfindingAlgorithms}
-            onChange={(next) => setAlgorithms((items) => items.map((item, i) => (i === index ? next : item)))}
+            onChange={(next) => handleAlgorithmChange(index, next)}
           />
         ))}
-        <SelectField label="Maze" value={mazeType} options={catalog.mazeTypes} onChange={setMazeType} />
+        <SelectField label="Maze" value={mazeType} options={catalog.mazeTypes} onChange={handleMazeTypeChange} />
       </section>
 
       <Controls
@@ -110,7 +165,7 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
         disabled={loading}
         onStart={startRace}
         onToggle={() => playback.setPlaying(!playback.playing)}
-        onReset={playback.reset}
+        onReset={handleReset}
         speed={speed}
         onSpeedChange={setSpeed}
       />

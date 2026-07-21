@@ -17,6 +17,8 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
   const [datasetType, setDatasetType] = useState('Random');
   const [size, setSize] = useState(30);
   const [customArray, setCustomArray] = useState('5, 12, 3, 8, 1');
+  const [dataset, setDataset] = useState<number[] | null>(null);
+  const [hasFreshDataset, setHasFreshDataset] = useState(true);
   const [response, setResponse] = useState<RaceResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [speed, setSpeed] = useState(6);
@@ -34,30 +36,96 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
 
   const playback = usePlayback(response, speed, onFrame);
 
-  async function startRace(autoplay = true) {
-    setLoading(true);
-    winnerAnnouncedRef.current = false;
-    play('start');
-    try {
-      const body = {
-        algorithms,
-        datasetType,
-        size,
-        customArray: customArray.split(',').map((part) => Number(part.trim())).filter((n) => Number.isFinite(n))
-      };
-      const data = await api.sorting(body);
-      setResponse(data);
-      if (autoplay) {
-        playback.setPlaying(true);
+  const fetchSimulation = useCallback(
+    async (
+      newDataset: boolean,
+      autoplay = false,
+      customParams?: { algos?: string[]; dType?: string; sz?: number; cArray?: string }
+    ) => {
+      setLoading(true);
+      winnerAnnouncedRef.current = false;
+      const useAlgos = customParams?.algos ?? algorithms;
+      const useType = customParams?.dType ?? datasetType;
+      const useSize = customParams?.sz ?? size;
+      const useCArrayStr = customParams?.cArray ?? customArray;
+
+      let sendCustomArray: number[] | undefined;
+      if (useType === 'Custom') {
+        sendCustomArray = useCArrayStr.split(',').map((part) => Number(part.trim())).filter((n) => Number.isFinite(n));
+      } else if (!newDataset && dataset) {
+        sendCustomArray = dataset;
       }
-    } finally {
-      setLoading(false);
+
+      try {
+        const body = {
+          algorithms: useAlgos,
+          datasetType: useType,
+          size: useSize,
+          customArray: sendCustomArray
+        };
+        const data = await api.sorting(body);
+        setResponse(data);
+        if (data.dataset) {
+          setDataset(data.dataset);
+        }
+        setHasFreshDataset(true);
+        playback.reset();
+        if (autoplay) {
+          play('start');
+          playback.setPlaying(true);
+          setHasFreshDataset(false);
+        }
+      } finally {
+        setLoading(false);
+      }
+    },
+    [algorithms, datasetType, size, customArray, dataset, play, playback]
+  );
+
+  useEffect(() => {
+    fetchSimulation(true, false);
+  }, []);
+
+  async function startRace() {
+    if (hasFreshDataset && response) {
+      winnerAnnouncedRef.current = false;
+      play('start');
+      playback.reset();
+      playback.setPlaying(true);
+      setHasFreshDataset(false);
+    } else {
+      await fetchSimulation(true, true);
+      setHasFreshDataset(false);
     }
   }
 
-  useEffect(() => {
-    startRace(false);
-  }, []);
+  async function handleReset() {
+    await fetchSimulation(true, false);
+    setHasFreshDataset(true);
+  }
+
+  function handleAlgorithmChange(index: number, nextAlgo: string) {
+    const nextAlgos = algorithms.map((item, i) => (i === index ? nextAlgo : item));
+    setAlgorithms(nextAlgos);
+    fetchSimulation(false, false, { algos: nextAlgos });
+  }
+
+  function handleDatasetTypeChange(nextType: string) {
+    setDatasetType(nextType);
+    fetchSimulation(true, false, { dType: nextType });
+  }
+
+  function handleSizeChange(nextSize: number) {
+    setSize(nextSize);
+    fetchSimulation(true, false, { sz: nextSize });
+  }
+
+  function handleCustomArrayChange(nextCArray: string) {
+    setCustomArray(nextCArray);
+    if (datasetType === 'Custom') {
+      fetchSimulation(true, false, { cArray: nextCArray });
+    }
+  }
 
   const activeFrames = useMemo(
     () => response?.lanes.map((lane) => lane.frames[Math.min(playback.frameIndex, lane.frames.length - 1)]),
@@ -109,19 +177,19 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
             label={`Lane ${index + 1}`}
             value={value}
             options={catalog.sortingAlgorithms}
-            onChange={(next) => setAlgorithms((items) => items.map((item, i) => (i === index ? next : item)))}
+            onChange={(next) => handleAlgorithmChange(index, next)}
           />
         ))}
-        <SelectField label="Dataset" value={datasetType} options={catalog.datasetTypes} onChange={setDatasetType} />
+        <SelectField label="Dataset" value={datasetType} options={catalog.datasetTypes} onChange={handleDatasetTypeChange} />
         {datasetType === 'Custom' ? (
           <label className="field wide">
             <span>Custom Array</span>
-            <input value={customArray} onChange={(event) => setCustomArray(event.target.value)} />
+            <input value={customArray} onChange={(event) => handleCustomArrayChange(event.target.value)} />
           </label>
         ) : (
           <label className="field">
             <span>Array Size</span>
-            <input type="number" min={2} max={160} value={size} onChange={(event) => setSize(Number(event.target.value))} />
+            <input type="number" min={2} max={160} value={size} onChange={(event) => handleSizeChange(Number(event.target.value))} />
           </label>
         )}
       </section>
@@ -131,7 +199,7 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
         disabled={loading}
         onStart={startRace}
         onToggle={() => playback.setPlaying(!playback.playing)}
-        onReset={playback.reset}
+        onReset={handleReset}
         speed={speed}
         onSpeedChange={setSpeed}
       />
