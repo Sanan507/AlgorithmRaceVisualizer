@@ -77,21 +77,18 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
 
   async function startRace() {
     if (hasFreshDataset && response) {
-      // User pressed Reset (or fresh dataset present) -> run race on current dataset
       winnerAnnouncedRef.current = false;
       play('start');
       playback.reset();
       playback.setPlaying(true);
       setHasFreshDataset(false);
     } else {
-      // Race ended & user did NOT press Reset -> generate new dataset & start
       await fetchSimulation(true, true);
       setHasFreshDataset(false);
     }
   }
 
   async function handleReset() {
-    // Pressing Reset generates a new dataset ready for the next race
     await fetchSimulation(true, false);
     setHasFreshDataset(true);
   }
@@ -195,6 +192,11 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
         onStart={startRace}
         onToggle={() => playback.setPlaying(!playback.playing)}
         onReset={handleReset}
+        onStepForward={playback.stepForward}
+        onStepBackward={playback.stepBackward}
+        frameIndex={playback.frameIndex}
+        maxFrames={playback.maxFrames}
+        onSeek={playback.seek}
         speed={speed}
         onSpeedChange={setSpeed}
       />

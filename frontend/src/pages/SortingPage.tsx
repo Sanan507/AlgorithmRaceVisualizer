@@ -200,6 +200,11 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
         onStart={startRace}
         onToggle={() => playback.setPlaying(!playback.playing)}
         onReset={handleReset}
+        onStepForward={playback.stepForward}
+        onStepBackward={playback.stepBackward}
+        frameIndex={playback.frameIndex}
+        maxFrames={playback.maxFrames}
+        onSeek={playback.seek}
         speed={speed}
         onSpeedChange={setSpeed}
       />

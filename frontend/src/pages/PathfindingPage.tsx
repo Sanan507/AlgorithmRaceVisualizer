@@ -38,14 +38,14 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
     async (
       newMaze: boolean,
       autoplay = false,
-      customParams?: { algos?: string[]; mType?: string }
+      customParams?: { algos?: string[]; mType?: string; walls?: boolean[][] }
     ) => {
       setLoading(true);
       winnerAnnouncedRef.current = false;
       const useAlgos = customParams?.algos ?? algorithms;
       const useMazeType = customParams?.mType ?? mazeType;
 
-      const sendWalls = !newMaze && walls ? walls : null;
+      const sendWalls = customParams?.walls ?? (!newMaze && walls ? walls : null);
 
       try {
         const data = await api.pathfinding({
@@ -106,6 +106,16 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
     fetchSimulation(true, false, { mType: nextMazeType });
   }
 
+  function handleToggleWall(r: number, c: number) {
+    if (playback.playing) return;
+    const currentGrid = walls ?? Array.from({ length: 18 }, () => Array(28).fill(false));
+    const nextGrid = currentGrid.map((rowArr, rowIdx) =>
+      rowArr.map((cell, colIdx) => (rowIdx === r && colIdx === c ? !cell : cell))
+    );
+    setWalls(nextGrid);
+    fetchSimulation(false, false, { walls: nextGrid });
+  }
+
   const activeFrames = useMemo(
     () => response?.lanes.map((lane) => lane.frames[Math.min(playback.frameIndex, lane.frames.length - 1)]),
     [response, playback.frameIndex]
@@ -130,7 +140,7 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
       <header className="page-header">
         <div>
           <h1>Pathfinding Arena</h1>
-          <p>Real-time benchmarking of pathfinding algorithms</p>
+          <p>Real-time benchmarking of pathfinding algorithms (Click/drag grid to edit walls)</p>
         </div>
       </header>
 
@@ -166,6 +176,11 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
         onStart={startRace}
         onToggle={() => playback.setPlaying(!playback.playing)}
         onReset={handleReset}
+        onStepForward={playback.stepForward}
+        onStepBackward={playback.stepBackward}
+        frameIndex={playback.frameIndex}
+        maxFrames={playback.maxFrames}
+        onSeek={playback.seek}
         speed={speed}
         onSpeedChange={setSpeed}
       />
@@ -181,7 +196,11 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
           else laneState = 'ready';
           return (
             <LaneCard key={lane.name} lane={lane} frame={frame} laneState={laneState} arenaType="pathfinding">
-              <PathCanvas frame={frame} />
+              <PathCanvas
+                frame={frame}
+                editable={!playback.playing}
+                onToggleWall={handleToggleWall}
+              />
             </LaneCard>
           );
         })}

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { SimulationFrame } from '../models/types';
 
 const stateColor: Record<string, string> = {
@@ -11,8 +11,17 @@ const stateColor: Record<string, string> = {
   PATH: '#ffd166'
 };
 
-export function PathCanvas({ frame }: { frame: SimulationFrame }) {
+export function PathCanvas({
+  frame,
+  editable = false,
+  onToggleWall
+}: {
+  frame: SimulationFrame;
+  editable?: boolean;
+  onToggleWall?: (row: number, col: number) => void;
+}) {
   const ref = useRef<HTMLCanvasElement | null>(null);
+  const [isMouseDown, setIsMouseDown] = useState(false);
 
   useEffect(() => {
     const canvas = ref.current;
@@ -28,7 +37,6 @@ export function PathCanvas({ frame }: { frame: SimulationFrame }) {
     
     const isLight = document.documentElement.dataset.theme === 'light';
     
-    // Draw canvas container base
     ctx.fillStyle = isLight ? '#f2f7ff' : '#0b0b1e';
     ctx.fillRect(0, 0, rect.width, rect.height);
     
@@ -81,10 +89,53 @@ export function PathCanvas({ frame }: { frame: SimulationFrame }) {
           Math.min(cellW / 3, 4)
         );
         ctx.fill();
-        ctx.shadowBlur = 0; // Reset shadow
+        ctx.shadowBlur = 0;
       });
     });
   }, [frame]);
 
-  return <canvas className="path-canvas" ref={ref} />;
+  function getGridPos(event: React.MouseEvent<HTMLCanvasElement>) {
+    const canvas = ref.current;
+    if (!canvas || !frame.grid) return null;
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    const rows = frame.grid.length;
+    const cols = frame.grid[0]?.length ?? 0;
+    const col = Math.floor((x / rect.width) * cols);
+    const row = Math.floor((y / rect.height) * rows);
+    if (row >= 0 && row < rows && col >= 0 && col < cols) {
+      return { row, col };
+    }
+    return null;
+  }
+
+  function handleMouseDown(event: React.MouseEvent<HTMLCanvasElement>) {
+    if (!editable || !onToggleWall) return;
+    setIsMouseDown(true);
+    const pos = getGridPos(event);
+    if (pos) onToggleWall(pos.row, pos.col);
+  }
+
+  function handleMouseMove(event: React.MouseEvent<HTMLCanvasElement>) {
+    if (!editable || !onToggleWall || !isMouseDown) return;
+    const pos = getGridPos(event);
+    if (pos) onToggleWall(pos.row, pos.col);
+  }
+
+  function handleMouseUp() {
+    setIsMouseDown(false);
+  }
+
+  return (
+    <canvas
+      className="path-canvas"
+      ref={ref}
+      style={{ cursor: editable ? 'crosshair' : 'default' }}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
+    />
+  );
 }

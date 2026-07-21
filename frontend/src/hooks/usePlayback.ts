@@ -30,10 +30,8 @@ export function usePlayback(
           return current;
         }
         const next = current + 1;
-        // Fire frame event for audio hooks — pick first lane's frame type if available
         if (onFrame && response?.lanes[0]?.frames[next]) {
           const frame = response.lanes[0].frames[next] as Record<string, unknown>;
-          // Detect frame type from common sentinel fields set by the backend
           if (frame.swapped === true) {
             onFrame('swap', next);
           } else if (frame.found === true) {
@@ -50,12 +48,30 @@ export function usePlayback(
     return () => window.clearInterval(id);
   }, [playing, maxFrames, speed, onFrame, response]);
 
+  function stepForward() {
+    setPlaying(false);
+    setFrameIndex((current) => Math.min(maxFrames - 1, current + 1));
+  }
+
+  function stepBackward() {
+    setPlaying(false);
+    setFrameIndex((current) => Math.max(0, current - 1));
+  }
+
+  function seek(index: number) {
+    setPlaying(false);
+    setFrameIndex(Math.max(0, Math.min(index, maxFrames - 1)));
+  }
+
   return {
     playing,
     setPlaying,
     frameIndex,
     setFrameIndex,
     maxFrames,
+    stepForward,
+    stepBackward,
+    seek,
     reset: () => {
       setPlaying(false);
       setFrameIndex(0);

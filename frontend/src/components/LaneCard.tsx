@@ -1,8 +1,7 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import type { RaceLaneResponse, SimulationFrame } from '../models/types';
-import { Clock, Activity, RotateCw, CheckCircle2, AlertCircle, Percent } from 'lucide-react';
+import { Clock, Activity, RotateCw, CheckCircle2, AlertCircle, Percent, Code, ChevronDown, ChevronUp } from 'lucide-react';
 
-/** Which overall race state the parent arena is in */
 export type LaneState = 'ready' | 'running' | 'paused' | 'finished';
 export type ArenaType = 'sorting' | 'searching' | 'pathfinding';
 
@@ -15,19 +14,16 @@ export function LaneCard({
 }: {
   lane: RaceLaneResponse;
   frame: SimulationFrame;
-  /** Drives the status badge: ready | running | paused | finished */
   laneState?: LaneState;
   arenaType: ArenaType;
   children: ReactNode;
 }) {
+  const [showCode, setShowCode] = useState(false);
   const totalFrames = lane.frames.length;
   const progress = totalFrames > 1 ? Math.min(100, Math.round((frame.frame / (totalFrames - 1)) * 100)) : 0;
 
-  // ── Per-lane finished state ────────────────────────────────────────────────
-  // A lane is individually done when its last frame has done=true
   const laneFinished = frame.done;
 
-  // Derive the per-lane badge state
   let badgeState: LaneState;
   if (laneState === 'ready') {
     badgeState = 'ready';
@@ -39,7 +35,6 @@ export function LaneCard({
     badgeState = 'running';
   }
 
-  // ── Badge label & CSS class ───────────────────────────────────────────────
   const sortingStatusLabels: Record<LaneState, string> = {
     ready: 'Ready',
     running: 'Sorting',
@@ -58,11 +53,9 @@ export function LaneCard({
     ? sortingStatusLabels[badgeState]
     : defaultStatusLabels[badgeState];
 
-  // ── Operations label & value ──────────────────────────────────────────────
   const opLabel = frame.steps !== undefined && frame.steps > 0 ? 'Steps' : 'Comparisons';
   const opValue = frame.comparisons || frame.steps || 0;
 
-  // ── Action metric (Swaps / Status) ───────────────────────────────────────
   let actionLabel = 'Swaps';
   let actionValue: string | number = frame.swaps ?? 0;
   let ActionIcon = RotateCw;
@@ -99,12 +92,13 @@ export function LaneCard({
     }
   }
 
-  // ── Sorting status label for display ─────────────────────────────────────
   if (isSorting) {
     actionLabel = 'Status';
     actionValue = sortingStatusLabels[badgeState];
     ActionIcon = badgeState === 'finished' ? CheckCircle2 : Activity;
   }
+
+  const pseudocodeText = lane.complexityInfo?.pseudocode ?? '';
 
   return (
     <article className={`lane-card ${badgeState === 'finished' ? 'done' : ''}`}>
@@ -113,9 +107,21 @@ export function LaneCard({
           <strong>{lane.name}</strong>
           <span>{lane.complexity}</span>
         </div>
-        <em className={`status-badge status-badge--${badgeState}`}>
-          {badgeLabel}
-        </em>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {pseudocodeText && (
+            <button
+              className="btn ghost icon-btn"
+              onClick={() => setShowCode(!showCode)}
+              title={showCode ? 'Hide Code Inspector' : 'Show Code Inspector'}
+              style={{ padding: '4px 8px', fontSize: '12px' }}
+            >
+              <Code size={13} /> {showCode ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+            </button>
+          )}
+          <em className={`status-badge status-badge--${badgeState}`}>
+            {badgeLabel}
+          </em>
+        </div>
       </header>
 
       <div className="lane-canvas-container">
@@ -128,6 +134,17 @@ export function LaneCard({
           style={{ width: `${progress}%` }}
         />
       </div>
+
+      {showCode && pseudocodeText && (
+        <div className="code-inspector-box" style={{ background: 'var(--bg-card-alt, rgba(0,0,0,0.2))', padding: '10px 14px', borderRadius: '8px', margin: '8px 0', fontSize: '12px', borderLeft: '3px solid var(--accent, #6366f1)' }}>
+          <div style={{ fontWeight: 600, marginBottom: '4px', opacity: 0.8, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Code size={12} /> Pseudocode Logic
+          </div>
+          <pre style={{ margin: 0, fontFamily: 'monospace', whiteSpace: 'pre-wrap', opacity: 0.9 }}>
+            {pseudocodeText}
+          </pre>
+        </div>
+      )}
 
       <footer className="lane-stats-grid">
         <div className="metric-card">
