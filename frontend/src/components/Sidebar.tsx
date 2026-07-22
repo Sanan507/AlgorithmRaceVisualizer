@@ -1,9 +1,10 @@
-import { BarChart3, Binary, GitBranch, History, Settings, ChevronLeft, ChevronRight, Zap } from 'lucide-react';
+import { BarChart3, Binary, GitBranch, History, Settings, ChevronLeft, ChevronRight, Zap, LayoutGrid } from 'lucide-react';
 import { useAudio } from '../context/AudioContext';
 
-type Page = 'sorting' | 'searching' | 'pathfinding' | 'history' | 'settings';
+type Page = 'landing' | 'sorting' | 'searching' | 'pathfinding' | 'history' | 'settings';
 
 const items = [
+  { id: 'landing',     label: 'Overview',            icon: LayoutGrid },
   { id: 'sorting',     label: 'Sorting Arena',      icon: BarChart3  },
   { id: 'searching',   label: 'Search Arena',        icon: Binary     },
   { id: 'pathfinding', label: 'Pathfinding Arena',   icon: GitBranch  },
@@ -37,7 +38,7 @@ export function Sidebar({
   return (
     <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-top">
-        <div className="brand">
+        <div className="brand" onClick={() => handleNav('landing')} style={{ cursor: 'pointer' }}>
           <div className="brand-mark">
             <Zap size={22} className="brand-icon-zap" />
           </div>

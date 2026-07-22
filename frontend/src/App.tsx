@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 import { Sidebar } from './components/Sidebar';
+import { LandingPage } from './pages/LandingPage';
 import { HistoryPage } from './pages/HistoryPage';
 import { PathfindingPage } from './pages/PathfindingPage';
 import { SearchingPage } from './pages/SearchingPage';
@@ -15,18 +16,18 @@ import { useSound } from './hooks/useSound';
 
 import { fallbackCatalog } from './data/fallbackCatalog';
 
-type Page = 'sorting' | 'searching' | 'pathfinding' | 'history' | 'settings';
+type Page = 'landing' | 'sorting' | 'searching' | 'pathfinding' | 'history' | 'settings';
 
 export default function App() {
-  const [active, setActive] = useState<Page>('sorting');
+  const [active, setActive] = useState<Page>('landing');
   const [catalog, setCatalog] = useState<CatalogResponse>(fallbackCatalog);
-  const [error, setError] = useState<string | null>(null);
+  const [error] = useState<string | null>(null);
   const [darkMode, setDarkMode] = useState(() => {
     try {
       const saved = localStorage.getItem('algorace_dark_mode');
-      return saved !== null ? JSON.parse(saved) : false;
+      return saved !== null ? JSON.parse(saved) : true; // Default to dark mode for ultra luxury aesthetic
     } catch {
-      return false;
+      return true;
     }
   });
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -70,23 +71,27 @@ export default function App() {
 
   return (
     <AudioCtx.Provider value={{ play, audioSettings, setAudioSettings }}>
-      <div className={`app-shell ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
-        <Sidebar
-          active={active}
-          onChange={setActive}
-          collapsed={sidebarCollapsed}
-          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-        />
-        <div className="content-shell">
-          {active === 'sorting' && <SortingPage catalog={catalog} />}
-          {active === 'searching' && <SearchingPage catalog={catalog} />}
-          {active === 'pathfinding' && <PathfindingPage catalog={catalog} />}
-          {active === 'history' && <HistoryPage catalog={catalog} />}
-          {active === 'settings' && (
-            <SettingsPage darkMode={darkMode} setDarkMode={setDarkMode} />
-          )}
+      {active === 'landing' ? (
+        <LandingPage onNavigate={setActive} />
+      ) : (
+        <div className={`app-shell ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+          <Sidebar
+            active={active}
+            onChange={setActive}
+            collapsed={sidebarCollapsed}
+            onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+          />
+          <div className="content-shell">
+            {active === 'sorting' && <SortingPage catalog={catalog} />}
+            {active === 'searching' && <SearchingPage catalog={catalog} />}
+            {active === 'pathfinding' && <PathfindingPage catalog={catalog} />}
+            {active === 'history' && <HistoryPage catalog={catalog} />}
+            {active === 'settings' && (
+              <SettingsPage darkMode={darkMode} setDarkMode={setDarkMode} />
+            )}
+          </div>
         </div>
-      </div>
+      )}
       <Analytics />
       <SpeedInsights />
     </AudioCtx.Provider>
