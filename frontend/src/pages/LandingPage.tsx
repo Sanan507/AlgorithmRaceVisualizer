@@ -44,7 +44,7 @@ export function LandingPage({ onNavigate }: Props) {
           </div>
           <div className="brand-title-group">
             <span className="brand-name">AlgoRace</span>
-            <span className="brand-badge">PRO ENGINE</span>
+            <span className="brand-badge">v2.0</span>
           </div>
         </div>
 
@@ -71,7 +71,7 @@ export function LandingPage({ onNavigate }: Props) {
             className="landing-cta-btn btn-primary"
             onClick={() => onNavigate('sorting')}
           >
-            <span>Enter Visualizer</span>
+            <span>Launch Arena</span>
             <ArrowRight size={16} />
           </button>
         </div>
@@ -82,7 +82,7 @@ export function LandingPage({ onNavigate }: Props) {
         <div className="hero-content">
           <div className="hero-chip-badge">
             <Sparkles size={13} className="chip-icon text-amber-400" />
-            <span>CYBERNETIC ALGORITHM BENCHMARK ENGINE</span>
+            <span>ALGORITHM VISUALIZATION & BENCHMARKING</span>
           </div>
 
           <h1 className="hero-main-title">
@@ -91,9 +91,7 @@ export function LandingPage({ onNavigate }: Props) {
           </h1>
 
           <p className="hero-description">
-            Experience next-generation multi-lane algorithm visualization with hardware-accelerated
-            HTML5 canvases, interactive grid wall editing, frame scrubbing step debuggers, and a synthesized
-            Web Audio feedback engine.
+            Compare sorting, searching, and pathfinding algorithms side by side — with live performance metrics, step-by-step debugging, and interactive canvas visualizations.
           </p>
 
           <div className="hero-cta-group">
@@ -185,7 +183,7 @@ export function LandingPage({ onNavigate }: Props) {
             </div>
 
             <div className="bento-card-action">
-              <span>Enter Sorting Arena</span>
+              <span>Launch Sorting Arena</span>
               <ArrowRight size={16} />
             </div>
           </div>
@@ -202,7 +200,7 @@ export function LandingPage({ onNavigate }: Props) {
               Observe logarithmic search space elimination in Binary Search with darkened inactive ranges and index targeting.
             </p>
             <div className="bento-card-action">
-              <span>Explore Searching</span>
+              <span>Launch Search Arena</span>
               <ArrowRight size={16} />
             </div>
           </div>
@@ -229,7 +227,7 @@ export function LandingPage({ onNavigate }: Props) {
             </div>
 
             <div className="bento-card-action">
-              <span>Enter Pathfinding Arena</span>
+              <span>Launch Pathfinding Arena</span>
               <ArrowRight size={16} />
             </div>
           </div>
@@ -332,7 +330,7 @@ export function LandingPage({ onNavigate }: Props) {
             <Shield className="highlight-icon text-amber-400" size={24} />
             <h4>Dark & Light Obsidian Themes</h4>
             <p>
-              Seamlessly switch between Cyber Obsidian dark mode and high-contrast light mode tailored for long study and development sessions.
+              Seamlessly switch between Obsidian dark mode and high-contrast light mode tailored for long study and development sessions.
             </p>
           </div>
         </div>
@@ -393,7 +391,7 @@ export function LandingPage({ onNavigate }: Props) {
             onClick={() => onNavigate('sorting')}
           >
             <Zap size={20} />
-            <span>Launch AlgoRace Engine</span>
+            <span>Launch Sorting Arena</span>
             <ArrowRight size={18} />
           </button>
         </div>

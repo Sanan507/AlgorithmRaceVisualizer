@@ -44,7 +44,7 @@ export function Sidebar({
           </div>
           <div className="brand-text">
             <strong className="brand-title">AlgoRace</strong>
-            <span className="brand-tagline">Cybernetic Benchmark Engine</span>
+            <span className="brand-tagline">Algorithm Benchmark Engine</span>
           </div>
         </div>
 

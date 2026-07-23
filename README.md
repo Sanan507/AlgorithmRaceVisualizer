@@ -112,7 +112,7 @@ Custom synthesized Web Audio engine providing subtle audio feedback:
 
 ### Frontend
 * **Framework**: React 18 with TypeScript & Vite
-* **Styling**: Vanilla CSS3 with Cyber Obsidian dark & Light theme design system
+* **Styling**: Vanilla CSS3 with Obsidian dark & light theme design system
 * **Visuals**: HTML5 Canvas (Hardware-accelerated 2D context)
 * **Audio**: Native Web Audio API Synthesizer
 
@@ -137,7 +137,7 @@ AlgoRace/
 │   │   ├── models/               # TypeScript interfaces & API types
 │   │   ├── pages/                # Sorting, Searching, Pathfinding, History, Settings
 │   │   ├── services/             # API HTTP client
-│   │   └── styles.css            # Cyber Obsidian theme design system
+│   │   └── styles.css            # Dark & Light theme design system
 │   └── package.json
 │
 ├── backend/                      # Spring Boot 3.4 API Engine
