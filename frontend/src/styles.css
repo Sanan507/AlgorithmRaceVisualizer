@@ -2720,15 +2720,15 @@ input[type="range"] {
 }
 
 .landing-cta-btn.btn-primary {
-  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-  color: #ffffff;
-  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+  background: linear-gradient(135deg, #4cd7f6 0%, #06b6d4 100%) !important;
+  color: #001f26 !important;
+  box-shadow: 0 4px 20px rgba(6, 182, 212, 0.4);
   border-color: rgba(255, 255, 255, 0.2);
 }
 
 .landing-cta-btn.btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(168, 85, 247, 0.6);
+  box-shadow: 0 8px 30px rgba(76, 215, 246, 0.6);
 }
 
 .landing-cta-btn.btn-large {
@@ -3073,8 +3073,8 @@ input[type="range"] {
 
 .bento-card {
   position: relative;
-  background: rgba(15, 19, 32, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #11112d !important;
+  border: 0.5px solid rgba(255, 255, 255, 0.08) !important;
   border-radius: 20px;
   padding: 32px;
   display: flex;
@@ -3083,13 +3083,21 @@ input[type="range"] {
   cursor: pointer;
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.bento-card.featured {
+  border-top: 1px solid transparent !important;
+  background-image: linear-gradient(#11112d, #11112d), linear-gradient(to right, #4cd7f6, #ddb7ff) !important;
+  background-origin: border-box !important;
+  background-clip: padding-box, border-box !important;
 }
 
 .bento-card:hover {
   transform: translateY(-4px);
-  border-color: rgba(255, 255, 255, 0.2);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(99, 102, 241, 0.15);
+  border-color: rgba(255, 255, 255, 0.25) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(6, 182, 212, 0.15) !important;
 }
 
 .bento-card-large {
@@ -3745,7 +3753,117 @@ input[type="range"] {
     grid-template-columns: 1fr 1fr;
   }
 
-  .highlights-grid {
-    grid-template-columns: 1fr;
-  }
 }
+
+/* ==========================================================================
+   STITCH ICY GLASS THEME - ALGORACE (LIGHT MODE & ICY SURFACES)
+   ========================================================================== */
+
+:root[data-theme='light'] .landing-page,
+.landing-page.icy-glass {
+  background-color: #faf8ff !important;
+  color: #1e293b !important;
+  color-scheme: light !important;
+}
+
+:root[data-theme='light'] .landing-navbar,
+.landing-page.icy-glass .landing-navbar {
+  background: rgba(250, 248, 255, 0.85) !important;
+  backdrop-filter: blur(24px) !important;
+  border-bottom: 1px solid rgba(14, 165, 233, 0.15) !important;
+}
+
+:root[data-theme='light'] .nav-link-btn,
+.landing-page.icy-glass .nav-link-btn {
+  color: #475569 !important;
+}
+
+:root[data-theme='light'] .nav-link-btn:hover,
+.landing-page.icy-glass .nav-link-btn:hover {
+  color: #0284c7 !important;
+  text-shadow: none !important;
+}
+
+:root[data-theme='light'] .brand-title,
+.landing-page.icy-glass .brand-title {
+  color: #0f172a !important;
+}
+
+:root[data-theme='light'] .hero-main-title,
+.landing-page.icy-glass .hero-main-title,
+:root[data-theme='light'] .section-title,
+.landing-page.icy-glass .section-title,
+:root[data-theme='light'] .matrix-title,
+.landing-page.icy-glass .matrix-title {
+  color: #0f172a !important;
+}
+
+:root[data-theme='light'] .hero-description,
+.landing-page.icy-glass .hero-description,
+:root[data-theme='light'] .section-subtitle,
+.landing-page.icy-glass .section-subtitle {
+  color: #475569 !important;
+}
+
+:root[data-theme='light'] .bento-card,
+.landing-page.icy-glass .bento-card {
+  background: rgba(255, 255, 255, 0.75) !important;
+  backdrop-filter: blur(25px) !important;
+  -webkit-backdrop-filter: blur(25px) !important;
+  border: 1px solid rgba(14, 165, 233, 0.2) !important;
+  box-shadow: 0 4px 24px rgba(14, 165, 233, 0.06) !important;
+  color: #1e293b !important;
+}
+
+:root[data-theme='light'] .bento-card:hover,
+.landing-page.icy-glass .bento-card:hover {
+  border-color: rgba(14, 165, 233, 0.45) !important;
+  box-shadow: 0 8px 32px rgba(14, 165, 233, 0.18) !important;
+  transform: translateY(-4px) !important;
+}
+
+:root[data-theme='light'] .bento-card.featured,
+.landing-page.icy-glass .bento-card.featured {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.6)) !important;
+  border: 1px solid rgba(14, 165, 233, 0.35) !important;
+}
+
+:root[data-theme='light'] .bento-title,
+.landing-page.icy-glass .bento-title,
+:root[data-theme='light'] .bento-desc,
+.landing-page.icy-glass .bento-desc {
+  color: #1e293b !important;
+}
+
+:root[data-theme='light'] .hero-btn-primary,
+.landing-page.icy-glass .hero-btn-primary,
+:root[data-theme='light'] .landing-cta-btn.btn-primary,
+.landing-page.icy-glass .landing-cta-btn.btn-primary {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(14, 165, 233, 0.35) !important;
+  border: none !important;
+}
+
+:root[data-theme='light'] .hero-btn-secondary,
+.landing-page.icy-glass .hero-btn-secondary {
+  background: rgba(255, 255, 255, 0.7) !important;
+  border: 1px solid rgba(14, 165, 233, 0.3) !important;
+  color: #0284c7 !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+:root[data-theme='light'] .hero-btn-secondary:hover,
+.landing-page.icy-glass .hero-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-color: rgba(14, 165, 233, 0.5) !important;
+}
+
+:root[data-theme='light'] .algorithm-matrix-section,
+.landing-page.icy-glass .algorithm-matrix-section {
+  background: rgba(255, 255, 255, 0.85) !important;
+  border: 1px solid rgba(14, 165, 233, 0.25) !important;
+  box-shadow: 0 8px 32px rgba(14, 165, 233, 0.08) !important;
+  color: #0f172a !important;
+}
+

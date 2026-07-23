@@ -164,7 +164,7 @@ export function LandingPage({ onNavigate }: Props) {
 
         <div className="bento-grid">
           {/* Row 1: Card 1 (Sorting Arena - 2 cols) + Card 2 (Search Arena - 1 col) */}
-          <div className="bento-card bento-card-large bento-sorting" onClick={() => onNavigate('sorting')}>
+          <div className="bento-card bento-card-large bento-sorting featured" onClick={() => onNavigate('sorting')}>
             <div className="bento-card-bg-glow glow-purple-subtle" />
             <div className="bento-card-header">
               <div className="bento-icon-wrapper icon-purple">
