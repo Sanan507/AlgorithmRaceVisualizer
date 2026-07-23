@@ -3867,3 +3867,522 @@ input[type="range"] {
   color: #0f172a !important;
 }
 
+/* ==========================================================================
+   COMPLETE LIGHT THEME OVERRIDES — LANDING PAGE
+   Covers every element missing light-mode styles.
+   Design language: Ice-glass — frosted white, sky-blue accents, slate text.
+   ========================================================================== */
+
+/* ---- 1. PAGE ROOT, GLOW BLOBS, GRID OVERLAY ---- */
+:root[data-theme='light'] .landing-page {
+  background-color: #f0f4ff !important;
+  color: #0f172a !important;
+  color-scheme: light !important;
+}
+
+:root[data-theme='light'] .landing-glow-bg {
+  opacity: 0.18 !important;
+  filter: blur(200px) !important;
+}
+
+:root[data-theme='light'] .glow-purple {
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.25) 0%, rgba(168, 85, 247, 0.1) 60%, transparent 100%) !important;
+}
+
+:root[data-theme='light'] .glow-cyan {
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.2) 0%, rgba(56, 189, 248, 0.08) 60%, transparent 100%) !important;
+}
+
+:root[data-theme='light'] .landing-grid-overlay {
+  background-image:
+    linear-gradient(rgba(14, 165, 233, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(14, 165, 233, 0.04) 1px, transparent 1px) !important;
+}
+
+/* ---- 2. NAVBAR ---- */
+:root[data-theme='light'] .brand-name {
+  background: linear-gradient(135deg, #0f172a 30%, #0284c7 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+:root[data-theme='light'] .brand-badge {
+  background: rgba(14, 165, 233, 0.12) !important;
+  border: 1px solid rgba(14, 165, 233, 0.3) !important;
+  color: #0284c7 !important;
+}
+
+:root[data-theme='light'] .brand-logo-icon {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.15) 0%, rgba(99, 102, 241, 0.15) 100%) !important;
+  border: 1px solid rgba(14, 165, 233, 0.3) !important;
+  box-shadow: 0 0 12px rgba(14, 165, 233, 0.15) !important;
+}
+
+/* ---- 3. HERO SECTION ---- */
+:root[data-theme='light'] .hero-chip-badge {
+  background: rgba(14, 165, 233, 0.08) !important;
+  border: 1px solid rgba(14, 165, 233, 0.2) !important;
+  color: #334155 !important;
+}
+
+:root[data-theme='light'] .hero-main-title {
+  color: #0f172a !important;
+}
+
+:root[data-theme='light'] .hero-gradient-text {
+  background: linear-gradient(135deg, #7c3aed 0%, #0284c7 50%, #059669 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+:root[data-theme='light'] .hero-description {
+  color: #334155 !important;
+}
+
+:root[data-theme='light'] .hero-btn-ghost {
+  color: #475569 !important;
+}
+
+:root[data-theme='light'] .hero-btn-ghost:hover {
+  color: #0284c7 !important;
+}
+
+:root[data-theme='light'] .hero-stats-grid {
+  border-top: 1px solid rgba(14, 165, 233, 0.15) !important;
+}
+
+:root[data-theme='light'] .stat-number {
+  color: #0284c7 !important;
+}
+
+:root[data-theme='light'] .stat-label {
+  color: #475569 !important;
+}
+
+:root[data-theme='light'] .stat-card {
+  padding: 8px 0;
+}
+
+/* ---- 4. BENTO CARDS (DEEP OVERRIDES) ---- */
+:root[data-theme='light'] .bento-card-bg-glow {
+  opacity: 0.3 !important;
+}
+
+:root[data-theme='light'] .glow-purple-subtle {
+  background: rgba(99, 102, 241, 0.1) !important;
+}
+
+:root[data-theme='light'] .glow-cyan-subtle {
+  background: rgba(14, 165, 233, 0.1) !important;
+}
+
+:root[data-theme='light'] .bento-card.featured {
+  background-image: none !important;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(240, 245, 255, 0.8)) !important;
+  border: 1px solid rgba(14, 165, 233, 0.35) !important;
+}
+
+:root[data-theme='light'] .bento-arena-tag {
+  color: #475569 !important;
+}
+
+:root[data-theme='light'] .bento-title {
+  color: #0f172a !important;
+}
+
+:root[data-theme='light'] .bento-text {
+  color: #334155 !important;
+}
+
+:root[data-theme='light'] .bento-pill {
+  background: rgba(14, 165, 233, 0.08) !important;
+  border: 1px solid rgba(14, 165, 233, 0.2) !important;
+  color: #334155 !important;
+}
+
+:root[data-theme='light'] .bento-card-action {
+  color: #0284c7 !important;
+}
+
+:root[data-theme='light'] .bento-card:hover .bento-card-action {
+  color: #0369a1 !important;
+}
+
+:root[data-theme='light'] .bento-icon-wrapper {
+  border: 1px solid rgba(14, 165, 233, 0.15) !important;
+}
+
+:root[data-theme='light'] .icon-purple {
+  background: rgba(124, 58, 237, 0.1) !important;
+  color: #7c3aed !important;
+}
+
+:root[data-theme='light'] .icon-cyan {
+  background: rgba(14, 165, 233, 0.1) !important;
+  color: #0284c7 !important;
+}
+
+:root[data-theme='light'] .icon-blue {
+  background: rgba(37, 99, 235, 0.1) !important;
+  color: #2563eb !important;
+}
+
+:root[data-theme='light'] .icon-amber {
+  background: rgba(217, 119, 6, 0.1) !important;
+  color: #d97706 !important;
+}
+
+:root[data-theme='light'] .icon-emerald {
+  background: rgba(5, 150, 105, 0.1) !important;
+  color: #059669 !important;
+}
+
+/* ---- 5. FEATURE HIGHLIGHT CARDS ---- */
+:root[data-theme='light'] .highlight-card {
+  background: rgba(255, 255, 255, 0.75) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(14, 165, 233, 0.15) !important;
+  box-shadow: 0 4px 20px rgba(14, 165, 233, 0.06) !important;
+}
+
+:root[data-theme='light'] .highlight-card h4 {
+  color: #0f172a !important;
+}
+
+:root[data-theme='light'] .highlight-card p {
+  color: #334155 !important;
+}
+
+/* ---- 6. ARCHITECTURE SECTION ---- */
+:root[data-theme='light'] .architecture-box {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(240, 245, 255, 0.85) 100%) !important;
+  border: 1px solid rgba(14, 165, 233, 0.2) !important;
+  box-shadow: 0 12px 40px rgba(14, 165, 233, 0.08) !important;
+}
+
+:root[data-theme='light'] .arch-badge {
+  background: rgba(14, 165, 233, 0.1) !important;
+  border: 1px solid rgba(14, 165, 233, 0.25) !important;
+  color: #0284c7 !important;
+}
+
+:root[data-theme='light'] .arch-title {
+  color: #0f172a !important;
+}
+
+:root[data-theme='light'] .arch-subtitle {
+  color: #334155 !important;
+}
+
+:root[data-theme='light'] .arch-tech-card {
+  background: rgba(255, 255, 255, 0.7) !important;
+  border: 1px solid rgba(14, 165, 233, 0.15) !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+:root[data-theme='light'] .arch-tech-card h3 {
+  color: #0f172a !important;
+}
+
+:root[data-theme='light'] .arch-tech-card li {
+  color: #334155 !important;
+}
+
+/* ---- 7. ALGORITHM MATRIX — INNER ELEMENTS ---- */
+:root[data-theme='light'] .matrix-badge {
+  color: #d97706 !important;
+}
+
+:root[data-theme='light'] .matrix-title {
+  color: #0f172a !important;
+}
+
+:root[data-theme='light'] .matrix-subtitle {
+  color: #475569 !important;
+}
+
+:root[data-theme='light'] .filter-pill {
+  background: rgba(14, 165, 233, 0.06) !important;
+  border: 1px solid rgba(14, 165, 233, 0.15) !important;
+  color: #475569 !important;
+}
+
+:root[data-theme='light'] .filter-pill.active,
+:root[data-theme='light'] .filter-pill:hover {
+  background: rgba(14, 165, 233, 0.15) !important;
+  border-color: rgba(14, 165, 233, 0.4) !important;
+  color: #0284c7 !important;
+}
+
+:root[data-theme='light'] .matrix-search-input {
+  background: rgba(255, 255, 255, 0.85) !important;
+  border: 1px solid rgba(14, 165, 233, 0.2) !important;
+  color: #0f172a !important;
+}
+
+:root[data-theme='light'] .matrix-search-input::placeholder {
+  color: #94a3b8 !important;
+}
+
+:root[data-theme='light'] .matrix-search-input:focus {
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15) !important;
+}
+
+:root[data-theme='light'] .search-icon {
+  color: #94a3b8 !important;
+}
+
+:root[data-theme='light'] .matrix-table th {
+  color: #475569 !important;
+  border-bottom: 1px solid rgba(14, 165, 233, 0.15) !important;
+}
+
+:root[data-theme='light'] .matrix-row {
+  background: rgba(255, 255, 255, 0.4) !important;
+}
+
+:root[data-theme='light'] .matrix-row:hover {
+  background: rgba(14, 165, 233, 0.06) !important;
+}
+
+:root[data-theme='light'] .matrix-table td {
+  border-top: 1px solid rgba(14, 165, 233, 0.08) !important;
+  border-bottom: 1px solid rgba(14, 165, 233, 0.08) !important;
+}
+
+:root[data-theme='light'] .algo-title {
+  color: #0f172a !important;
+}
+
+:root[data-theme='light'] .algo-desc {
+  color: #475569 !important;
+}
+
+:root[data-theme='light'] .arena-tag-sorting {
+  background: rgba(124, 58, 237, 0.1) !important;
+  color: #7c3aed !important;
+  border-color: rgba(124, 58, 237, 0.25) !important;
+}
+
+:root[data-theme='light'] .arena-tag-searching {
+  background: rgba(37, 99, 235, 0.1) !important;
+  color: #2563eb !important;
+  border-color: rgba(37, 99, 235, 0.25) !important;
+}
+
+:root[data-theme='light'] .arena-tag-pathfinding {
+  background: rgba(14, 165, 233, 0.1) !important;
+  color: #0284c7 !important;
+  border-color: rgba(14, 165, 233, 0.25) !important;
+}
+
+:root[data-theme='light'] .complexity-badge.badge-complexity-optimal {
+  background: rgba(5, 150, 105, 0.1) !important;
+  color: #059669 !important;
+  border-color: rgba(5, 150, 105, 0.25) !important;
+}
+
+:root[data-theme='light'] .complexity-badge.badge-complexity-good {
+  background: rgba(217, 119, 6, 0.1) !important;
+  color: #d97706 !important;
+  border-color: rgba(217, 119, 6, 0.25) !important;
+}
+
+:root[data-theme='light'] .complexity-badge.badge-complexity-heavy {
+  background: rgba(225, 29, 72, 0.1) !important;
+  color: #e11d48 !important;
+  border-color: rgba(225, 29, 72, 0.25) !important;
+}
+
+:root[data-theme='light'] .complexity-badge.badge-complexity-space {
+  background: rgba(99, 102, 241, 0.1) !important;
+  color: #4f46e5 !important;
+  border-color: rgba(99, 102, 241, 0.25) !important;
+}
+
+:root[data-theme='light'] .matrix-launch-btn {
+  background: rgba(14, 165, 233, 0.08) !important;
+  border: 1px solid rgba(14, 165, 233, 0.2) !important;
+  color: #0284c7 !important;
+}
+
+:root[data-theme='light'] .matrix-launch-btn:hover {
+  background: #0284c7 !important;
+  border-color: #0284c7 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(14, 165, 233, 0.3) !important;
+}
+
+:root[data-theme='light'] .matrix-empty-state {
+  color: #94a3b8 !important;
+}
+
+/* ---- 8. CTA BANNER ---- */
+:root[data-theme='light'] .landing-cta-banner {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.12) 0%, rgba(99, 102, 241, 0.12) 100%) !important;
+  border: 1px solid rgba(14, 165, 233, 0.25) !important;
+  box-shadow: 0 12px 40px rgba(14, 165, 233, 0.08) !important;
+}
+
+:root[data-theme='light'] .cta-banner-title {
+  color: #0f172a !important;
+}
+
+:root[data-theme='light'] .cta-banner-desc {
+  color: #334155 !important;
+}
+
+/* ---- 9. FOOTER ---- */
+:root[data-theme='light'] .landing-footer {
+  background: rgba(240, 245, 255, 0.95) !important;
+  border-top: 1px solid rgba(14, 165, 233, 0.12) !important;
+}
+
+:root[data-theme='light'] .footer-brand-title {
+  color: #0f172a !important;
+}
+
+:root[data-theme='light'] .footer-links button {
+  color: #475569 !important;
+}
+
+:root[data-theme='light'] .footer-links button:hover {
+  color: #0284c7 !important;
+}
+
+:root[data-theme='light'] .footer-bottom {
+  border-top: 1px solid rgba(14, 165, 233, 0.1) !important;
+  color: #64748b !important;
+}
+
+:root[data-theme='light'] .footer-bottom p {
+  color: #475569 !important;
+}
+
+:root[data-theme='light'] .footer-bottom strong {
+  color: #0f172a !important;
+}
+
+:root[data-theme='light'] .footer-tech-tags span {
+  background: rgba(14, 165, 233, 0.08) !important;
+  color: #475569 !important;
+}
+
+/* ---- 10. HERO CANVAS CONTAINER ---- */
+:root[data-theme='light'] .hero-mini-canvas-container {
+  background: rgba(255, 255, 255, 0.8) !important;
+  border: 1px solid rgba(14, 165, 233, 0.2) !important;
+  box-shadow: 0 12px 40px rgba(14, 165, 233, 0.1), 0 0 0 1px rgba(14, 165, 233, 0.05) !important;
+  backdrop-filter: blur(20px) !important;
+}
+
+:root[data-theme='light'] .hero-canvas-header {
+  border-bottom: 1px solid rgba(14, 165, 233, 0.1) !important;
+}
+
+:root[data-theme='light'] .hero-canvas-badge {
+  color: #475569 !important;
+}
+
+:root[data-theme='light'] .hero-canvas-btn {
+  background: rgba(14, 165, 233, 0.08) !important;
+  border: 1px solid rgba(14, 165, 233, 0.2) !important;
+  color: #334155 !important;
+}
+
+:root[data-theme='light'] .hero-canvas-btn:hover {
+  background: rgba(14, 165, 233, 0.15) !important;
+  color: #0284c7 !important;
+}
+
+:root[data-theme='light'] .hero-canvas-wrapper {
+  border: 1px solid rgba(14, 165, 233, 0.15) !important;
+  /* Canvas itself stays dark — it's a rendering surface */
+  background: #0d1117 !important;
+}
+
+:root[data-theme='light'] .lane-stat-pill {
+  background: rgba(14, 165, 233, 0.06) !important;
+  border: 1px solid rgba(14, 165, 233, 0.12) !important;
+}
+
+:root[data-theme='light'] .pill-title {
+  color: #475569 !important;
+}
+
+:root[data-theme='light'] .pill-val {
+  color: #0f172a !important;
+}
+
+:root[data-theme='light'] .pill-badge {
+  background: rgba(14, 165, 233, 0.08) !important;
+  color: #475569 !important;
+}
+
+:root[data-theme='light'] .badge-winner {
+  background: rgba(5, 150, 105, 0.12) !important;
+  color: #059669 !important;
+  border: 1px solid rgba(5, 150, 105, 0.3) !important;
+}
+
+:root[data-theme='light'] .live-pulse-dot {
+  background: #059669 !important;
+  box-shadow: 0 0 8px #059669 !important;
+}
+
+/* ---- 11. SECTION BADGES & SHARED ELEMENTS ---- */
+:root[data-theme='light'] .section-badge {
+  background: rgba(14, 165, 233, 0.08) !important;
+  border: 1px solid rgba(14, 165, 233, 0.2) !important;
+  color: #334155 !important;
+}
+
+:root[data-theme='light'] .section-title {
+  color: #0f172a !important;
+}
+
+:root[data-theme='light'] .section-subtitle {
+  color: #334155 !important;
+}
+
+/* ---- 12. SCROLLBAR — LIGHT THEME ---- */
+:root[data-theme='light'] ::-webkit-scrollbar-track {
+  background: rgba(240, 245, 255, 0.9) !important;
+}
+
+:root[data-theme='light'] ::-webkit-scrollbar-thumb {
+  background: rgba(14, 165, 233, 0.25) !important;
+  border: 1px solid rgba(14, 165, 233, 0.1) !important;
+}
+
+:root[data-theme='light'] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(14, 165, 233, 0.45) !important;
+}
+
+/* ---- 13. LANDING CTA BTN LIGHT REFINEMENT ---- */
+:root[data-theme='light'] .landing-cta-btn.btn-primary {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.3) !important;
+  border: none !important;
+}
+
+:root[data-theme='light'] .landing-cta-btn.btn-primary:hover {
+  box-shadow: 0 8px 28px rgba(14, 165, 233, 0.45) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* ---- 14. HERO BTN PRIMARY LIGHT REFINEMENT ---- */
+:root[data-theme='light'] .hero-btn-primary {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 18px rgba(14, 165, 233, 0.35) !important;
+  border: 1px solid rgba(14, 165, 233, 0.3) !important;
+}
+
+:root[data-theme='light'] .hero-btn-primary:hover {
+  box-shadow: 0 8px 28px rgba(14, 165, 233, 0.5) !important;
+}
+
