@@ -90,7 +90,7 @@ class SortingAlgorithmsTest {
 
         assertNotNull(response, "Simulation response should not be null");
         assertEquals("sorting", response.type());
-        assertEquals(algorithms.size(), response.lanes().size(), "Should contain lane responses for all requested algorithms");
+        assertEquals(Math.min(algorithms.size(), 6), response.lanes().size(), "Should cap lane responses to max supported lanes");
         assertNotNull(response.winner(), "A winner lane should be determined");
 
         response.lanes().forEach(lane -> {
