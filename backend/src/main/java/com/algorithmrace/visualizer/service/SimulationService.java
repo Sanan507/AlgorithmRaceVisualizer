@@ -22,13 +22,19 @@ import java.util.Random;
 @Service
 public class SimulationService {
     private static final int MAX_FRAMES = 5000;
+    private static final int MAX_ARRAY_SIZE = 100;
+    private static final int MAX_LANES = 6;
+    private static final int MAX_GRID_ROWS = 40;
+    private static final int MAX_GRID_COLS = 60;
+
     private static final int SORT_FRAME_MS = 16;
     private static final int SEARCH_FRAME_MS = 18;
     private static final int PATH_FRAME_MS = 20;
 
     public RaceResponse simulateSorting(SortingSimulationRequest request) {
         int[] dataset = resolveSortingDataset(request);
-        List<RaceLaneResponse> lanes = request.algorithms().stream()
+        List<String> algos = sanitizeAlgorithms(request.algorithms());
+        List<RaceLaneResponse> lanes = algos.stream()
             .map(name -> simulateSortingLane(name, dataset))
             .toList();
         return new RaceResponse("sorting", dataset, null, null, lanes, winner(lanes));
@@ -37,15 +43,16 @@ public class SimulationService {
     public RaceResponse simulateSearching(SearchingSimulationRequest request) {
         int[] dataset = resolveSearchingDataset(request);
         int target = request.target() != null ? request.target() : dataset[new Random().nextInt(dataset.length)];
-        List<RaceLaneResponse> lanes = request.algorithms().stream()
+        List<String> algos = sanitizeAlgorithms(request.algorithms());
+        List<RaceLaneResponse> lanes = algos.stream()
             .map(name -> simulateSearchLane(name, dataset, target))
             .toList();
         return new RaceResponse("searching", dataset, target, null, lanes, winner(lanes));
     }
 
     public RaceResponse simulatePathfinding(PathfindingSimulationRequest request) {
-        int rows = request.rows() <= 0 ? 18 : request.rows();
-        int cols = request.cols() <= 0 ? 28 : request.cols();
+        int rows = Math.min(MAX_GRID_ROWS, Math.max(5, request.rows() <= 0 ? 18 : request.rows()));
+        int cols = Math.min(MAX_GRID_COLS, Math.max(5, request.cols() <= 0 ? 28 : request.cols()));
         int startRow = 2;
         int startCol = 2;
         int endRow = rows - 3;
@@ -54,10 +61,21 @@ public class SimulationService {
             ? request.walls()
             : MazeGenerator.generate(rows, cols, startRow, startCol, endRow, endCol, MazeGenerator.fromName(request.mazeType()));
 
-        List<RaceLaneResponse> lanes = request.algorithms().stream()
+        List<String> algos = sanitizeAlgorithms(request.algorithms());
+        List<RaceLaneResponse> lanes = algos.stream()
             .map(name -> simulatePathLane(name, rows, cols, startRow, startCol, endRow, endCol, walls))
             .toList();
         return new RaceResponse("pathfinding", null, null, walls, lanes, winner(lanes));
+    }
+
+    private List<String> sanitizeAlgorithms(List<String> inputAlgos) {
+        if (inputAlgos == null || inputAlgos.isEmpty()) {
+            return List.of();
+        }
+        return inputAlgos.stream()
+            .filter(name -> name != null && !name.isBlank())
+            .limit(MAX_LANES)
+            .toList();
     }
 
     private RaceLaneResponse simulateSortingLane(String name, int[] dataset) {
@@ -124,17 +142,23 @@ public class SimulationService {
 
     private int[] resolveSortingDataset(SortingSimulationRequest request) {
         if (request.customArray() != null && !request.customArray().isEmpty()) {
-            return request.customArray().stream().mapToInt(Integer::intValue).toArray();
+            return request.customArray().stream()
+                .limit(MAX_ARRAY_SIZE)
+                .mapToInt(Integer::intValue)
+                .toArray();
         }
-        int size = request.size() <= 0 ? 30 : request.size();
+        int size = Math.min(MAX_ARRAY_SIZE, Math.max(2, request.size() <= 0 ? 30 : request.size()));
         return ArrayGenerator.generate(size, ArrayGenerator.fromLabel(request.datasetType()));
     }
 
     private int[] resolveSearchingDataset(SearchingSimulationRequest request) {
         if (request.dataset() != null && !request.dataset().isEmpty()) {
-            return request.dataset().stream().mapToInt(Integer::intValue).toArray();
+            return request.dataset().stream()
+                .limit(MAX_ARRAY_SIZE)
+                .mapToInt(Integer::intValue)
+                .toArray();
         }
-        int size = request.size() <= 0 ? 42 : request.size();
+        int size = Math.min(MAX_ARRAY_SIZE, Math.max(2, request.size() <= 0 ? 42 : request.size()));
         return ArrayGenerator.generate(size, ArrayGenerator.ArrayType.RANDOM);
     }
 
