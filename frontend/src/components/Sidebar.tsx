@@ -1,4 +1,4 @@
-import { BarChart3, Binary, GitBranch, History, Settings, ChevronLeft, ChevronRight, Zap, LayoutGrid } from 'lucide-react';
+import { BarChart3, Binary, GitBranch, History, Settings, ChevronLeft, ChevronRight, Zap, LayoutGrid, X } from 'lucide-react';
 import { useAudio } from '../context/AudioContext';
 
 type Page = 'landing' | 'sorting' | 'searching' | 'pathfinding' | 'history' | 'settings';
@@ -17,17 +17,22 @@ export function Sidebar({
   onChange,
   collapsed,
   onToggle,
+  mobileOpen,
+  onMobileClose,
 }: {
   active: Page;
   onChange: (page: Page) => void;
   collapsed: boolean;
   onToggle: () => void;
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
 }) {
   const { play } = useAudio();
 
   function handleNav(id: Page) {
     play('click');
     onChange(id);
+    if (onMobileClose) onMobileClose();
   }
 
   function handleToggle() {
@@ -36,54 +41,68 @@ export function Sidebar({
   }
 
   return (
-    <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
-      <div className="sidebar-top">
-        <div className="brand" onClick={() => handleNav('landing')} style={{ cursor: 'pointer' }}>
-          <div className="brand-mark">
-            <Zap size={22} className="brand-icon-zap" />
+    <>
+      {/* Mobile Drawer Overlay */}
+      {mobileOpen && (
+        <div className="mobile-drawer-backdrop" onClick={onMobileClose} />
+      )}
+
+      <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
+        <div className="sidebar-top">
+          <div className="brand-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+            <div className="brand" onClick={() => handleNav('landing')} style={{ cursor: 'pointer' }}>
+              <div className="brand-mark">
+                <Zap size={22} className="brand-icon-zap" />
+              </div>
+              <div className="brand-text">
+                <strong className="brand-title">AlgoRace</strong>
+                <span className="brand-tagline">Algorithm Benchmark Engine</span>
+              </div>
+            </div>
+            {mobileOpen && onMobileClose && (
+              <button type="button" className="mobile-close-btn" onClick={onMobileClose}>
+                <X size={20} />
+              </button>
+            )}
           </div>
-          <div className="brand-text">
-            <strong className="brand-title">AlgoRace</strong>
-            <span className="brand-tagline">Algorithm Benchmark Engine</span>
-          </div>
+
+          <nav className="nav-list">
+            {items.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                className={`nav-item ${active === id ? 'active' : ''}`}
+                onClick={() => handleNav(id)}
+                title={collapsed ? label : undefined}
+              >
+                <div className="nav-item-glow" />
+                <Icon size={19} className="nav-icon" />
+                <span className="nav-label">{label}</span>
+              </button>
+            ))}
+          </nav>
         </div>
 
-        <nav className="nav-list">
-          {items.map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              className={`nav-item ${active === id ? 'active' : ''}`}
-              onClick={() => handleNav(id)}
-              title={collapsed ? label : undefined}
-            >
-              <div className="nav-item-glow" />
-              <Icon size={19} className="nav-icon" />
-              <span className="nav-label">{label}</span>
-            </button>
-          ))}
-        </nav>
-      </div>
+        <div className="sidebar-bottom">
+          <button 
+            className="nav-item sidebar-toggle-item" 
+            onClick={handleToggle} 
+            title={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+            style={{ 
+              border: '1px dashed var(--line)', 
+              background: 'rgba(255,255,255,0.02)',
+              marginTop: '10px'
+            }}
+          >
+            {collapsed ? <ChevronRight size={18} className="nav-icon" /> : <ChevronLeft size={18} className="nav-icon" />}
+            <span className="nav-label">Collapse Sidebar</span>
+          </button>
 
-      <div className="sidebar-bottom">
-        <button 
-          className="nav-item sidebar-toggle-item" 
-          onClick={handleToggle} 
-          title={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-          style={{ 
-            border: '1px dashed var(--line)', 
-            background: 'rgba(255,255,255,0.02)',
-            marginTop: '10px'
-          }}
-        >
-          {collapsed ? <ChevronRight size={18} className="nav-icon" /> : <ChevronLeft size={18} className="nav-icon" />}
-          <span className="nav-label">Collapse Sidebar</span>
-        </button>
-
-        <div className="sidebar-footer">
-          <span className="footer-brand">AlgoRace</span>
-          <span>React · Spring Boot · Web Audio</span>
+          <div className="sidebar-footer">
+            <span className="footer-brand">AlgoRace</span>
+            <span>React · Spring Boot · Web Audio</span>
+          </div>
         </div>
-      </div>
-    </aside>
+      </aside>
+    </>
   );
 }

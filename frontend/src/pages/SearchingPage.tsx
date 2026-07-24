@@ -24,9 +24,70 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
   const [response, setResponse] = useState<RaceResponse | null>(null);
   const [speed, setSpeed] = useState(6);
   const [loading, setLoading] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const { play } = useAudio();
   const winnerAnnouncedRef = useRef(false);
+  const requestIdRef = useRef(0);
+
+  // Custom Array & Target validation helpers
+  const parsedCustomArray = useMemo(() => parseCustomArrayInput(customArrayStr), [customArrayStr]);
+
+  const invalidCustomTokens = useMemo(() => {
+    if (!isCustomMode || !customArrayStr.trim()) return [];
+    return customArrayStr
+      .split(',')
+      .map((t) => t.trim())
+      .filter((t) => t.length > 0 && !/^-?\d+$/.test(t));
+  }, [isCustomMode, customArrayStr]);
+
+  const isCustomEmpty = isCustomMode && parsedCustomArray.length === 0;
+  const hasInvalidTokens = invalidCustomTokens.length > 0;
+  const isTargetInvalid = Number.isNaN(target);
+
+  // Instant 0ms Preview Response Generator for Custom Array Editing in Search Arena
+  const activeResponse = useMemo(() => {
+    if (!isCustomMode || parsedCustomArray.length === 0) {
+      return response;
+    }
+    if (response?.dataset && response.dataset.join(',') === parsedCustomArray.join(',')) {
+      return response;
+    }
+    const previewLanes = algorithms.map((name) => ({
+      name,
+      complexity: 'O(log n)',
+      description: '',
+      frames: [
+        {
+          frameIndex: 0,
+          array: parsedCustomArray,
+          highlight: [],
+          sortedBoundary: -1,
+          pivotIndex: -1,
+          mergeRegionStart: -1,
+          mergeRegionEnd: -1,
+          heapBoundary: -1,
+          comparisons: 0,
+          swaps: 0,
+          timeMs: 0,
+          done: false,
+          status: 'Ready',
+          searchPath: [],
+          visitedNodes: [],
+          steps: 0,
+          pathFound: false,
+        },
+      ],
+      stats: { comparisons: 0, swaps: 0, timeMs: 0, found: false },
+    }));
+    return {
+      type: 'searching',
+      dataset: parsedCustomArray,
+      target,
+      lanes: previewLanes,
+      winner: null,
+    };
+  }, [isCustomMode, parsedCustomArray, response, algorithms, target]);
 
   const onFrame = useCallback(
     (event: 'compare' | 'swap' | 'hit' | 'miss' | 'step') => {
@@ -37,7 +98,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
     [play]
   );
 
-  const playback = usePlayback(response, speed, onFrame);
+  const playback = usePlayback(activeResponse, speed, onFrame);
 
   const fetchSimulation = useCallback(
     async (
@@ -48,12 +109,15 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
       customSize?: number,
       overrideDataset?: number[]
     ) => {
+      const requestId = ++requestIdRef.current;
       setLoading(true);
       winnerAnnouncedRef.current = false;
       const useTarget = customTarget ?? target;
       const useAlgos = customAlgos ?? algorithms;
-      const useSize = customSize ?? size;
       const useDataset = overrideDataset ?? dataset;
+
+      // Dynamically compute size for single-element or multi-element custom arrays
+      const useSize = customSize ?? (isCustomMode && useDataset ? Math.max(1, useDataset.length) : size);
 
       try {
         if (newDataset || !useDataset) {
@@ -63,6 +127,10 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
             target: useTarget,
             dataset: useDataset ?? undefined,
           });
+
+          // Ignore stale out-of-order responses
+          if (requestId !== requestIdRef.current) return;
+
           setDataset(data.dataset);
           setResponse(data);
           setHasFreshDataset(true);
@@ -78,6 +146,10 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
             target: useTarget,
             dataset: useDataset,
           });
+
+          // Ignore stale out-of-order responses
+          if (requestId !== requestIdRef.current) return;
+
           setResponse(data);
           playback.reset();
           if (autoplay) {
@@ -86,10 +158,12 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
           }
         }
       } finally {
-        setLoading(false);
+        if (requestId === requestIdRef.current) {
+          setLoading(false);
+        }
       }
     },
-    [algorithms, size, target, dataset, play, playback]
+    [algorithms, isCustomMode, size, target, dataset, play, playback]
   );
 
   useEffect(() => {
@@ -97,7 +171,25 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
   }, []);
 
   async function startRace() {
-    if (hasFreshDataset && response) {
+    if (isTargetInvalid) {
+      setValidationError('Cannot start search: Please enter a valid target integer.');
+      return;
+    }
+
+    if (isCustomMode) {
+      if (isCustomEmpty) {
+        setValidationError('Cannot start search: Custom Array is empty. Please enter comma-separated numbers (e.g. 10, 5, 20).');
+        return;
+      }
+      if (hasInvalidTokens) {
+        setValidationError(`Cannot start search: Invalid entry "${invalidCustomTokens[0]}". Please enter integers only.`);
+        return;
+      }
+    }
+
+    setValidationError(null);
+
+    if (hasFreshDataset && activeResponse) {
       winnerAnnouncedRef.current = false;
       play('start');
       playback.reset();
@@ -110,16 +202,25 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
   }
 
   async function handleReset() {
+    setValidationError(null);
     await fetchSimulation(true, false);
     setHasFreshDataset(true);
   }
 
   function handleTargetChange(newTarget: number) {
     setTarget(newTarget);
+    if (Number.isNaN(newTarget)) {
+      setValidationError('Please enter a valid target integer.');
+      return;
+    }
+    setValidationError(null);
+
     if (dataset) {
+      const requestId = ++requestIdRef.current;
       api
         .searching({ algorithms, size: dataset.length, target: newTarget, dataset })
         .then((data) => {
+          if (requestId !== requestIdRef.current) return;
           setResponse(data);
           playback.reset();
         });
@@ -129,18 +230,23 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
   function handleSizeChange(newSize: number) {
     setSize(newSize);
     setIsCustomMode(false);
+    setValidationError(null);
     fetchSimulation(true, false, target, algorithms, newSize, undefined);
   }
 
   function handleToggleCustomMode() {
     const nextMode = !isCustomMode;
     setIsCustomMode(nextMode);
+    setValidationError(null);
+
     if (nextMode) {
       const parsed = parseCustomArrayInput(customArrayStr);
       if (parsed.length > 0) {
         setDataset(parsed);
         setSize(parsed.length);
         fetchSimulation(true, false, target, algorithms, parsed.length, parsed);
+      } else {
+        setValidationError('Custom Array is empty. Please enter comma-separated numbers.');
       }
     } else {
       fetchSimulation(true, false, target, algorithms, size, undefined);
@@ -150,7 +256,18 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
   function handleCustomArrayTextChange(text: string) {
     setCustomArrayStr(text);
     const parsed = parseCustomArrayInput(text);
-    if (parsed.length > 0) {
+
+    const invalid = text
+      .split(',')
+      .map((t) => t.trim())
+      .filter((t) => t.length > 0 && !/^-?\d+$/.test(t));
+
+    if (invalid.length > 0) {
+      setValidationError(`Invalid entry "${invalid[0]}". Please enter integers only.`);
+    } else if (parsed.length === 0) {
+      setValidationError('Custom Array is empty. Please enter comma-separated numbers.');
+    } else {
+      setValidationError(null);
       setDataset(parsed);
       setSize(parsed.length);
       fetchSimulation(true, false, target, algorithms, parsed.length, parsed);
@@ -162,9 +279,11 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
     setAlgorithms(nextAlgos);
 
     if (dataset) {
+      const requestId = ++requestIdRef.current;
       api
         .searching({ algorithms: nextAlgos, size: dataset.length, target, dataset })
         .then((data) => {
+          if (requestId !== requestIdRef.current) return;
           setResponse(data);
           playback.reset();
         });
@@ -172,23 +291,23 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
   }
 
   const activeFrames = useMemo(
-    () => response?.lanes.map((lane) => lane.frames[Math.min(playback.frameIndex, lane.frames.length - 1)]),
-    [response, playback.frameIndex]
+    () => activeResponse?.lanes.map((lane) => lane.frames[Math.min(playback.frameIndex, lane.frames.length - 1)]),
+    [activeResponse, playback.frameIndex]
   );
 
-  const isCompleted = !!(response && playback.frameIndex === playback.maxFrames - 1 && playback.maxFrames > 0);
-  const winnerLane = response?.lanes.find((l) => l.name === response.winner);
+  const isCompleted = !!(activeResponse && playback.frameIndex === playback.maxFrames - 1 && playback.maxFrames > 0);
+  const winnerLane = activeResponse?.lanes.find((l) => l.name === activeResponse.winner);
 
   useEffect(() => {
-    if (isCompleted && response && !winnerAnnouncedRef.current) {
+    if (isCompleted && activeResponse && !winnerAnnouncedRef.current) {
       winnerAnnouncedRef.current = true;
-      if (response.winner) {
+      if (activeResponse.winner) {
         setTimeout(() => play('winner'), 120);
       } else {
         setTimeout(() => play('raceComplete'), 120);
       }
     }
-  }, [isCompleted, response, play]);
+  }, [isCompleted, activeResponse, play]);
 
   return (
     <main className="page">
@@ -197,16 +316,16 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
           <h1>Search Arena</h1>
           <p>Real-time benchmarking of search algorithms</p>
         </div>
-        {response?.target !== undefined && response?.target !== null && (
-          <div className="winner-pill target-pill">Target: {response.target}</div>
+        {activeResponse?.target !== undefined && activeResponse?.target !== null && (
+          <div className="winner-pill target-pill">Target: {activeResponse.target}</div>
         )}
       </header>
 
-      {isCompleted && response?.winner && (
+      {isCompleted && activeResponse?.winner && (
         <div className="winner-banner">
           <div className="winner-trophy">🏆</div>
           <div className="winner-details">
-            <h3>{response.winner} Wins!</h3>
+            <h3>{activeResponse.winner} Wins!</h3>
             <p>
               Completed search in <strong>{winnerLane?.stats.timeMs ?? 0} ms</strong> performing{' '}
               <strong>{winnerLane?.stats.comparisons?.toLocaleString() ?? 0}</strong> comparisons.{' '}
@@ -219,6 +338,17 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
               )}
             </p>
           </div>
+        </div>
+      )}
+
+      {/* User-facing Validation Error Banner */}
+      {validationError && (
+        <div className="validation-alert-banner">
+          <span className="alert-icon">⚠️</span>
+          <span>{validationError}</span>
+          <button type="button" className="close-banner-btn" onClick={() => setValidationError(null)}>
+            ✕
+          </button>
         </div>
       )}
 
@@ -238,7 +368,8 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
           <span>Target</span>
           <input
             type="number"
-            value={target}
+            className={isTargetInvalid ? 'input-error' : ''}
+            value={Number.isNaN(target) ? '' : target}
             onChange={(event) => handleTargetChange(Number(event.target.value))}
           />
         </label>
@@ -259,7 +390,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
             <span>Custom Values (comma-separated)</span>
             <input
               type="text"
-              className="custom-input-inline"
+              className={`custom-input-inline ${hasInvalidTokens || isCustomEmpty ? 'input-error' : ''}`}
               value={customArrayStr}
               placeholder="e.g. 10, 5, 20, 15, 30"
               onChange={(e) => handleCustomArrayTextChange(e.target.value)}
@@ -281,7 +412,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
 
       <Controls
         playing={playback.playing}
-        disabled={loading}
+        disabled={loading || (isCustomMode && (isCustomEmpty || hasInvalidTokens)) || isTargetInvalid}
         onStart={startRace}
         onToggle={() => playback.setPlaying(!playback.playing)}
         onReset={handleReset}
@@ -295,10 +426,10 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
       />
 
       <section className="lane-grid">
-        {response?.lanes.map((lane, index) => {
+        {activeResponse?.lanes.map((lane, index) => {
           const frame = activeFrames?.[index] ?? lane.frames[0];
           let laneState: LaneState;
-          if (!response) laneState = 'ready';
+          if (!activeResponse) laneState = 'ready';
           else if (isCompleted || frame.done) laneState = 'finished';
           else if (!playback.playing && playback.frameIndex > 0) laneState = 'paused';
           else if (playback.playing) laneState = 'running';
@@ -313,7 +444,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginTop: '24px' }}>
         <PerformanceComparison
-          response={response}
+          response={activeResponse}
           activeFrames={activeFrames}
           type="searching"
           isCompleted={isCompleted}

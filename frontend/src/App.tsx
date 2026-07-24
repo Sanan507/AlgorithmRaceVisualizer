@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
+import { Menu, Zap } from 'lucide-react';
 import { Sidebar } from './components/Sidebar';
 import { LandingPage } from './pages/LandingPage';
 import { HistoryPage } from './pages/HistoryPage';
@@ -25,12 +26,13 @@ export default function App() {
   const [darkMode, setDarkMode] = useState(() => {
     try {
       const saved = localStorage.getItem('algorace_dark_mode');
-      return saved !== null ? JSON.parse(saved) : true; // Default to dark mode for ultra luxury aesthetic
+      return saved !== null ? JSON.parse(saved) : true;
     } catch {
       return true;
     }
   });
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const { settings: audioSettings, setSettings: setAudioSettings } = useAudioSettings();
   const { play } = useSound(audioSettings);
@@ -75,12 +77,30 @@ export default function App() {
         <LandingPage onNavigate={setActive} />
       ) : (
         <div className={`app-shell ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+          {/* Mobile Header Bar */}
+          <div className="mobile-header-bar">
+            <div className="mobile-brand" onClick={() => setActive('landing')}>
+              <Zap size={18} className="brand-icon-zap" />
+              <strong>AlgoRace</strong>
+            </div>
+            <button
+              type="button"
+              className="mobile-hamburger-btn"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              <Menu size={22} />
+            </button>
+          </div>
+
           <Sidebar
             active={active}
             onChange={setActive}
             collapsed={sidebarCollapsed}
             onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+            mobileOpen={mobileMenuOpen}
+            onMobileClose={() => setMobileMenuOpen(false)}
           />
+
           <div className="content-shell">
             {active === 'sorting' && <SortingPage catalog={catalog} />}
             {active === 'searching' && <SearchingPage catalog={catalog} />}

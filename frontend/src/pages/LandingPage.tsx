@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   BarChart3,
   Binary,
@@ -13,6 +14,8 @@ import {
   Sliders,
   CheckCircle2,
   Shield,
+  Menu,
+  X,
 } from 'lucide-react';
 import { HeroMiniCanvas } from '../components/HeroMiniCanvas';
 import { AlgorithmMatrix } from '../components/AlgorithmMatrix';
@@ -22,7 +25,10 @@ interface Props {
 }
 
 export function LandingPage({ onNavigate }: Props) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   const scrollToSection = (id: string) => {
+    setMobileMenuOpen(false);
     const el = document.getElementById(id);
     if (el) {
       el.scrollIntoView({ behavior: 'smooth' });
@@ -48,7 +54,15 @@ export function LandingPage({ onNavigate }: Props) {
           </div>
         </div>
 
-        <nav className="landing-nav-links">
+        <button
+          type="button"
+          className="landing-mobile-toggle"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        >
+          {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+        </button>
+
+        <nav className={`landing-nav-links ${mobileMenuOpen ? 'mobile-expanded' : ''}`}>
           <button onClick={() => scrollToSection('arenas')} className="nav-link-btn">
             Arenas
           </button>
@@ -64,9 +78,16 @@ export function LandingPage({ onNavigate }: Props) {
           <button onClick={() => scrollToSection('architecture')} className="nav-link-btn">
             Architecture
           </button>
+          <button
+            className="landing-cta-btn btn-primary mobile-cta-only"
+            onClick={() => onNavigate('sorting')}
+          >
+            <span>Launch Arena</span>
+            <ArrowRight size={16} />
+          </button>
         </nav>
 
-        <div className="landing-nav-actions">
+        <div className="landing-nav-actions desktop-cta-only">
           <button
             className="landing-cta-btn btn-primary"
             onClick={() => onNavigate('sorting')}
@@ -161,7 +182,7 @@ export function LandingPage({ onNavigate }: Props) {
         </div>
 
         <div className="bento-grid">
-          {/* Row 1: Card 1 (Sorting Arena - 2 cols) + Card 2 (Search Arena - 1 col) */}
+          {/* Row 1: Card 1 (Sorting Arena) + Card 2 (Search Arena) */}
           <div className="bento-card bento-card-large bento-sorting featured" onClick={() => onNavigate('sorting')}>
             <div className="bento-card-bg-glow glow-purple-subtle" />
             <div className="bento-card-header">
@@ -205,7 +226,7 @@ export function LandingPage({ onNavigate }: Props) {
             </div>
           </div>
 
-          {/* Row 2: Card 3 (Pathfinding Arena - 2 cols) + Card 4 (Web Audio - 1 col) */}
+          {/* Row 2: Card 3 (Pathfinding Arena) + Card 4 (Web Audio) */}
           <div className="bento-card bento-card-large bento-pathfinding" onClick={() => onNavigate('pathfinding')}>
             <div className="bento-card-bg-glow glow-cyan-subtle" />
             <div className="bento-card-header">
@@ -249,7 +270,7 @@ export function LandingPage({ onNavigate }: Props) {
             </div>
           </div>
 
-          {/* Row 3: Card 5 (Performance Benchmarks - 2 cols) + Card 6 (Step Debugger - 1 col) */}
+          {/* Row 3: Card 5 (Performance Benchmarks) + Card 6 (Step Debugger) */}
           <div className="bento-card bento-card-large bento-benchmarks" onClick={() => onNavigate('history')}>
             <div className="bento-card-header">
               <div className="bento-icon-wrapper icon-emerald">
@@ -417,7 +438,7 @@ export function LandingPage({ onNavigate }: Props) {
         </div>
 
         <div className="footer-bottom">
-          <p>© 2026 AlgoRace. Built by <strong>Muhammad Sanan Sarwar</strong>.</p>
+          <p>© 2026 AlgoRace. Built by <strong>Sanan</strong>.</p>
           <div className="footer-tech-tags">
             <span>React 18</span>
             <span>TypeScript</span>

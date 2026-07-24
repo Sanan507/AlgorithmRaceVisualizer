@@ -24,15 +24,76 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
   const [response, setResponse] = useState<RaceResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [speed, setSpeed] = useState(6);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const { play } = useAudio();
   const winnerAnnouncedRef = useRef(false);
+  const requestIdRef = useRef(0);
 
   // Filter out "Custom" from Dataset selection dropdown options
   const predefinedOptions = useMemo(
     () => catalog.datasetTypes.filter((d) => d !== 'Custom'),
     [catalog.datasetTypes]
   );
+
+  // Custom Array validation helpers
+  const parsedCustomArray = useMemo(() => parseCustomArrayInput(customArrayStr), [customArrayStr]);
+  
+  const invalidCustomTokens = useMemo(() => {
+    if (!isCustomMode || !customArrayStr.trim()) return [];
+    return customArrayStr
+      .split(',')
+      .map((t) => t.trim())
+      .filter((t) => t.length > 0 && !/^-?\d+$/.test(t));
+  }, [isCustomMode, customArrayStr]);
+
+  const isCustomEmpty = isCustomMode && parsedCustomArray.length === 0;
+  const hasInvalidTokens = invalidCustomTokens.length > 0;
+
+  // Instant 0ms Preview Response Generator for Custom Array Editing
+  const activeResponse = useMemo(() => {
+    if (!isCustomMode || parsedCustomArray.length === 0) {
+      return response;
+    }
+    // If backend response matches current custom array, use response
+    if (response?.dataset && response.dataset.join(',') === parsedCustomArray.join(',')) {
+      return response;
+    }
+    // Otherwise, construct an instant local preview response
+    const previewLanes = algorithms.map((name) => ({
+      name,
+      complexity: 'O(n)',
+      description: '',
+      frames: [
+        {
+          frameIndex: 0,
+          array: parsedCustomArray,
+          highlight: [],
+          sortedBoundary: -1,
+          pivotIndex: -1,
+          mergeRegionStart: -1,
+          mergeRegionEnd: -1,
+          heapBoundary: -1,
+          comparisons: 0,
+          swaps: 0,
+          timeMs: 0,
+          done: false,
+          status: 'Ready',
+          searchPath: [],
+          visitedNodes: [],
+          steps: 0,
+          pathFound: false,
+        },
+      ],
+      stats: { comparisons: 0, swaps: 0, timeMs: 0, found: false },
+    }));
+    return {
+      type: 'sorting',
+      dataset: parsedCustomArray,
+      lanes: previewLanes,
+      winner: null,
+    };
+  }, [isCustomMode, parsedCustomArray, response, algorithms]);
 
   const onFrame = useCallback(
     (event: 'compare' | 'swap' | 'hit' | 'miss' | 'step') => {
@@ -42,7 +103,7 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
     [play]
   );
 
-  const playback = usePlayback(response, speed, onFrame);
+  const playback = usePlayback(activeResponse, speed, onFrame);
 
   const fetchSimulation = useCallback(
     async (
@@ -50,11 +111,11 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
       autoplay = false,
       customParams?: { algos?: string[]; dType?: string; sz?: number; cArray?: string }
     ) => {
+      const requestId = ++requestIdRef.current;
       setLoading(true);
       winnerAnnouncedRef.current = false;
       const useAlgos = customParams?.algos ?? algorithms;
       const useType = customParams?.dType ?? (isCustomMode ? 'Custom' : datasetType);
-      const useSize = customParams?.sz ?? size;
       const useCArrayStr = customParams?.cArray ?? customArrayStr;
 
       let sendCustomArray: number[] | undefined;
@@ -64,6 +125,9 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
         sendCustomArray = dataset;
       }
 
+      // Compute actual size dynamically
+      const useSize = customParams?.sz ?? (useType === 'Custom' && sendCustomArray ? Math.max(1, sendCustomArray.length) : size);
+
       try {
         const body = {
           algorithms: useAlgos,
@@ -72,6 +136,10 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
           customArray: sendCustomArray,
         };
         const data = await api.sorting(body);
+
+        // Ignore stale out-of-order API responses
+        if (requestId !== requestIdRef.current) return;
+
         setResponse(data);
         if (data.dataset) {
           setDataset(data.dataset);
@@ -84,7 +152,9 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
           setHasFreshDataset(false);
         }
       } finally {
-        setLoading(false);
+        if (requestId === requestIdRef.current) {
+          setLoading(false);
+        }
       }
     },
     [algorithms, datasetType, isCustomMode, size, customArrayStr, dataset, play, playback]
@@ -95,7 +165,20 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
   }, []);
 
   async function startRace() {
-    if (hasFreshDataset && response) {
+    if (isCustomMode) {
+      if (isCustomEmpty) {
+        setValidationError('Cannot start race: Custom Array is empty. Please enter comma-separated numbers (e.g. 5, 3, 8).');
+        return;
+      }
+      if (hasInvalidTokens) {
+        setValidationError(`Cannot start race: Invalid entry "${invalidCustomTokens[0]}". Please enter valid integers only.`);
+        return;
+      }
+    }
+
+    setValidationError(null);
+
+    if (hasFreshDataset && activeResponse) {
       winnerAnnouncedRef.current = false;
       play('start');
       playback.reset();
@@ -108,6 +191,7 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
   }
 
   async function handleReset() {
+    setValidationError(null);
     await fetchSimulation(true, false);
     setHasFreshDataset(true);
   }
@@ -120,6 +204,7 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
 
   function handleDatasetTypeChange(nextType: string) {
     setIsCustomMode(false);
+    setValidationError(null);
     setDatasetType(nextType);
     fetchSimulation(true, false, { dType: nextType });
   }
@@ -127,8 +212,17 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
   function handleToggleCustomMode() {
     const nextMode = !isCustomMode;
     setIsCustomMode(nextMode);
+    setValidationError(null);
+
     if (nextMode) {
-      fetchSimulation(true, false, { dType: 'Custom', cArray: customArrayStr });
+      const parsed = parseCustomArrayInput(customArrayStr);
+      if (parsed.length > 0) {
+        setSize(parsed.length);
+        setDataset(parsed);
+        fetchSimulation(true, false, { dType: 'Custom', cArray: customArrayStr, sz: parsed.length });
+      } else {
+        setValidationError('Custom Array is empty. Please enter comma-separated numbers.');
+      }
     } else {
       fetchSimulation(true, false, { dType: datasetType });
     }
@@ -142,29 +236,43 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
   function handleCustomArrayTextChange(text: string) {
     setCustomArrayStr(text);
     const parsed = parseCustomArrayInput(text);
-    if (parsed.length > 0) {
+    
+    // Check validation
+    const invalid = text
+      .split(',')
+      .map((t) => t.trim())
+      .filter((t) => t.length > 0 && !/^-?\d+$/.test(t));
+
+    if (invalid.length > 0) {
+      setValidationError(`Invalid entry "${invalid[0]}". Please enter numbers only.`);
+    } else if (parsed.length === 0) {
+      setValidationError('Custom Array is empty. Please enter comma-separated numbers.');
+    } else {
+      setValidationError(null);
+      setSize(parsed.length);
+      setDataset(parsed);
       fetchSimulation(true, false, { dType: 'Custom', cArray: text, sz: parsed.length });
     }
   }
 
   const activeFrames = useMemo(
-    () => response?.lanes.map((lane) => lane.frames[Math.min(playback.frameIndex, lane.frames.length - 1)]),
-    [response, playback.frameIndex]
+    () => activeResponse?.lanes.map((lane) => lane.frames[Math.min(playback.frameIndex, lane.frames.length - 1)]),
+    [activeResponse, playback.frameIndex]
   );
 
-  const isCompleted = !!(response && playback.frameIndex === playback.maxFrames - 1 && playback.maxFrames > 0);
-  const winnerLane = response?.lanes.find((l) => l.name === response.winner);
+  const isCompleted = !!(activeResponse && playback.frameIndex === playback.maxFrames - 1 && playback.maxFrames > 0);
+  const winnerLane = activeResponse?.lanes.find((l) => l.name === activeResponse.winner);
 
   useEffect(() => {
-    if (isCompleted && response && !winnerAnnouncedRef.current) {
+    if (isCompleted && activeResponse && !winnerAnnouncedRef.current) {
       winnerAnnouncedRef.current = true;
-      if (response.winner) {
+      if (activeResponse.winner) {
         setTimeout(() => play('winner'), 120);
       } else {
         setTimeout(() => play('raceComplete'), 120);
       }
     }
-  }, [isCompleted, response, play]);
+  }, [isCompleted, activeResponse, play]);
 
   return (
     <main className="page">
@@ -175,17 +283,28 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
         </div>
       </header>
 
-      {isCompleted && response?.winner && (
+      {isCompleted && activeResponse?.winner && (
         <div className="winner-banner">
           <div className="winner-trophy">🏆</div>
           <div className="winner-details">
-            <h3>{response.winner} Wins!</h3>
+            <h3>{activeResponse.winner} Wins!</h3>
             <p>
               Completed sorting in <strong>{winnerLane?.stats.timeMs ?? 0} ms</strong> with{' '}
               <strong>{winnerLane?.stats.comparisons?.toLocaleString() ?? 0}</strong> comparisons and{' '}
               <strong>{winnerLane?.stats.swaps?.toLocaleString() ?? 0}</strong> swaps.
             </p>
           </div>
+        </div>
+      )}
+
+      {/* User-facing Validation Error Banner */}
+      {validationError && (
+        <div className="validation-alert-banner">
+          <span className="alert-icon">⚠️</span>
+          <span>{validationError}</span>
+          <button type="button" className="close-banner-btn" onClick={() => setValidationError(null)}>
+            ✕
+          </button>
         </div>
       )}
 
@@ -224,7 +343,7 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
             <span>Custom Values (comma-separated)</span>
             <input
               type="text"
-              className="custom-input-inline"
+              className={`custom-input-inline ${hasInvalidTokens || isCustomEmpty ? 'input-error' : ''}`}
               value={customArrayStr}
               placeholder="e.g. 5, 3, 8, 1, 9, 2"
               onChange={(e) => handleCustomArrayTextChange(e.target.value)}
@@ -246,7 +365,7 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
 
       <Controls
         playing={playback.playing}
-        disabled={loading}
+        disabled={loading || (isCustomMode && (isCustomEmpty || hasInvalidTokens))}
         onStart={startRace}
         onToggle={() => playback.setPlaying(!playback.playing)}
         onReset={handleReset}
@@ -260,10 +379,10 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
       />
 
       <section className="lane-grid">
-        {response?.lanes.map((lane, index) => {
+        {activeResponse?.lanes.map((lane, index) => {
           const frame = activeFrames?.[index] ?? lane.frames[0];
           let laneState: LaneState;
-          if (!response) laneState = 'ready';
+          if (!activeResponse) laneState = 'ready';
           else if (isCompleted || frame.done) laneState = 'finished';
           else if (!playback.playing && playback.frameIndex > 0) laneState = 'paused';
           else if (playback.playing) laneState = 'running';
@@ -278,7 +397,7 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginTop: '24px' }}>
         <PerformanceComparison
-          response={response}
+          response={activeResponse}
           activeFrames={activeFrames}
           type="sorting"
           isCompleted={isCompleted}
