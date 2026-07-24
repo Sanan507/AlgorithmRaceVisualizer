@@ -1,17 +1,7 @@
 {
-  "regions": ["bom1", "sin1"],
   "headers": [
     {
-      "source": "/assets/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, s-maxage=31536000, immutable"
-        }
-      ]
-    },
-    {
-      "source": "/(.*).(png|jpg|jpeg|svg|webp|woff2|woff)",
+      "source": "/assets/:path*",
       "headers": [
         {
           "key": "Cache-Control",
