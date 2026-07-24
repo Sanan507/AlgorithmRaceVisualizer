@@ -153,13 +153,13 @@ export function SettingsPage({
         <div className="about-section-block">
           <h3>Why I Built AlgoRace</h3>
           <p>
-            I created <strong>AlgoRace</strong> to solve a fundamental problem in computer science education: static pseudocode and dry asymptotic notation (O(n log n), O(n²)) often fail to capture the real dynamic behavior, efficiency, and beauty of algorithms.
+            I built <strong>AlgoRace</strong> because Big-O notation and static pseudocode never fully captured how algorithms actually behave for me. O(n log n) tells you the growth rate, but it doesn't show you why Quick Sort pulls ahead of Bubble Sort on the same dataset, or how Dijkstra's algorithm actually explores a graph step by step.
           </p>
           <p>
-            AlgoRace transforms abstract theoretical data structures into an interactive visual arena. By racing sorting algorithms side-by-side on identical dataset seeds, visualizing logarithmic space elimination in search algorithms, and editing 2D pathfinding mazes in real-time, developers and students can intuitively grasp how algorithms behave under real execution conditions.
+            AlgoRace turns that into something you can watch and interact with. Sorting algorithms race side by side on identical dataset seeds, search algorithms visualize their space elimination as it happens, and pathfinding runs on 2D grids you can edit and re-run in real time.
           </p>
           <p>
-            Built as a full-stack engineering demonstration, AlgoRace combines a high-performance <strong>Spring Boot Java backend</strong> for deterministic simulation generation with a hardware-accelerated <strong>React 18 + HTML5 Canvas frontend</strong> and a custom <strong>Web Audio API synthesizer</strong>.
+            It's a full-stack project: a <strong>Spring Boot Java backend</strong> generates deterministic simulation steps, a <strong>React 18 + TypeScript frontend</strong> renders them on HTML5 Canvas, and a custom <strong>Web Audio synthesizer</strong> adds sound feedback for comparisons and swaps.
           </p>
         </div>
 

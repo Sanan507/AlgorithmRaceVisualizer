@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { Play, Pause, RotateCcw, Zap } from 'lucide-react';
 
 interface Step {
@@ -11,7 +11,10 @@ interface Step {
 
 export function HeroMiniCanvas() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(true);
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
   const [lane1Algo] = useState('Quick Sort');
   const [lane2Algo] = useState('Bubble Sort');
   const [lane1Stats, setLane1Stats] = useState({ comparisons: 0, swaps: 0, status: 'Racing...' });
@@ -34,6 +37,47 @@ export function HeroMiniCanvas() {
     initialArray: [],
     timer: null,
   });
+
+  // Mobile / Reduced Motion detection
+  useEffect(() => {
+    const checkMobile = () => {
+      const isMobile = window.innerWidth <= 768 || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      setIsMobileDevice(isMobile);
+      if (isMobile) {
+        setIsPlaying(false); // Disable auto-play loop on mobile devices to save main thread budget
+      }
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile, { passive: true });
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // IntersectionObserver to pause rendering when scrolled offscreen
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsVisible(entry.isIntersecting);
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  // Tab Visibility API to pause rendering when tab is hidden
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        setIsVisible(false);
+      } else if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        setIsVisible(rect.top < window.innerHeight && rect.bottom > 0);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
 
   const generateSteps = (arr: number[]) => {
     // QuickSort Step Generator
@@ -149,74 +193,7 @@ export function HeroMiniCanvas() {
     return { qSteps, bSteps, qComp, qSwap, bComp, bSwap };
   };
 
-  const resetRace = () => {
-    const size = 22;
-    const arr = Array.from({ length: size }, () => Math.floor(Math.random() * 85) + 15);
-    const { qSteps, bSteps } = generateSteps(arr);
-
-    stateRef.current.initialArray = arr;
-    stateRef.current.lane1Steps = qSteps;
-    stateRef.current.lane2Steps = bSteps;
-    stateRef.current.lane1Idx = 0;
-    stateRef.current.lane2Idx = 0;
-
-    setLane1Stats({ comparisons: 0, swaps: 0, status: 'Racing...' });
-    setLane2Stats({ comparisons: 0, swaps: 0, status: 'Racing...' });
-  };
-
-  useEffect(() => {
-    resetRace();
-  }, []);
-
-  useEffect(() => {
-    if (!isPlaying) {
-      if (stateRef.current.timer) clearInterval(stateRef.current.timer);
-      return;
-    }
-
-    stateRef.current.timer = window.setInterval(() => {
-      let l1Finished = false;
-      let l2Finished = false;
-
-      if (stateRef.current.lane1Idx < stateRef.current.lane1Steps.length - 1) {
-        stateRef.current.lane1Idx++;
-      } else {
-        l1Finished = true;
-      }
-
-      if (stateRef.current.lane2Idx < stateRef.current.lane2Steps.length - 1) {
-        stateRef.current.lane2Idx++;
-      } else {
-        l2Finished = true;
-      }
-
-      renderCanvas();
-
-      setLane1Stats({
-        comparisons: Math.floor(stateRef.current.lane1Idx * 0.8),
-        swaps: Math.floor(stateRef.current.lane1Idx * 0.4),
-        status: l1Finished ? 'Winner 🏆' : 'Racing...',
-      });
-
-      setLane2Stats({
-        comparisons: Math.floor(stateRef.current.lane2Idx * 0.9),
-        swaps: Math.floor(stateRef.current.lane2Idx * 0.5),
-        status: l2Finished ? 'Completed' : 'Racing...',
-      });
-
-      if (l1Finished && l2Finished) {
-        setTimeout(() => {
-          resetRace();
-        }, 3000);
-      }
-    }, 45);
-
-    return () => {
-      if (stateRef.current.timer) clearInterval(stateRef.current.timer);
-    };
-  }, [isPlaying]);
-
-  const renderCanvas = () => {
+  const renderCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -280,7 +257,76 @@ export function HeroMiniCanvas() {
       stateRef.current.lane2Steps[stateRef.current.lane2Idx],
       '#3b82f6'
     );
-  };
+  }, [lane1Algo, lane2Algo]);
+
+  const resetRace = useCallback(() => {
+    const size = 22;
+    const arr = Array.from({ length: size }, () => Math.floor(Math.random() * 85) + 15);
+    const { qSteps, bSteps } = generateSteps(arr);
+
+    stateRef.current.initialArray = arr;
+    stateRef.current.lane1Steps = qSteps;
+    stateRef.current.lane2Steps = bSteps;
+    stateRef.current.lane1Idx = 0;
+    stateRef.current.lane2Idx = 0;
+
+    setLane1Stats({ comparisons: 0, swaps: 0, status: 'Racing...' });
+    setLane2Stats({ comparisons: 0, swaps: 0, status: 'Racing...' });
+    renderCanvas();
+  }, [renderCanvas]);
+
+  useEffect(() => {
+    resetRace();
+  }, [resetRace]);
+
+  // Main animation timer effect - paused on mobile or when offscreen/hidden
+  useEffect(() => {
+    if (!isPlaying || !isVisible || isMobileDevice) {
+      if (stateRef.current.timer) clearInterval(stateRef.current.timer);
+      return;
+    }
+
+    stateRef.current.timer = window.setInterval(() => {
+      let l1Finished = false;
+      let l2Finished = false;
+
+      if (stateRef.current.lane1Idx < stateRef.current.lane1Steps.length - 1) {
+        stateRef.current.lane1Idx++;
+      } else {
+        l1Finished = true;
+      }
+
+      if (stateRef.current.lane2Idx < stateRef.current.lane2Steps.length - 1) {
+        stateRef.current.lane2Idx++;
+      } else {
+        l2Finished = true;
+      }
+
+      renderCanvas();
+
+      setLane1Stats({
+        comparisons: Math.floor(stateRef.current.lane1Idx * 0.8),
+        swaps: Math.floor(stateRef.current.lane1Idx * 0.4),
+        status: l1Finished ? 'Winner 🏆' : 'Racing...',
+      });
+
+      setLane2Stats({
+        comparisons: Math.floor(stateRef.current.lane2Idx * 0.9),
+        swaps: Math.floor(stateRef.current.lane2Idx * 0.5),
+        status: l2Finished ? 'Completed' : 'Racing...',
+      });
+
+      if (l1Finished && l2Finished) {
+        setTimeout(() => {
+          resetRace();
+        }, 3000);
+      }
+    }, 45);
+
+    return () => {
+      if (stateRef.current.timer) clearInterval(stateRef.current.timer);
+    };
+  }, [isPlaying, isVisible, isMobileDevice, renderCanvas, resetRace]);
 
   const drawLane = (
     ctx: CanvasRenderingContext2D,
@@ -347,7 +393,7 @@ export function HeroMiniCanvas() {
   };
 
   return (
-    <div className="hero-mini-canvas-container">
+    <div className="hero-mini-canvas-container" ref={containerRef}>
       <div className="hero-canvas-header">
         <div className="hero-canvas-title-group">
           <div className="live-pulse-dot" />

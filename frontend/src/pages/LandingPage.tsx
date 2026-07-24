@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import {
   BarChart3,
   Binary,
@@ -17,8 +17,9 @@ import {
   Menu,
   X,
 } from 'lucide-react';
-import { HeroMiniCanvas } from '../components/HeroMiniCanvas';
-import { AlgorithmMatrix } from '../components/AlgorithmMatrix';
+
+const HeroMiniCanvas = lazy(() => import('../components/HeroMiniCanvas').then(m => ({ default: m.HeroMiniCanvas })));
+const AlgorithmMatrix = lazy(() => import('../components/AlgorithmMatrix').then(m => ({ default: m.AlgorithmMatrix })));
 
 interface Props {
   onNavigate: (page: 'sorting' | 'searching' | 'pathfinding' | 'history' | 'settings') => void;
@@ -164,7 +165,9 @@ export function LandingPage({ onNavigate }: Props) {
 
         {/* Live Hardware Mini Canvas Teaser */}
         <div id="demo" className="hero-canvas-showcase">
-          <HeroMiniCanvas />
+          <Suspense fallback={<div className="hero-canvas-skeleton" />}>
+            <HeroMiniCanvas />
+          </Suspense>
         </div>
       </section>
 
@@ -397,7 +400,9 @@ export function LandingPage({ onNavigate }: Props) {
 
       {/* Complexity Matrix Section */}
       <section id="matrix" className="landing-section matrix-container-section">
-        <AlgorithmMatrix onNavigate={onNavigate} />
+        <Suspense fallback={<div className="matrix-skeleton" />}>
+          <AlgorithmMatrix onNavigate={onNavigate} />
+        </Suspense>
       </section>
 
       {/* Bottom CTA Banner */}
