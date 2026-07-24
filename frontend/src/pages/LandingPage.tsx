@@ -121,9 +121,17 @@ export function LandingPage({ onNavigate }: Props) {
               className="hero-btn-primary"
               onClick={() => onNavigate('sorting')}
             >
-              <Zap size={18} />
+              <BarChart3 size={18} />
               <span>Launch Sorting Arena</span>
               <ArrowRight size={16} />
+            </button>
+
+            <button
+              className="hero-btn-secondary"
+              onClick={() => onNavigate('searching')}
+            >
+              <Binary size={18} className="text-blue-400" />
+              <span>Explore Search Arena</span>
             </button>
 
             <button
@@ -131,14 +139,14 @@ export function LandingPage({ onNavigate }: Props) {
               onClick={() => onNavigate('pathfinding')}
             >
               <GitBranch size={18} className="text-cyan-400" />
-              <span>Explore Pathfinding</span>
+              <span>Pathfinding Arena</span>
             </button>
 
             <button
               className="hero-btn-ghost"
               onClick={() => scrollToSection('matrix')}
             >
-              <span>View Complexity Index</span>
+              <span>Algorithm Index</span>
             </button>
           </div>
 

@@ -38,6 +38,10 @@ export default function App() {
   const { play } = useSound(audioSettings);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [active]);
+
+  useEffect(() => {
     api.catalog()
       .then(setCatalog)
       .catch((err: Error) => {
