@@ -118,6 +118,48 @@ const algoDatabase: Record<string, AlgoMeta> = {
     realWorldApp: 'Operating system kernels (Linux kernel scheduler) and safety-critical embedded systems.',
     appDescription: 'Safety-critical systems and Kernel thread schedulers.'
   },
+  'Comb Sort': {
+    name: 'Comb Sort',
+    category: 'Sorting',
+    best: 'O(N log N)',
+    average: 'O(N²/2ᵖ)',
+    worst: 'O(N²)',
+    space: 'O(1)',
+    stability: 'Unstable',
+    speedRank: 'Moderate',
+    memoryRank: 'Minimal',
+    recommendedUse: 'Eliminates turtles (small values near the end of array) in Bubble Sort via shrinking gaps.',
+    realWorldApp: 'Embedded systems requiring simple gap-based sorting improvements over Bubble Sort.',
+    appDescription: 'Embedded gap-sorting optimizations.'
+  },
+  'Radix Sort': {
+    name: 'Radix Sort',
+    category: 'Sorting',
+    best: 'O(N·K)',
+    average: 'O(N·K)',
+    worst: 'O(N·K)',
+    space: 'O(N + K)',
+    stability: 'Stable',
+    speedRank: 'Elite',
+    memoryRank: 'Medium',
+    recommendedUse: 'Fixed-length integer arrays, keys with bounded digit counts (e.g. 32-bit integers, telephone numbers).',
+    realWorldApp: 'Suffix array construction, integer sorting in parallel computing GPUs, and radix-tree dictionary keys.',
+    appDescription: 'Parallel GPU sorting and suffix tree constructions.'
+  },
+  'Counting Sort': {
+    name: 'Counting Sort',
+    category: 'Sorting',
+    best: 'O(N + K)',
+    average: 'O(N + K)',
+    worst: 'O(N + K)',
+    space: 'O(K)',
+    stability: 'Stable',
+    speedRank: 'Elite',
+    memoryRank: 'Low',
+    recommendedUse: 'Integer data with a small known maximum range K (e.g. test scores, age distributions, pixel values).',
+    realWorldApp: 'Image processing histogram equalizations, radix sort sub-routines, and survey score tabulations.',
+    appDescription: 'Histogram equalizations and survey scoring engines.'
+  },
   // Searching
   'Linear Search': {
     name: 'Linear Search',
@@ -160,6 +202,34 @@ const algoDatabase: Record<string, AlgoMeta> = {
     recommendedUse: 'Sorted arrays where moving backward in memory is expensive (e.g. tape drives or disk block reads).',
     realWorldApp: 'Block lookup on physical sequential disks or hardware registers backing streaming data.',
     appDescription: 'Block sequential read controllers.'
+  },
+  'Exponential Search': {
+    name: 'Exponential Search',
+    category: 'Searching',
+    best: 'O(1)',
+    average: 'O(log N)',
+    worst: 'O(log N)',
+    space: 'O(1)',
+    stability: 'N/A',
+    speedRank: 'Fast',
+    memoryRank: 'Minimal',
+    recommendedUse: 'Unbounded or infinite sorted arrays, or when searching for items close to the start of a large sorted list.',
+    realWorldApp: 'Streaming search logs, infinite list lookups, and bounded search range determination.',
+    appDescription: 'Streaming search logs and unbounded array queries.'
+  },
+  'Interpolation Search': {
+    name: 'Interpolation Search',
+    category: 'Searching',
+    best: 'O(1)',
+    average: 'O(log log N)',
+    worst: 'O(N)',
+    space: 'O(1)',
+    stability: 'N/A',
+    speedRank: 'Elite',
+    memoryRank: 'Minimal',
+    recommendedUse: 'Uniformly distributed sorted data (e.g. phonebooks, numerical timestamps).',
+    realWorldApp: 'Phonebook directory lookups, uniformly distributed database keys, and index range estimations.',
+    appDescription: 'Uniformly distributed key lookups in disk indexes.'
   },
   // Pathfinding
   'BFS': {
@@ -217,6 +287,20 @@ const algoDatabase: Record<string, AlgoMeta> = {
     recommendedUse: 'Coordinate-based map navigation and pathfinding in video games or mobile maps.',
     realWorldApp: 'GPS systems calculating physical driving routes, video game AI character movement (e.g. StarCraft, RTS games).',
     appDescription: 'GPS vehicle navigation and game map navigation.'
+  },
+  'Bellman-Ford': {
+    name: 'Bellman-Ford',
+    category: 'Pathfinding',
+    best: 'O(V·E)',
+    average: 'O(V·E)',
+    worst: 'O(V·E)',
+    space: 'O(V)',
+    stability: 'N/A',
+    speedRank: 'Slow',
+    memoryRank: 'Medium',
+    recommendedUse: 'Graphs containing negative edge weights or requiring detection of negative weight cycles.',
+    realWorldApp: 'Distance Vector Routing protocols (RIP - Routing Information Protocol) and financial arbitrage detection.',
+    appDescription: 'Network RIP protocols and financial currency arbitrage engines.'
   }
 };
 
@@ -233,24 +317,24 @@ export function HistoryPage({ catalog }: { catalog: CatalogResponse }) {
   const selectedData = algoDatabase[getNormalizedName(selectedAlgo)] || algoDatabase['Quick Sort'];
 
   const speedRankings = [
-    { name: 'Binary Search / A* Search', type: 'Searching / Pathfinding', rating: 'Elite', desc: 'Logarithmic or highly heuristic' },
-    { name: 'Quick Sort', type: 'Sorting', rating: 'Elite', desc: 'Ultra-low constant factors, O(N log N)' },
+    { name: 'Binary / Interpolation Search / Radix / Counting Sort / A* Search', type: 'All Arenas', rating: 'Elite', desc: 'O(1), O(log log N), O(N·K) or heuristic optimal' },
+    { name: 'Quick Sort / Exponential Search', type: 'Sorting / Searching', rating: 'Elite', desc: 'Ultra-low constant factors, O(N log N) / O(log N)' },
     { name: 'Merge Sort / Heap Sort / Dijkstra', type: 'Sorting / Pathfinding', rating: 'Fast', desc: 'Guaranteed O(N log N) / O(V log V)' },
-    { name: 'Jump Search / BFS / DFS', type: 'Searching / Pathfinding', rating: 'Moderate', desc: 'O(√N) / Linear graph traversals' },
-    { name: 'Bubble / Selection / Insertion / Linear Search', type: 'Sorting / Searching', rating: 'Slow', desc: 'Quadratic O(N²) sorting, O(N) searching' }
+    { name: 'Jump Search / BFS / DFS / Comb Sort', type: 'All Arenas', rating: 'Moderate', desc: 'O(√N) / Linear graph traversals / gap sorting' },
+    { name: 'Bubble / Selection / Insertion / Linear Search / Bellman-Ford', type: 'All Arenas', rating: 'Slow', desc: 'Quadratic O(N²) sorting, O(N) search, O(V·E) pathfinding' }
   ];
 
   const memoryRankings = [
-    { name: 'Bubble / Selection / Insertion / Heap Sort', type: 'Sorting', rating: 'Minimal', desc: 'O(1) auxiliary space, in-place' },
-    { name: 'Linear / Binary / Jump Search', type: 'Searching', rating: 'Minimal', desc: 'O(1) auxiliary space, index checks' },
-    { name: 'Quick Sort', type: 'Sorting', rating: 'Low', desc: 'O(log N) recursion stack' },
-    { name: 'DFS', type: 'Pathfinding', rating: 'Medium', desc: 'O(Depth) recursion stack' },
+    { name: 'Bubble / Selection / Insertion / Heap / Comb Sort', type: 'Sorting', rating: 'Minimal', desc: 'O(1) auxiliary space, in-place' },
+    { name: 'Linear / Binary / Jump / Exponential / Interpolation Search', type: 'Searching', rating: 'Minimal', desc: 'O(1) auxiliary space, index checks' },
+    { name: 'Quick Sort / Counting Sort', type: 'Sorting', rating: 'Low', desc: 'O(log N) stack / O(K) frequency count array' },
+    { name: 'DFS / Radix Sort / Bellman-Ford', type: 'All Arenas', rating: 'Medium', desc: 'O(Depth) stack / O(N+K) bucket buffers / distance table' },
     { name: 'Merge Sort / BFS / Dijkstra / A*', type: 'Sorting / Pathfinding', rating: 'High', desc: 'O(N) / O(V) auxiliary grid queues/arrays' }
   ];
 
   const stabilityRankings = [
-    { name: 'Merge Sort / Insertion Sort / Bubble Sort', type: 'Sorting', rating: 'Stable', desc: 'Preserves duplicate keys ordering' },
-    { name: 'Quick Sort / Heap Sort / Selection Sort', type: 'Sorting', rating: 'Unstable', desc: 'Does not guarantee duplicate ordering' },
+    { name: 'Merge Sort / Insertion Sort / Bubble Sort / Radix Sort / Counting Sort', type: 'Sorting', rating: 'Stable', desc: 'Preserves duplicate keys ordering' },
+    { name: 'Quick Sort / Heap Sort / Selection Sort / Comb Sort', type: 'Sorting', rating: 'Unstable', desc: 'Does not guarantee duplicate ordering' },
     { name: 'Searching & Pathfinding Algorithms', type: 'Other', rating: 'N/A', desc: 'Stability metric is not applicable' }
   ];
 

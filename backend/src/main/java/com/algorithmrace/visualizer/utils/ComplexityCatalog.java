@@ -16,13 +16,20 @@ public final class ComplexityCatalog {
         add("Quick Sort", "O(n log n)", "O(n log n)", "O(n^2)", "O(log n)", "Partitions around a pivot so smaller values move left and larger values move right.", "partition around pivot\nquickSort left\nquickSort right");
         add("Heap Sort", "O(n log n)", "O(n log n)", "O(n log n)", "O(1)", "Turns the data into a max heap, then repeatedly extracts the maximum.", "build max heap\nswap root with end\nheapify");
         add("Comb Sort", "O(n log n)", "O(n^2/2^p)", "O(n^2)", "O(1)", "Improves Bubble Sort by comparing values with a shrinking gap before finishing with gap one.", "gap = n\nshrink gap by 1.3\ncompare a[i] and a[i + gap]");
+        add("Radix Sort", "O(nk)", "O(nk)", "O(nk)", "O(n+k)", "Non-comparison integer sorting algorithm that processes numbers digit-by-digit from least to most significant.", "for exp = 1 to max/exp > 0:\n  distribute into 10 buckets\n  collect buckets back to array");
+        add("Counting Sort", "O(n+k)", "O(n+k)", "O(n+k)", "O(k)", "Non-comparison integer sorting algorithm that counts value frequencies to construct sorted output.", "count = array of zeros size range\nfor x in arr: count[x - min]++\noverwrite arr by frequencies");
+
         add("Linear Search", "O(1)", "O(n)", "O(n)", "O(1)", "Checks each item in order until the target is found or the list ends.", "for each value:\n  compare with target");
         add("Binary Search", "O(1)", "O(log n)", "O(log n)", "O(1)", "Requires sorted data and halves the remaining search range after every comparison.", "low = 0, high = n - 1\nwhile low <= high:\n  compare middle");
         add("Jump Search", "O(1)", "O(sqrt n)", "O(sqrt n)", "O(1)", "Jumps by block size on sorted data, then scans linearly inside the matching block.", "jump by sqrt(n)\nlinear scan inside block");
+        add("Exponential Search", "O(1)", "O(log n)", "O(log n)", "O(1)", "Finds range where target exists by doubling index bounds, then performs binary search within that range.", "i = 1\nwhile i < n and a[i] <= target:\n  i = i * 2\nbinarySearch(i/2, min(i, n-1))");
+        add("Interpolation Search", "O(1)", "O(log log n)", "O(n)", "O(1)", "Estimates target position based on key value distribution rather than splitting midpoints.", "pos = low + ((target - a[low]) / (a[high] - a[low])) * (high - low)\nif a[pos] == target: found\nelse if a[pos] < target: low = pos + 1\nelse: high = pos - 1");
+
         add("BFS", "O(V+E)", "O(V+E)", "O(V+E)", "O(V)", "Explores evenly outward from the start and finds shortest paths in unweighted grids.", "queue.add(start)\nvisit neighbors breadth-first");
         add("DFS", "O(V+E)", "O(V+E)", "O(V+E)", "O(V)", "Explores deeply down one route before backtracking. It is fast to demonstrate but not shortest-path focused.", "stack.push(start)\nvisit neighbors depth-first");
         add("Dijkstra", "O(E log V)", "O(E log V)", "O(E log V)", "O(V)", "Always expands the currently cheapest known node and handles weighted shortest paths.", "dist[start] = 0\nrelax cheapest frontier node");
         add("A* Search", "O(E)", "O(E)", "O(b^d)", "O(V)", "Combines travelled distance with a heuristic estimate to guide the search toward the goal.", "choose lowest f = g + h\nrelax neighbors");
+        add("Bellman-Ford", "O(V*E)", "O(V*E)", "O(V*E)", "O(V)", "Relaxation-based shortest path algorithm that iteratively relaxes all edges across the graph.", "for i = 1 to V - 1:\n  for each edge (u, v):\n    relax(u, v)");
     }
 
     private ComplexityCatalog() {}

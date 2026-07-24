@@ -111,7 +111,7 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
       lanes: previewLanes,
       winner: null,
     };
-  }, [isCustomMode, parsedCustomArray, response, algorithms, catalog]);
+  }, [isCustomMode, parsedCustomArray, response, algorithms]);
 
 
   const onFrame = useCallback(
@@ -423,7 +423,7 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
           catalog={catalog}
           playing={playback.playing}
         />
-        <AlgorithmComparisonCenter algorithms={algorithms} type="sorting" catalog={catalog} />
+        <AlgorithmComparisonCenter algorithms={catalog.sortingAlgorithms} type="sorting" catalog={catalog} />
         <VisualizationLegend type="sorting" />
       </div>
     </main>

@@ -88,6 +88,30 @@ const ALGORITHM_DATA: AlgorithmItem[] = [
     stable: true,
     description: 'Classic comparison sort stepping through adjacent elements.',
   },
+  {
+    id: 'radixsort',
+    name: 'Radix Sort',
+    category: 'sorting',
+    categoryLabel: 'Sorting Arena',
+    bestTime: 'O(nk)',
+    avgTime: 'O(nk)',
+    worstTime: 'O(nk)',
+    space: 'O(n+k)',
+    stable: true,
+    description: 'Non-comparison integer sorting algorithm that processes numbers digit-by-digit from least to most significant.',
+  },
+  {
+    id: 'countingsort',
+    name: 'Counting Sort',
+    category: 'sorting',
+    categoryLabel: 'Sorting Arena',
+    bestTime: 'O(n+k)',
+    avgTime: 'O(n+k)',
+    worstTime: 'O(n+k)',
+    space: 'O(k)',
+    stable: true,
+    description: 'Non-comparison integer sorting algorithm that counts value frequencies to construct sorted output.',
+  },
 
   // Searching
   {
@@ -123,6 +147,28 @@ const ALGORITHM_DATA: AlgorithmItem[] = [
     space: 'O(1)',
     description: 'Sequential step-by-step element evaluation for unordered data.',
   },
+  {
+    id: 'exponentialsearch',
+    name: 'Exponential Search',
+    category: 'searching',
+    categoryLabel: 'Search Arena',
+    bestTime: 'O(1)',
+    avgTime: 'O(log n)',
+    worstTime: 'O(log n)',
+    space: 'O(1)',
+    description: 'Finds range where target exists by doubling index bounds, then performs binary search within that range.',
+  },
+  {
+    id: 'interpolationsearch',
+    name: 'Interpolation Search',
+    category: 'searching',
+    categoryLabel: 'Search Arena',
+    bestTime: 'O(1)',
+    avgTime: 'O(log log n)',
+    worstTime: 'O(n)',
+    space: 'O(1)',
+    description: 'Estimates target position based on key value distribution rather than splitting midpoints.',
+  },
 
   // Pathfinding
   {
@@ -157,6 +203,17 @@ const ALGORITHM_DATA: AlgorithmItem[] = [
     worstTime: 'O(V + E)',
     space: 'O(V)',
     description: 'Level-order queue traversal ensuring shortest path on unweighted grids.',
+  },
+  {
+    id: 'bellmanford',
+    name: 'Bellman-Ford Algorithm',
+    category: 'pathfinding',
+    categoryLabel: 'Pathfinding Arena',
+    bestTime: 'O(V·E)',
+    avgTime: 'O(V·E)',
+    worstTime: 'O(V·E)',
+    space: 'O(V)',
+    description: 'Relaxation-based shortest path algorithm that iteratively relaxes all edges across the graph.',
   },
   {
     id: 'dfs',

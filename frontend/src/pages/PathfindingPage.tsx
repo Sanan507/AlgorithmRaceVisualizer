@@ -215,7 +215,7 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
           catalog={catalog}
           playing={playback.playing}
         />
-        <AlgorithmComparisonCenter algorithms={algorithms} type="pathfinding" catalog={catalog} />
+        <AlgorithmComparisonCenter algorithms={catalog.pathfindingAlgorithms} type="pathfinding" catalog={catalog} />
         <VisualizationLegend type="pathfinding" />
       </div>
     </main>

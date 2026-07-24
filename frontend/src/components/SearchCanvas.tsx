@@ -52,11 +52,13 @@ export function SearchCanvas({ frame, algorithm }: { frame?: SimulationFrame | n
     const barW = Math.max(3, (rect.width - arr.length * 2) / arr.length);
     const gap = Math.max(1, (rect.width - barW * arr.length) / (arr.length + 1));
 
-    const isBinarySearch = algorithm?.includes('Binary');
-    let mid = -1;
+    const isMultiBoundSearch = algorithm?.includes('Binary') || algorithm?.includes('Exponential') || algorithm?.includes('Interpolation');
+    let activeProbe = -1;
 
-    if (isBinarySearch && frame.highlight && frame.highlight.length === 3) {
-      mid = frame.highlight[1];
+    if (frame.highlight && frame.highlight.length === 3) {
+      activeProbe = frame.highlight[1];
+    } else if (frame.highlight && frame.highlight.length === 1) {
+      activeProbe = frame.highlight[0];
     }
 
     arr.forEach((value, index) => {
@@ -81,7 +83,7 @@ export function SearchCanvas({ frame, algorithm }: { frame?: SimulationFrame | n
         baseColor = colors.found;
         isGlow = true;
         glowColor = 'rgba(0, 245, 212, 0.9)';
-      } else if (frame.highlight?.includes(index) && (!isBinarySearch || index === mid)) {
+      } else if (frame.highlight?.includes(index) && (!isMultiBoundSearch || index === activeProbe)) {
         baseColor = colors.current;
         isGlow = true;
         glowColor = 'rgba(255, 158, 0, 0.9)';

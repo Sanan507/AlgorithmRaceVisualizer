@@ -16,9 +16,19 @@ export function usePlayback(
     [response]
   );
 
+  // Compute a content-based signature for the current simulation dataset
+  const responseSignature = useMemo(() => {
+    if (!response) return '';
+    const laneNames = response.lanes.map((l) => l.name).join(',');
+    const totalFrames = response.lanes.map((l) => l.frames.length).join(',');
+    const dsLen = response.dataset?.length ?? 0;
+    return `${response.type}-${laneNames}-${totalFrames}-${dsLen}`;
+  }, [response]);
+
+  // Only reset frameIndex when actual simulation data changes, NOT on reference re-renders
   useEffect(() => {
     setFrameIndex(0);
-  }, [response]);
+  }, [responseSignature]);
 
   useEffect(() => {
     if (!playing || maxFrames <= 1) return undefined;
@@ -30,15 +40,40 @@ export function usePlayback(
           return current;
         }
         const next = current + 1;
-        if (onFrame && response?.lanes[0]?.frames[next]) {
-          const frame = response.lanes[0].frames[next] as Record<string, unknown>;
-          if (frame.swapped === true) {
-            onFrame('swap', next);
-          } else if (frame.found === true) {
+        if (onFrame && response) {
+          let hasSwap = false;
+          let hasHit = false;
+          let hasMiss = false;
+          let isAnyLaneActive = false;
+
+          for (const lane of response.lanes) {
+            if (next < lane.frames.length) {
+              const frame = lane.frames[next] as Record<string, unknown>;
+              const prevFrame = lane.frames[next - 1] as Record<string, unknown> | undefined;
+              const wasDoneBefore = prevFrame?.done === true;
+
+              if (!wasDoneBefore) {
+                isAnyLaneActive = true;
+                if (frame.swapped === true) {
+                  hasSwap = true;
+                }
+                if (frame.found === true || frame.pathFound === true) {
+                  hasHit = true;
+                }
+                if (frame.found === false && frame.done === true) {
+                  hasMiss = true;
+                }
+              }
+            }
+          }
+
+          if (hasHit) {
             onFrame('hit', next);
-          } else if (frame.found === false && frame.done === true) {
+          } else if (hasSwap) {
+            onFrame('swap', next);
+          } else if (hasMiss) {
             onFrame('miss', next);
-          } else {
+          } else if (isAnyLaneActive) {
             onFrame('compare', next);
           }
         }

@@ -110,6 +110,11 @@ export const SEARCHING_META: Record<string, SearchingMeta> = {
     strengths: 'Good for unbounded/infinite lists; O(log n) after finding range',
     weaknesses: 'Overhead of range-finding step; rarely used in practice',
   },
+  'Interpolation Search': {
+    requirements: 'Sorted array required',
+    strengths: 'Fast O(log log n) average time on uniformly distributed data',
+    weaknesses: 'Degrades to O(n) on non-uniform data; complex position calculation',
+  },
   'Ternary Search': {
     requirements: 'Sorted array required',
     strengths: 'Divides search space into thirds each step',
@@ -155,6 +160,14 @@ export const PATHFINDING_META: Record<string, PathfindingMeta> = {
     bestFor: 'Game AI, robotics; when a heuristic (e.g. Euclidean distance) is available',
     advantage: 'Fastest shortest-path algorithm when heuristic is accurate',
     limitation: 'Performance depends on heuristic quality; inadmissible h(x) can break optimality',
+  },
+  'Bellman-Ford': {
+    complete: true,
+    optimal: true,
+    weighted: true,
+    bestFor: 'Graphs with negative edge weights & negative cycle detection',
+    advantage: 'Handles negative edge weights cleanly via relaxation passes',
+    limitation: 'O(V*E) time complexity is slower than Dijkstra on positive-weight graphs',
   },
   'Greedy Best-First': {
     complete: false,

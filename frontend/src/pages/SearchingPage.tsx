@@ -104,7 +104,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
       lanes: previewLanes,
       winner: null,
     };
-  }, [isCustomMode, parsedCustomArray, response, algorithms, target, catalog]);
+  }, [isCustomMode, parsedCustomArray, response, algorithms, target]);
 
 
   const onFrame = useCallback(
@@ -469,7 +469,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
           catalog={catalog}
           playing={playback.playing}
         />
-        <AlgorithmComparisonCenter algorithms={algorithms} type="searching" catalog={catalog} />
+        <AlgorithmComparisonCenter algorithms={catalog.searchingAlgorithms} type="searching" catalog={catalog} />
         <VisualizationLegend type="searching" />
       </div>
     </main>

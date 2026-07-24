@@ -8,18 +8,23 @@ export const fallbackCatalog: CatalogResponse = {
     'Merge Sort',
     'Quick Sort',
     'Heap Sort',
-    'Comb Sort'
+    'Comb Sort',
+    'Radix Sort',
+    'Counting Sort'
   ],
   searchingAlgorithms: [
     'Linear Search',
     'Binary Search',
-    'Jump Search'
+    'Jump Search',
+    'Exponential Search',
+    'Interpolation Search'
   ],
   pathfindingAlgorithms: [
     'BFS',
     'DFS',
     'Dijkstra',
-    'A* Search'
+    'A* Search',
+    'Bellman-Ford'
   ],
   datasetTypes: [
     'Random',
@@ -91,6 +96,22 @@ export const fallbackCatalog: CatalogResponse = {
       theory: 'Improves Bubble Sort by comparing values with a shrinking gap before finishing with gap one.',
       pseudocode: 'gap = n\nshrink gap by 1.3\ncompare a[i] and a[i + gap]'
     },
+    'Radix Sort': {
+      best: 'O(nk)',
+      average: 'O(nk)',
+      worst: 'O(nk)',
+      space: 'O(n+k)',
+      theory: 'Non-comparison integer sorting algorithm that processes numbers digit-by-digit from least to most significant.',
+      pseudocode: 'for exp = 1 to max/exp > 0:\n  distribute into 10 buckets\n  collect buckets back to array'
+    },
+    'Counting Sort': {
+      best: 'O(n+k)',
+      average: 'O(n+k)',
+      worst: 'O(n+k)',
+      space: 'O(k)',
+      theory: 'Non-comparison integer sorting algorithm that counts value frequencies to construct sorted output.',
+      pseudocode: 'count = array of zeros size range\nfor x in arr: count[x - min]++\noverwrite arr by frequencies'
+    },
     'Linear Search': {
       best: 'O(1)',
       average: 'O(n)',
@@ -114,6 +135,22 @@ export const fallbackCatalog: CatalogResponse = {
       space: 'O(1)',
       theory: 'Jumps by block size on sorted data, then scans linearly inside the matching block.',
       pseudocode: 'jump by sqrt(n)\nlinear scan inside block'
+    },
+    'Exponential Search': {
+      best: 'O(1)',
+      average: 'O(log n)',
+      worst: 'O(log n)',
+      space: 'O(1)',
+      theory: 'Finds range where target exists by doubling index bounds, then performs binary search within that range.',
+      pseudocode: 'i = 1\nwhile i < n and a[i] <= target:\n  i = i * 2\nbinarySearch(i/2, min(i, n-1))'
+    },
+    'Interpolation Search': {
+      best: 'O(1)',
+      average: 'O(log log n)',
+      worst: 'O(n)',
+      space: 'O(1)',
+      theory: 'Estimates target position based on key value distribution rather than splitting midpoints.',
+      pseudocode: 'pos = low + ((target - a[low]) / (a[high] - a[low])) * (high - low)\nif a[pos] == target: found\nelse if a[pos] < target: low = pos + 1\nelse: high = pos - 1'
     },
     'BFS': {
       best: 'O(V+E)',
@@ -146,6 +183,14 @@ export const fallbackCatalog: CatalogResponse = {
       space: 'O(V)',
       theory: 'Combines travelled distance with a heuristic estimate to guide the search toward the goal.',
       pseudocode: 'choose lowest f = g + h\nrelax neighbors'
+    },
+    'Bellman-Ford': {
+      best: 'O(V*E)',
+      average: 'O(V*E)',
+      worst: 'O(V*E)',
+      space: 'O(V)',
+      theory: 'Relaxation-based shortest path algorithm that iteratively relaxes all edges across the graph.',
+      pseudocode: 'for i = 1 to V - 1:\n  for each edge (u, v):\n    relax(u, v)'
     }
   }
 };
