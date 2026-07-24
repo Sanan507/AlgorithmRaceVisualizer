@@ -9,7 +9,7 @@ import { SelectField } from '../components/SelectField';
 import { SortingCanvas } from '../components/SortingCanvas';
 import { useAudio } from '../context/AudioContext';
 import { usePlayback } from '../hooks/usePlayback';
-import type { CatalogResponse, RaceResponse } from '../models/types';
+import type { CatalogResponse, RaceLaneResponse, RaceResponse } from '../models/types';
 import { api } from '../services/api';
 import { parseCustomArrayInput } from '../utils/arrayParser';
 
@@ -51,7 +51,7 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
   const hasInvalidTokens = invalidCustomTokens.length > 0;
 
   // Instant 0ms Preview Response Generator for Custom Array Editing
-  const activeResponse = useMemo(() => {
+  const activeResponse: RaceResponse | null = useMemo(() => {
     if (!isCustomMode || parsedCustomArray.length === 0) {
       return response;
     }
@@ -60,13 +60,20 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
       return response;
     }
     // Otherwise, construct an instant local preview response
-    const previewLanes = algorithms.map((name) => ({
+    const previewLanes: RaceLaneResponse[] = algorithms.map((name) => ({
       name,
-      complexity: 'O(n)',
-      description: '',
+      complexity: catalog?.complexity[name]?.worst || 'O(n²)',
+      complexityInfo: catalog?.complexity[name] || {
+        best: 'O(n)',
+        average: 'O(n log n)',
+        worst: 'O(n²)',
+        space: 'O(1)',
+        theory: '',
+        pseudocode: '',
+      },
       frames: [
         {
-          frameIndex: 0,
+          frame: 0,
           array: parsedCustomArray,
           highlight: [],
           sortedBoundary: -1,
@@ -79,21 +86,33 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
           timeMs: 0,
           done: false,
           status: 'Ready',
+          foundIndex: null,
           searchPath: [],
-          visitedNodes: [],
+          grid: null,
+          path: [],
           steps: 0,
           pathFound: false,
         },
       ],
-      stats: { comparisons: 0, swaps: 0, timeMs: 0, found: false },
+      stats: {
+        comparisons: 0,
+        swaps: 0,
+        steps: 0,
+        timeMs: 0,
+        found: false,
+        foundIndex: null,
+      },
     }));
     return {
       type: 'sorting',
       dataset: parsedCustomArray,
+      target: null,
+      walls: null,
       lanes: previewLanes,
       winner: null,
     };
-  }, [isCustomMode, parsedCustomArray, response, algorithms]);
+  }, [isCustomMode, parsedCustomArray, response, algorithms, catalog]);
+
 
   const onFrame = useCallback(
     (event: 'compare' | 'swap' | 'hit' | 'miss' | 'step') => {

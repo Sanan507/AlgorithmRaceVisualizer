@@ -9,7 +9,7 @@ import { SearchCanvas } from '../components/SearchCanvas';
 import { SelectField } from '../components/SelectField';
 import { useAudio } from '../context/AudioContext';
 import { usePlayback } from '../hooks/usePlayback';
-import type { CatalogResponse, RaceResponse } from '../models/types';
+import type { CatalogResponse, RaceLaneResponse, RaceResponse } from '../models/types';
 import { api } from '../services/api';
 import { parseCustomArrayInput } from '../utils/arrayParser';
 
@@ -46,20 +46,27 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
   const isTargetInvalid = Number.isNaN(target);
 
   // Instant 0ms Preview Response Generator for Custom Array Editing in Search Arena
-  const activeResponse = useMemo(() => {
+  const activeResponse: RaceResponse | null = useMemo(() => {
     if (!isCustomMode || parsedCustomArray.length === 0) {
       return response;
     }
     if (response?.dataset && response.dataset.join(',') === parsedCustomArray.join(',')) {
       return response;
     }
-    const previewLanes = algorithms.map((name) => ({
+    const previewLanes: RaceLaneResponse[] = algorithms.map((name) => ({
       name,
-      complexity: 'O(log n)',
-      description: '',
+      complexity: catalog?.complexity[name]?.worst || 'O(log n)',
+      complexityInfo: catalog?.complexity[name] || {
+        best: 'O(1)',
+        average: 'O(log n)',
+        worst: 'O(log n)',
+        space: 'O(1)',
+        theory: '',
+        pseudocode: '',
+      },
       frames: [
         {
-          frameIndex: 0,
+          frame: 0,
           array: parsedCustomArray,
           highlight: [],
           sortedBoundary: -1,
@@ -72,22 +79,33 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
           timeMs: 0,
           done: false,
           status: 'Ready',
+          foundIndex: null,
           searchPath: [],
-          visitedNodes: [],
+          grid: null,
+          path: [],
           steps: 0,
           pathFound: false,
         },
       ],
-      stats: { comparisons: 0, swaps: 0, timeMs: 0, found: false },
+      stats: {
+        comparisons: 0,
+        swaps: 0,
+        steps: 0,
+        timeMs: 0,
+        found: false,
+        foundIndex: null,
+      },
     }));
     return {
       type: 'searching',
       dataset: parsedCustomArray,
       target,
+      walls: null,
       lanes: previewLanes,
       winner: null,
     };
-  }, [isCustomMode, parsedCustomArray, response, algorithms, target]);
+  }, [isCustomMode, parsedCustomArray, response, algorithms, target, catalog]);
+
 
   const onFrame = useCallback(
     (event: 'compare' | 'swap' | 'hit' | 'miss' | 'step') => {
