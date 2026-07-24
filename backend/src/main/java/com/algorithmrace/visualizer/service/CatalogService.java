@@ -17,7 +17,7 @@ public class CatalogService {
             SortingAlgorithmFactory.allNames(),
             SearchingAlgorithmFactory.allNames(),
             PathfindingFactory.allNames(),
-            List.of("Random", "Nearly Sorted", "Reversed", "Few Unique", "Custom"),
+            List.of("Random", "Nearly Sorted", "Reversed", "Few Unique"),
             MazeGenerator.allNames(),
             ComplexityCatalog.all()
         );

@@ -8,7 +8,7 @@ import java.util.List;
 
 public record SearchingSimulationRequest(
     @NotEmpty List<String> algorithms,
-    @Min(2) @Max(160) int size,
+    @Min(1) @Max(160) int size,
     Integer target,
     List<Integer> dataset
 ) {}

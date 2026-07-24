@@ -11,11 +11,14 @@ import { useAudio } from '../context/AudioContext';
 import { usePlayback } from '../hooks/usePlayback';
 import type { CatalogResponse, RaceResponse } from '../models/types';
 import { api } from '../services/api';
+import { parseCustomArrayInput } from '../utils/arrayParser';
 
 export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
   const [algorithms, setAlgorithms] = useState(['Linear Search', 'Binary Search', 'Jump Search']);
-  const [target, setTarget] = useState(66);
+  const [target, setTarget] = useState(20);
   const [size, setSize] = useState(42);
+  const [isCustomMode, setIsCustomMode] = useState(false);
+  const [customArrayStr, setCustomArrayStr] = useState('10, 5, 20, 15, 30');
   const [dataset, setDataset] = useState<number[] | null>(null);
   const [hasFreshDataset, setHasFreshDataset] = useState(true);
   const [response, setResponse] = useState<RaceResponse | null>(null);
@@ -37,16 +40,29 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
   const playback = usePlayback(response, speed, onFrame);
 
   const fetchSimulation = useCallback(
-    async (newDataset: boolean, autoplay = false, customTarget?: number, customAlgos?: string[], customSize?: number) => {
+    async (
+      newDataset: boolean,
+      autoplay = false,
+      customTarget?: number,
+      customAlgos?: string[],
+      customSize?: number,
+      overrideDataset?: number[]
+    ) => {
       setLoading(true);
       winnerAnnouncedRef.current = false;
       const useTarget = customTarget ?? target;
       const useAlgos = customAlgos ?? algorithms;
       const useSize = customSize ?? size;
+      const useDataset = overrideDataset ?? dataset;
 
       try {
-        if (newDataset || !dataset) {
-          const data = await api.searching({ algorithms: useAlgos, size: useSize, target: useTarget });
+        if (newDataset || !useDataset) {
+          const data = await api.searching({
+            algorithms: useAlgos,
+            size: useSize,
+            target: useTarget,
+            dataset: useDataset ?? undefined,
+          });
           setDataset(data.dataset);
           setResponse(data);
           setHasFreshDataset(true);
@@ -56,7 +72,12 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
             playback.setPlaying(true);
           }
         } else {
-          const data = await api.searching({ algorithms: useAlgos, size: useSize, target: useTarget, dataset });
+          const data = await api.searching({
+            algorithms: useAlgos,
+            size: useSize,
+            target: useTarget,
+            dataset: useDataset,
+          });
           setResponse(data);
           playback.reset();
           if (autoplay) {
@@ -96,26 +117,57 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
   function handleTargetChange(newTarget: number) {
     setTarget(newTarget);
     if (dataset) {
-      api.searching({ algorithms, size, target: newTarget, dataset }).then((data) => {
-        setResponse(data);
-        playback.reset();
-      });
+      api
+        .searching({ algorithms, size: dataset.length, target: newTarget, dataset })
+        .then((data) => {
+          setResponse(data);
+          playback.reset();
+        });
     }
   }
 
   function handleSizeChange(newSize: number) {
     setSize(newSize);
-    fetchSimulation(true, false, target, algorithms, newSize);
+    setIsCustomMode(false);
+    fetchSimulation(true, false, target, algorithms, newSize, undefined);
+  }
+
+  function handleToggleCustomMode() {
+    const nextMode = !isCustomMode;
+    setIsCustomMode(nextMode);
+    if (nextMode) {
+      const parsed = parseCustomArrayInput(customArrayStr);
+      if (parsed.length > 0) {
+        setDataset(parsed);
+        setSize(parsed.length);
+        fetchSimulation(true, false, target, algorithms, parsed.length, parsed);
+      }
+    } else {
+      fetchSimulation(true, false, target, algorithms, size, undefined);
+    }
+  }
+
+  function handleCustomArrayTextChange(text: string) {
+    setCustomArrayStr(text);
+    const parsed = parseCustomArrayInput(text);
+    if (parsed.length > 0) {
+      setDataset(parsed);
+      setSize(parsed.length);
+      fetchSimulation(true, false, target, algorithms, parsed.length, parsed);
+    }
   }
 
   function handleAlgorithmChange(index: number, nextAlgo: string) {
     const nextAlgos = algorithms.map((item, i) => (i === index ? nextAlgo : item));
     setAlgorithms(nextAlgos);
+
     if (dataset) {
-      api.searching({ algorithms: nextAlgos, size, target, dataset }).then((data) => {
-        setResponse(data);
-        playback.reset();
-      });
+      api
+        .searching({ algorithms: nextAlgos, size: dataset.length, target, dataset })
+        .then((data) => {
+          setResponse(data);
+          playback.reset();
+        });
     }
   }
 
@@ -125,7 +177,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
   );
 
   const isCompleted = !!(response && playback.frameIndex === playback.maxFrames - 1 && playback.maxFrames > 0);
-  const winnerLane = response?.lanes.find(l => l.name === response.winner);
+  const winnerLane = response?.lanes.find((l) => l.name === response.winner);
 
   useEffect(() => {
     if (isCompleted && response && !winnerAnnouncedRef.current) {
@@ -145,7 +197,9 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
           <h1>Search Arena</h1>
           <p>Real-time benchmarking of search algorithms</p>
         </div>
-        {response?.target && <div className="winner-pill target-pill">Target: {response.target}</div>}
+        {response?.target !== undefined && response?.target !== null && (
+          <div className="winner-pill target-pill">Target: {response.target}</div>
+        )}
       </header>
 
       {isCompleted && response?.winner && (
@@ -157,7 +211,9 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
               Completed search in <strong>{winnerLane?.stats.timeMs ?? 0} ms</strong> performing{' '}
               <strong>{winnerLane?.stats.comparisons?.toLocaleString() ?? 0}</strong> comparisons.{' '}
               {winnerLane?.stats.found ? (
-                <span>Target found at index <strong>{winnerLane?.stats.foundIndex}</strong>.</span>
+                <span>
+                  Target found at index <strong>{winnerLane?.stats.foundIndex}</strong>.
+                </span>
               ) : (
                 <span>Target not found in dataset.</span>
               )}
@@ -166,6 +222,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
         </div>
       )}
 
+      {/* Main Algorithm & Control Config Panel */}
       <section className="panel config-panel">
         {algorithms.map((value, index) => (
           <SelectField
@@ -176,14 +233,50 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
             onChange={(next) => handleAlgorithmChange(index, next)}
           />
         ))}
+
         <label className="field">
           <span>Target</span>
-          <input type="number" value={target} onChange={(event) => handleTargetChange(Number(event.target.value))} />
+          <input
+            type="number"
+            value={target}
+            onChange={(event) => handleTargetChange(Number(event.target.value))}
+          />
         </label>
-        <label className="field">
-          <span>Array Size</span>
-          <input type="number" min={2} max={160} value={size} onChange={(event) => handleSizeChange(Number(event.target.value))} />
-        </label>
+
+        <div className="field">
+          <span>Dataset Mode</span>
+          <button
+            type="button"
+            className={`btn-custom-toggle ${isCustomMode ? 'active' : ''}`}
+            onClick={handleToggleCustomMode}
+          >
+            {isCustomMode ? '✓ Custom Mode' : '⚡ Custom Array'}
+          </button>
+        </div>
+
+        {isCustomMode ? (
+          <label className="field custom-values-field">
+            <span>Custom Values (comma-separated)</span>
+            <input
+              type="text"
+              className="custom-input-inline"
+              value={customArrayStr}
+              placeholder="e.g. 10, 5, 20, 15, 30"
+              onChange={(e) => handleCustomArrayTextChange(e.target.value)}
+            />
+          </label>
+        ) : (
+          <label className="field">
+            <span>Array Size</span>
+            <input
+              type="number"
+              min={1}
+              max={160}
+              value={size}
+              onChange={(event) => handleSizeChange(Number(event.target.value))}
+            />
+          </label>
+        )}
       </section>
 
       <Controls

@@ -11,12 +11,14 @@ import { useAudio } from '../context/AudioContext';
 import { usePlayback } from '../hooks/usePlayback';
 import type { CatalogResponse, RaceResponse } from '../models/types';
 import { api } from '../services/api';
+import { parseCustomArrayInput } from '../utils/arrayParser';
 
 export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
   const [algorithms, setAlgorithms] = useState(['Bubble Sort', 'Quick Sort', 'Merge Sort']);
   const [datasetType, setDatasetType] = useState('Random');
+  const [isCustomMode, setIsCustomMode] = useState(false);
   const [size, setSize] = useState(30);
-  const [customArray, setCustomArray] = useState('5, 12, 3, 8, 1');
+  const [customArrayStr, setCustomArrayStr] = useState('5, 3, 8, 1, 9, 2');
   const [dataset, setDataset] = useState<number[] | null>(null);
   const [hasFreshDataset, setHasFreshDataset] = useState(true);
   const [response, setResponse] = useState<RaceResponse | null>(null);
@@ -25,6 +27,12 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
 
   const { play } = useAudio();
   const winnerAnnouncedRef = useRef(false);
+
+  // Filter out "Custom" from Dataset selection dropdown options
+  const predefinedOptions = useMemo(
+    () => catalog.datasetTypes.filter((d) => d !== 'Custom'),
+    [catalog.datasetTypes]
+  );
 
   const onFrame = useCallback(
     (event: 'compare' | 'swap' | 'hit' | 'miss' | 'step') => {
@@ -45,13 +53,13 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
       setLoading(true);
       winnerAnnouncedRef.current = false;
       const useAlgos = customParams?.algos ?? algorithms;
-      const useType = customParams?.dType ?? datasetType;
+      const useType = customParams?.dType ?? (isCustomMode ? 'Custom' : datasetType);
       const useSize = customParams?.sz ?? size;
-      const useCArrayStr = customParams?.cArray ?? customArray;
+      const useCArrayStr = customParams?.cArray ?? customArrayStr;
 
       let sendCustomArray: number[] | undefined;
       if (useType === 'Custom') {
-        sendCustomArray = useCArrayStr.split(',').map((part) => Number(part.trim())).filter((n) => Number.isFinite(n));
+        sendCustomArray = parseCustomArrayInput(useCArrayStr);
       } else if (!newDataset && dataset) {
         sendCustomArray = dataset;
       }
@@ -61,7 +69,7 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
           algorithms: useAlgos,
           datasetType: useType,
           size: useSize,
-          customArray: sendCustomArray
+          customArray: sendCustomArray,
         };
         const data = await api.sorting(body);
         setResponse(data);
@@ -79,7 +87,7 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
         setLoading(false);
       }
     },
-    [algorithms, datasetType, size, customArray, dataset, play, playback]
+    [algorithms, datasetType, isCustomMode, size, customArrayStr, dataset, play, playback]
   );
 
   useEffect(() => {
@@ -111,8 +119,19 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
   }
 
   function handleDatasetTypeChange(nextType: string) {
+    setIsCustomMode(false);
     setDatasetType(nextType);
     fetchSimulation(true, false, { dType: nextType });
+  }
+
+  function handleToggleCustomMode() {
+    const nextMode = !isCustomMode;
+    setIsCustomMode(nextMode);
+    if (nextMode) {
+      fetchSimulation(true, false, { dType: 'Custom', cArray: customArrayStr });
+    } else {
+      fetchSimulation(true, false, { dType: datasetType });
+    }
   }
 
   function handleSizeChange(nextSize: number) {
@@ -120,10 +139,11 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
     fetchSimulation(true, false, { sz: nextSize });
   }
 
-  function handleCustomArrayChange(nextCArray: string) {
-    setCustomArray(nextCArray);
-    if (datasetType === 'Custom') {
-      fetchSimulation(true, false, { cArray: nextCArray });
+  function handleCustomArrayTextChange(text: string) {
+    setCustomArrayStr(text);
+    const parsed = parseCustomArrayInput(text);
+    if (parsed.length > 0) {
+      fetchSimulation(true, false, { dType: 'Custom', cArray: text, sz: parsed.length });
     }
   }
 
@@ -133,9 +153,8 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
   );
 
   const isCompleted = !!(response && playback.frameIndex === playback.maxFrames - 1 && playback.maxFrames > 0);
-  const winnerLane = response?.lanes.find(l => l.name === response.winner);
+  const winnerLane = response?.lanes.find((l) => l.name === response.winner);
 
-  // Fire winner / race complete sound once when animation finishes
   useEffect(() => {
     if (isCompleted && response && !winnerAnnouncedRef.current) {
       winnerAnnouncedRef.current = true;
@@ -170,6 +189,7 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
         </div>
       )}
 
+      {/* Dataset & Control Config Panel */}
       <section className="panel config-panel">
         {algorithms.map((value, index) => (
           <SelectField
@@ -180,16 +200,46 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
             onChange={(next) => handleAlgorithmChange(index, next)}
           />
         ))}
-        <SelectField label="Dataset" value={datasetType} options={catalog.datasetTypes} onChange={handleDatasetTypeChange} />
-        {datasetType === 'Custom' ? (
-          <label className="field wide">
-            <span>Custom Array</span>
-            <input value={customArray} onChange={(event) => handleCustomArrayChange(event.target.value)} />
+
+        <SelectField
+          label="Dataset"
+          value={isCustomMode ? 'Custom' : datasetType}
+          options={predefinedOptions}
+          onChange={handleDatasetTypeChange}
+        />
+
+        <div className="field">
+          <span>Dataset Mode</span>
+          <button
+            type="button"
+            className={`btn-custom-toggle ${isCustomMode ? 'active' : ''}`}
+            onClick={handleToggleCustomMode}
+          >
+            {isCustomMode ? '✓ Custom Mode' : '⚡ Custom Array'}
+          </button>
+        </div>
+
+        {isCustomMode ? (
+          <label className="field custom-values-field">
+            <span>Custom Values (comma-separated)</span>
+            <input
+              type="text"
+              className="custom-input-inline"
+              value={customArrayStr}
+              placeholder="e.g. 5, 3, 8, 1, 9, 2"
+              onChange={(e) => handleCustomArrayTextChange(e.target.value)}
+            />
           </label>
         ) : (
           <label className="field">
             <span>Array Size</span>
-            <input type="number" min={2} max={160} value={size} onChange={(event) => handleSizeChange(Number(event.target.value))} />
+            <input
+              type="number"
+              min={1}
+              max={160}
+              value={size}
+              onChange={(event) => handleSizeChange(Number(event.target.value))}
+            />
           </label>
         )}
       </section>
