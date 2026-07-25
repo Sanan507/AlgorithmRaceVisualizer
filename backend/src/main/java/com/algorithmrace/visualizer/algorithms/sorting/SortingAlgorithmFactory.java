@@ -16,6 +16,7 @@ public final class SortingAlgorithmFactory {
             case "Comb Sort" -> new CombSortModel();
             case "Radix Sort" -> new RadixSortModel();
             case "Counting Sort" -> new CountingSortModel();
+            case "Cocktail Sort" -> new CocktailSortModel();
             default -> throw new IllegalArgumentException("Unrecognized sorting algorithm requested.");
         };
     }
@@ -30,7 +31,8 @@ public final class SortingAlgorithmFactory {
             "Heap Sort",
             "Comb Sort",
             "Radix Sort",
-            "Counting Sort"
+            "Counting Sort",
+            "Cocktail Sort"
         );
     }
 }

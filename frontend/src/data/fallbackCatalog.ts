@@ -10,7 +10,8 @@ export const fallbackCatalog: CatalogResponse = {
     'Heap Sort',
     'Comb Sort',
     'Radix Sort',
-    'Counting Sort'
+    'Counting Sort',
+    'Cocktail Sort'
   ],
   searchingAlgorithms: [
     'Linear Search',
@@ -111,6 +112,14 @@ export const fallbackCatalog: CatalogResponse = {
       space: 'O(k)',
       theory: 'Non-comparison integer sorting algorithm that counts value frequencies to construct sorted output.',
       pseudocode: 'count = array of zeros size range\nfor x in arr: count[x - min]++\noverwrite arr by frequencies'
+    },
+    'Cocktail Sort': {
+      best: 'O(n)',
+      average: 'O(n^2)',
+      worst: 'O(n^2)',
+      space: 'O(1)',
+      theory: 'A bidirectional variation of Bubble Sort that traverses the array in both directions during each pass',
+      pseudocode: 'repeat until no swaps\nforward pass: swap adjacent out-of-order elements\nbackward pass: swap adjacent out-of-order elements\nshrink unsorted boundaries after each full pass'
     },
     'Linear Search': {
       best: 'O(1)',

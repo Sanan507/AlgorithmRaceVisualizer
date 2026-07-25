@@ -18,6 +18,8 @@ public final class ComplexityCatalog {
         add("Comb Sort", "O(n log n)", "O(n^2/2^p)", "O(n^2)", "O(1)", "Improves Bubble Sort by comparing values with a shrinking gap before finishing with gap one.", "gap = n\nshrink gap by 1.3\ncompare a[i] and a[i + gap]");
         add("Radix Sort", "O(nk)", "O(nk)", "O(nk)", "O(n+k)", "Non-comparison integer sorting algorithm that processes numbers digit-by-digit from least to most significant.", "for exp = 1 to max/exp > 0:\n  distribute into 10 buckets\n  collect buckets back to array");
         add("Counting Sort", "O(n+k)", "O(n+k)", "O(n+k)", "O(k)", "Non-comparison integer sorting algorithm that counts value frequencies to construct sorted output.", "count = array of zeros size range\nfor x in arr: count[x - min]++\noverwrite arr by frequencies");
+        add("Cocktail Sort", "O(n)", "O(n²)", "O(n²)", "O(1)", "A bidirectional variation of Bubble Sort that traverses the array in both directions during each pass", "repeat until no swaps\nforward pass: swap adjacent out-of-order elements\nbackward pass: swap adjacent out-of-order elements\nshrink unsorted boundaries after each full pass"
+        );
 
         add("Linear Search", "O(1)", "O(n)", "O(n)", "O(1)", "Checks each item in order until the target is found or the list ends.", "for each value:\n  compare with target");
         add("Binary Search", "O(1)", "O(log n)", "O(log n)", "O(1)", "Requires sorted data and halves the remaining search range after every comparison.", "low = 0, high = n - 1\nwhile low <= high:\n  compare middle");

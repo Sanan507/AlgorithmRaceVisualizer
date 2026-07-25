@@ -22,7 +22,8 @@ class SortingAlgorithmsTest {
         "Merge Sort",
         "Quick Sort",
         "Heap Sort",
-        "Comb Sort"
+        "Comb Sort",
+        "Cocktail Sort"
     );
 
     @Test
