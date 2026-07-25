@@ -197,7 +197,7 @@ npm run dev
 ## 👤 Author & Contact
 
 - **Author**: **Muhammad Sanan Sarwar**
-- **Email**: [sanansarwar567@gmail.com](mailto:sanansarwar567@gmail.com)
+- **Email**: [sanansarwar507@gmail.com](mailto:sanansarwar507@gmail.com)
 - **LinkedIn**: [sanan-sarwar](https://www.linkedin.com/in/sanan-sarwar)
 - **GitHub**: [Sanan507](https://github.com/Sanan507)
 - **License**: MIT License (Permissive Open Source)

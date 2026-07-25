@@ -1,4 +1,4 @@
-import { BarChart3, Binary, GitBranch, History, Settings, ChevronLeft, ChevronRight, Zap, LayoutGrid, X } from 'lucide-react';
+import { BarChart3, Binary, GitBranch, History, Settings, ChevronLeft, ChevronRight, Zap, LayoutGrid, X, Sun, Moon } from 'lucide-react';
 import { useAudio } from '../context/AudioContext';
 
 type Page = 'landing' | 'sorting' | 'searching' | 'pathfinding' | 'history' | 'settings';
@@ -19,6 +19,8 @@ export function Sidebar({
   onToggle,
   mobileOpen,
   onMobileClose,
+  darkMode,
+  setDarkMode,
 }: {
   active: Page;
   onChange: (page: Page) => void;
@@ -26,6 +28,8 @@ export function Sidebar({
   onToggle: () => void;
   mobileOpen?: boolean;
   onMobileClose?: () => void;
+  darkMode?: boolean;
+  setDarkMode?: (value: boolean) => void;
 }) {
   const { play } = useAudio();
 
@@ -83,6 +87,25 @@ export function Sidebar({
         </div>
 
         <div className="sidebar-bottom">
+          {setDarkMode && (
+            <button
+              className="nav-item theme-toggle-item"
+              onClick={() => {
+                play('click');
+                setDarkMode(!darkMode);
+              }}
+              title={collapsed ? (darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode') : undefined}
+              style={{
+                border: '1px solid var(--line)',
+                background: 'rgba(255,255,255,0.03)',
+                marginBottom: '6px'
+              }}
+            >
+              {darkMode ? <Sun size={18} className="nav-icon text-amber-400" /> : <Moon size={18} className="nav-icon" />}
+              <span className="nav-label">{darkMode ? 'Light Mode' : 'Dark Mode'}</span>
+            </button>
+          )}
+
           <button 
             className="nav-item sidebar-toggle-item" 
             onClick={handleToggle} 
@@ -90,7 +113,7 @@ export function Sidebar({
             style={{ 
               border: '1px dashed var(--line)', 
               background: 'rgba(255,255,255,0.02)',
-              marginTop: '10px'
+              marginTop: '4px'
             }}
           >
             {collapsed ? <ChevronRight size={18} className="nav-icon" /> : <ChevronLeft size={18} className="nav-icon" />}

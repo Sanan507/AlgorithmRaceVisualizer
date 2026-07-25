@@ -242,7 +242,7 @@ export function SettingsPage({
               <Linkedin size={18} />
               <span>LinkedIn</span>
             </a>
-            <a href="mailto:sanansarwar567@gmail.com" className="social-btn">
+            <a href="mailto:sanansarwar507@gmail.com" className="social-btn">
               <Mail size={18} />
               <span>Email</span>
             </a>

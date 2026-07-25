@@ -16,6 +16,8 @@ import {
   Shield,
   Menu,
   X,
+  Sun,
+  Moon,
 } from 'lucide-react';
 
 const HeroMiniCanvas = lazy(() => import('../components/HeroMiniCanvas').then(m => ({ default: m.HeroMiniCanvas })));
@@ -23,9 +25,11 @@ const AlgorithmMatrix = lazy(() => import('../components/AlgorithmMatrix').then(
 
 interface Props {
   onNavigate: (page: 'sorting' | 'searching' | 'pathfinding' | 'history' | 'settings') => void;
+  darkMode?: boolean;
+  setDarkMode?: (val: boolean) => void;
 }
 
-export function LandingPage({ onNavigate }: Props) {
+export function LandingPage({ onNavigate, darkMode, setDarkMode }: Props) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const scrollToSection = (id: string) => {
@@ -90,7 +94,30 @@ export function LandingPage({ onNavigate }: Props) {
           </button>
         </nav>
 
-        <div className="landing-nav-actions desktop-cta-only">
+        <div className="landing-nav-actions desktop-cta-only" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {setDarkMode && (
+            <button
+              type="button"
+              className="theme-toggle-btn-top"
+              onClick={() => setDarkMode(!darkMode)}
+              title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              style={{
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid var(--line)',
+                borderRadius: '8px',
+                padding: '8px 12px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                color: 'var(--fg)',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              {darkMode ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} />}
+            </button>
+          )}
+
           <button
             className="landing-cta-btn btn-primary"
             onClick={() => onNavigate('sorting')}

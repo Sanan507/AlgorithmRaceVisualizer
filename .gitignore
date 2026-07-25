@@ -25,4 +25,4 @@ docx_render_oop_final/
 .temp-*
 user_request_*.txt
 race_history.csv
-
+create_github_issues.*

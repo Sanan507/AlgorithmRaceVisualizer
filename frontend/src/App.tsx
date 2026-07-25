@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
-import { Menu, Zap } from 'lucide-react';
+import { Sun, Moon, Menu, Zap } from 'lucide-react';
 import { Sidebar } from './components/Sidebar';
 import { LandingPage } from './pages/LandingPage';
 import { HistoryPage } from './pages/HistoryPage';
@@ -19,8 +19,18 @@ import { fallbackCatalog } from './data/fallbackCatalog';
 
 type Page = 'landing' | 'sorting' | 'searching' | 'pathfinding' | 'history' | 'settings';
 
+const getPageFromHash = (): Page => {
+  const hash = window.location.hash.replace('#/', '').replace('#', '').toLowerCase();
+  if (hash === 'sorting' || hash === 'sorting-arena') return 'sorting';
+  if (hash === 'searching' || hash === 'search' || hash === 'search-arena') return 'searching';
+  if (hash === 'pathfinding' || hash === 'pathfinding-arena') return 'pathfinding';
+  if (hash === 'history' || hash === 'benchmarks') return 'history';
+  if (hash === 'settings') return 'settings';
+  return 'landing';
+};
+
 export default function App() {
-  const [active, setActive] = useState<Page>('landing');
+  const [active, setActive] = useState<Page>(() => getPageFromHash());
   const [catalog, setCatalog] = useState<CatalogResponse>(fallbackCatalog);
   const [error] = useState<string | null>(null);
   const [darkMode, setDarkMode] = useState(() => {
@@ -37,8 +47,22 @@ export default function App() {
   const { settings: audioSettings, setSettings: setAudioSettings } = useAudioSettings();
   const { play } = useSound(audioSettings);
 
+  // Listen to browser back/forward and URL hash updates
+  useEffect(() => {
+    const handleHashChange = () => {
+      setActive(getPageFromHash());
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  // Synchronize state changes to URL bar hash
   useEffect(() => {
     window.scrollTo(0, 0);
+    const targetHash = active === 'landing' ? '' : `#${active}`;
+    if (window.location.hash !== targetHash) {
+      window.history.replaceState(null, '', targetHash || window.location.pathname + window.location.search);
+    }
   }, [active]);
 
   useEffect(() => {
@@ -78,7 +102,7 @@ export default function App() {
   return (
     <AudioCtx.Provider value={{ play, audioSettings, setAudioSettings }}>
       {active === 'landing' ? (
-        <LandingPage onNavigate={setActive} />
+        <LandingPage onNavigate={setActive} darkMode={darkMode} setDarkMode={setDarkMode} />
       ) : (
         <div className={`app-shell ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
           {/* Mobile Header Bar */}
@@ -87,15 +111,25 @@ export default function App() {
               <Zap size={18} className="brand-icon-zap" />
               <strong>AlgoRace</strong>
             </div>
-            <button
-              type="button"
-              className="mobile-hamburger-btn"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
-              aria-expanded={mobileMenuOpen}
-            >
-              <Menu size={22} />
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button
+                type="button"
+                className="mobile-hamburger-btn"
+                onClick={() => setDarkMode(!darkMode)}
+                aria-label={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              >
+                {darkMode ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} />}
+              </button>
+              <button
+                type="button"
+                className="mobile-hamburger-btn"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+                aria-expanded={mobileMenuOpen}
+              >
+                <Menu size={22} />
+              </button>
+            </div>
           </div>
 
           <Sidebar
@@ -105,6 +139,8 @@ export default function App() {
             onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
             mobileOpen={mobileMenuOpen}
             onMobileClose={() => setMobileMenuOpen(false)}
+            darkMode={darkMode}
+            setDarkMode={setDarkMode}
           />
 
           <div className="content-shell">

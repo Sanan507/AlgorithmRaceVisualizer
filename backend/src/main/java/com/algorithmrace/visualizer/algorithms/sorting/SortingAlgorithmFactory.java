@@ -3,7 +3,8 @@ package com.algorithmrace.visualizer.algorithms.sorting;
 import java.util.List;
 
 public final class SortingAlgorithmFactory {
-    private SortingAlgorithmFactory() {}
+    private SortingAlgorithmFactory() {
+    }
 
     public static com.algorithmrace.visualizer.model.AlgorithmModel create(String name) {
         return switch (name) {
@@ -17,6 +18,8 @@ public final class SortingAlgorithmFactory {
             case "Radix Sort" -> new RadixSortModel();
             case "Counting Sort" -> new CountingSortModel();
             case "Cocktail Sort" -> new CocktailSortModel();
+            case "Shell Sort" -> new ShellSortModel();
+
             default -> throw new IllegalArgumentException("Unrecognized sorting algorithm requested.");
         };
     }
@@ -32,7 +35,8 @@ public final class SortingAlgorithmFactory {
             "Comb Sort",
             "Radix Sort",
             "Counting Sort",
-            "Cocktail Sort"
+            "Cocktail Sort",
+            "Shell Sort"
         );
     }
 }
