@@ -11,6 +11,8 @@ import { useAudio } from '../context/AudioContext';
 import { usePlayback } from '../hooks/usePlayback';
 import type { CatalogResponse, RaceResponse } from '../models/types';
 import { api } from '../services/api';
+import { Share2 } from 'lucide-react';
+import { getUrlParams } from '../utils/urlParams';
 
 export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
   const [algorithms, setAlgorithms] = useState(['BFS', 'Dijkstra', 'A* Search', 'DFS']);
@@ -23,6 +25,8 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
 
   const { play } = useAudio();
   const winnerAnnouncedRef = useRef(false);
+  const initialized = useRef(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const onFrame = useCallback(
     (event: 'compare' | 'swap' | 'hit' | 'miss' | 'step') => {
@@ -74,8 +78,55 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
   );
 
   useEffect(() => {
-    fetchSimulation(true, false);
+    if (!initialized.current) {
+      initialized.current = true;
+      const params = getUrlParams();
+      if (params && params.page === 'pathfinding') {
+        const urlAlgos = params.algos;
+        const urlMaze = params.maze;
+
+        let newAlgos = [...algorithms];
+        let newMaze = mazeType;
+
+        if (urlAlgos) {
+          newAlgos = [
+             urlAlgos[0] || algorithms[0],
+             urlAlgos[1] || algorithms[1],
+             urlAlgos[2] || algorithms[2],
+             urlAlgos[3] || algorithms[3]
+          ].filter(Boolean); // Pathfinding has 4 lanes, if fewer provided, keep them
+          setAlgorithms(newAlgos);
+        }
+        if (urlMaze) {
+           newMaze = urlMaze;
+           setMazeType(urlMaze);
+        }
+
+        // Remove query parameters from URL without reloading
+        const url = new URL(window.location.href);
+        url.search = '';
+        window.history.replaceState(null, '', url.href);
+
+        fetchSimulation(true, false, { algos: newAlgos, mType: newMaze });
+      } else {
+        fetchSimulation(true, false);
+      }
+    }
   }, []);
+
+  function handleShareRun() {
+    const url = new URL(window.location.href);
+    url.searchParams.set('page', 'pathfinding');
+    url.searchParams.set('algos', algorithms.join(','));
+    url.searchParams.set('maze', mazeType);
+
+    navigator.clipboard.writeText(url.href)
+      .then(() => {
+        setToastMessage('Link copied to clipboard!');
+        setTimeout(() => setToastMessage(null), 3000);
+      })
+      .catch((err) => console.error('Failed to copy link', err));
+  }
 
   async function startRace() {
     if (hasFreshDataset && response) {
@@ -137,12 +188,21 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
 
   return (
     <main className="page">
-      <header className="page-header">
+      <header className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h1>Pathfinding Arena</h1>
           <p>Real-time benchmarking of pathfinding algorithms (Click/drag grid to edit walls)</p>
         </div>
+        <button className="btn btn-secondary" onClick={handleShareRun} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Share2 size={16} /> Share Run
+        </button>
       </header>
+
+      {toastMessage && (
+        <div className="toast-notification">
+          {toastMessage}
+        </div>
+      )}
 
       {isCompleted && response?.winner && (
         <div className="winner-banner">

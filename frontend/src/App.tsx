@@ -20,6 +20,17 @@ import { fallbackCatalog } from './data/fallbackCatalog';
 type Page = 'landing' | 'sorting' | 'searching' | 'pathfinding' | 'history' | 'settings';
 
 const getPageFromHash = (): Page => {
+  const searchParams = new URLSearchParams(window.location.search);
+  const pageParam = searchParams.get('page')?.toLowerCase();
+
+  if (pageParam) {
+    if (pageParam === 'sorting') return 'sorting';
+    if (pageParam === 'searching') return 'searching';
+    if (pageParam === 'pathfinding') return 'pathfinding';
+    if (pageParam === 'history') return 'history';
+    if (pageParam === 'settings') return 'settings';
+  }
+
   const hash = window.location.hash.replace('#/', '').replace('#', '').toLowerCase();
   if (hash === 'sorting' || hash === 'sorting-arena') return 'sorting';
   if (hash === 'searching' || hash === 'search' || hash === 'search-arena') return 'searching';
@@ -60,8 +71,25 @@ export default function App() {
   useEffect(() => {
     window.scrollTo(0, 0);
     const targetHash = active === 'landing' ? '' : `#${active}`;
-    if (window.location.hash !== targetHash) {
-      window.history.replaceState(null, '', targetHash || window.location.pathname + window.location.search);
+    const currentUrl = new URL(window.location.href);
+    const currentHash = currentUrl.hash;
+
+    // Only clear search params if we are navigating normally (not driven by initial search param)
+    // Actually we can keep search params if they are for the active page, but clear them if we switch pages
+    const pageParam = currentUrl.searchParams.get('page')?.toLowerCase();
+
+    if (active === 'landing') {
+      currentUrl.search = '';
+      currentUrl.hash = '';
+      if (window.location.href !== currentUrl.href) {
+        window.history.replaceState(null, '', currentUrl.href);
+      }
+    } else if (currentHash !== targetHash || (pageParam && pageParam !== active)) {
+       if (pageParam && pageParam !== active) {
+           currentUrl.search = '';
+       }
+       currentUrl.hash = targetHash;
+       window.history.replaceState(null, '', currentUrl.href);
     }
   }, [active]);
 
