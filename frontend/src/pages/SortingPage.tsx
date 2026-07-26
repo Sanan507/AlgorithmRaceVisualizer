@@ -12,6 +12,8 @@ import { usePlayback } from '../hooks/usePlayback';
 import type { CatalogResponse, RaceLaneResponse, RaceResponse } from '../models/types';
 import { api } from '../services/api';
 import { parseCustomArrayInput } from '../utils/arrayParser';
+import { Share2 } from 'lucide-react';
+import { getUrlParams } from '../utils/urlParams';
 
 export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
   const [algorithms, setAlgorithms] = useState(['Bubble Sort', 'Quick Sort', 'Merge Sort']);
@@ -29,6 +31,8 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
   const { play } = useAudio();
   const winnerAnnouncedRef = useRef(false);
   const requestIdRef = useRef(0);
+  const initialized = useRef(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Filter out "Custom" from Dataset selection dropdown options
   const predefinedOptions = useMemo(
@@ -180,9 +184,71 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
   );
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    fetchSimulation(true, false);
+    if (!initialized.current) {
+      initialized.current = true;
+      const params = getUrlParams();
+      if (params && params.page === 'sorting') {
+        const urlAlgos = params.algos;
+        const urlSize = params.size;
+        const urlMode = params.mode;
+
+        let newAlgos = [...algorithms];
+        let newMode = datasetType;
+        let newSize = size;
+
+        if (urlAlgos) {
+          newAlgos = [
+             urlAlgos[0] || algorithms[0],
+             urlAlgos[1] || algorithms[1],
+             urlAlgos[2] || algorithms[2]
+          ];
+          setAlgorithms(newAlgos);
+        }
+        if (urlSize) {
+           newSize = urlSize;
+           setSize(urlSize);
+        }
+        if (urlMode) {
+           newMode = urlMode;
+           setDatasetType(urlMode);
+           if (urlMode === 'Custom' && params.cArray) {
+             setIsCustomMode(true);
+             setCustomArrayStr(params.cArray);
+             setDataset(parseCustomArrayInput(params.cArray));
+           }
+        }
+
+        // Remove query parameters from URL without reloading
+        const url = new URL(window.location.href);
+        url.search = '';
+        window.history.replaceState(null, '', url.href);
+
+        fetchSimulation(true, false, { algos: newAlgos, dType: newMode, sz: newSize, cArray: params.cArray });
+      } else {
+        fetchSimulation(true, false);
+      }
+    }
   }, []);
+
+  function handleShareRun() {
+    const url = new URL(window.location.href);
+    url.searchParams.set('page', 'sorting');
+    url.searchParams.set('algos', algorithms.join(','));
+    if (!isCustomMode) {
+        url.searchParams.set('size', size.toString());
+        url.searchParams.set('mode', datasetType);
+    } else {
+        url.searchParams.set('mode', 'Custom');
+        url.searchParams.set('cArray', customArrayStr);
+    }
+
+    navigator.clipboard.writeText(url.href)
+      .then(() => {
+        setToastMessage('Link copied to clipboard!');
+        setTimeout(() => setToastMessage(null), 3000);
+      })
+      .catch((err) => console.error('Failed to copy link', err));
+  }
 
   async function startRace() {
     if (isCustomMode) {
@@ -296,12 +362,21 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
 
   return (
     <main className="page">
-      <header className="page-header">
+      <header className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h1>Sorting Arena</h1>
           <p>Real-time benchmarking of sorting algorithms</p>
         </div>
+        <button className="btn btn-secondary" onClick={handleShareRun} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Share2 size={16} /> Share Run
+        </button>
       </header>
+
+      {toastMessage && (
+        <div className="toast-notification">
+          {toastMessage}
+        </div>
+      )}
 
       {isCompleted && activeResponse?.winner && (
         <div className="winner-banner">

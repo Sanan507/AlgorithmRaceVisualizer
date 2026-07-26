@@ -12,6 +12,8 @@ import { usePlayback } from '../hooks/usePlayback';
 import type { CatalogResponse, RaceLaneResponse, RaceResponse } from '../models/types';
 import { api } from '../services/api';
 import { parseCustomArrayInput } from '../utils/arrayParser';
+import { Share2 } from 'lucide-react';
+import { getUrlParams } from '../utils/urlParams';
 
 export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
   const [algorithms, setAlgorithms] = useState(['Linear Search', 'Binary Search', 'Jump Search']);
@@ -29,6 +31,8 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
   const { play } = useAudio();
   const winnerAnnouncedRef = useRef(false);
   const requestIdRef = useRef(0);
+  const initialized = useRef(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Custom Array & Target validation helpers
   const parsedCustomArray = useMemo(() => parseCustomArrayInput(customArrayStr), [customArrayStr]);
@@ -185,8 +189,78 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
   );
 
   useEffect(() => {
-    fetchSimulation(true, false);
+    if (!initialized.current) {
+      initialized.current = true;
+      const params = getUrlParams();
+      if (params && params.page === 'searching') {
+        const urlAlgos = params.algos;
+        const urlSize = params.size;
+        const urlMode = params.mode;
+
+        let newAlgos = [...algorithms];
+        let newSize = size;
+        let newTarget = target; // Target could also be serialized if needed, but not specified in prompt example. Will keep as is.
+
+        if (urlAlgos) {
+          newAlgos = [
+             urlAlgos[0] || algorithms[0],
+             urlAlgos[1] || algorithms[1],
+             urlAlgos[2] || algorithms[2]
+          ];
+          setAlgorithms(newAlgos);
+        }
+        if (urlSize) {
+           newSize = urlSize;
+           setSize(urlSize);
+        }
+        if (urlMode) {
+           if (urlMode === 'Custom' && params.cArray) {
+             setIsCustomMode(true);
+             setCustomArrayStr(params.cArray);
+             const parsed = parseCustomArrayInput(params.cArray);
+             setDataset(parsed);
+
+             // Remove query parameters from URL without reloading
+             const url = new URL(window.location.href);
+             url.search = '';
+             window.history.replaceState(null, '', url.href);
+
+             fetchSimulation(true, false, newTarget, newAlgos, newSize, parsed);
+             return;
+           }
+        }
+
+        // Remove query parameters from URL without reloading
+        const url = new URL(window.location.href);
+        url.search = '';
+        window.history.replaceState(null, '', url.href);
+
+        fetchSimulation(true, false, newTarget, newAlgos, newSize, undefined);
+      } else {
+        fetchSimulation(true, false);
+      }
+    }
   }, []);
+
+  function handleShareRun() {
+    const url = new URL(window.location.href);
+    url.searchParams.set('page', 'searching');
+    url.searchParams.set('algos', algorithms.join(','));
+    if (!isCustomMode) {
+        url.searchParams.set('size', size.toString());
+        // url.searchParams.set('target', target.toString()); // If we wanted to share target
+    } else {
+        url.searchParams.set('mode', 'Custom');
+        url.searchParams.set('cArray', customArrayStr);
+    }
+
+    navigator.clipboard.writeText(url.href)
+      .then(() => {
+        setToastMessage('Link copied to clipboard!');
+        setTimeout(() => setToastMessage(null), 3000);
+      })
+      .catch((err) => console.error('Failed to copy link', err));
+  }
 
   async function startRace() {
     if (isTargetInvalid) {
@@ -329,15 +403,26 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
 
   return (
     <main className="page">
-      <header className="page-header">
+      <header className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h1>Search Arena</h1>
           <p>Real-time benchmarking of search algorithms</p>
         </div>
-        {activeResponse?.target !== undefined && activeResponse?.target !== null && (
-          <div className="winner-pill target-pill">Target: {activeResponse.target}</div>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          {activeResponse?.target !== undefined && activeResponse?.target !== null && (
+            <div className="winner-pill target-pill" style={{ margin: 0 }}>Target: {activeResponse.target}</div>
+          )}
+          <button className="btn btn-secondary" onClick={handleShareRun} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Share2 size={16} /> Share Run
+          </button>
+        </div>
       </header>
+
+      {toastMessage && (
+        <div className="toast-notification">
+          {toastMessage}
+        </div>
+      )}
 
       {isCompleted && activeResponse?.winner && (
         <div className="winner-banner">
