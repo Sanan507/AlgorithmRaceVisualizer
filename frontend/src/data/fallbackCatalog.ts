@@ -130,7 +130,6 @@ export const fallbackCatalog: CatalogResponse = {
       theory: 'Improves Insertion Sort by comparing and shifting elements at a shrinking gap before finishing with gap one.',
   pseudocode: 'gap = n / 2\nwhile gap > 0:\n  insertion sort with step size gap\n  gap = gap / 2'
 },
->>>>>>> upstream/master
     'Linear Search': {
       best: 'O(1)',
       average: 'O(n)',
