@@ -180,9 +180,20 @@ cd AlgorithmRaceVisualizer
 cd backend
 mvn spring-boot:run
 ```
+
+### 3. Run Code Quality Checks (Checkstyle)
+```bash
+cd backend
+mvn checkstyle:check       # Fails immediately if style violations are found
+mvn checkstyle:checkstyle  # Generates a detailed report (does not fail the build)
+```
+*Report is written to `backend/target/checkstyle/checkstyle-report.xml`. Rules follow Google's Java Style Guide (`google_checks.xml`). These checks also run automatically in CI on every push and pull request — see `.github/workflows/ci.yml`.*
+
+---
+
 *Backend server runs on `http://localhost:8080`.*
 
-### 3. Run Frontend (React + Vite)
+### 4. Run Frontend (React + Vite)
 ```bash
 cd frontend
 npm install

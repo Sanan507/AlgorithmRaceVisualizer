@@ -18,6 +18,17 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
+      - name: Run Checkstyle (fail on violations)
+        run: mvn -B checkstyle:check
+      - name: Generate Checkstyle report
+        run: mvn -B checkstyle:checkstyle
+      - name: Upload Checkstyle report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: checkstyle-report
+          path: backend/target/checkstyle/*
+          retention-days: 15
       - name: Build backend
         run: mvn -B test
 
