@@ -10,7 +10,9 @@ public class CocktailSortModel extends AlgorithmModel {
 	private boolean forward;
 	private boolean swappedInPass;
 
-	public CocktailSortModel() {super("Cocktail Sort", "O(n^2)");}
+	public CocktailSortModel() {
+		super("Cocktail Sort", "O(n^2)");
+	}
 
 	@Override
 	public void step() {

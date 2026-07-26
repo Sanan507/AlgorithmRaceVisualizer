@@ -7,9 +7,10 @@ import jakarta.validation.constraints.NotEmpty;
 import java.util.List;
 
 public record PathfindingSimulationRequest(
-    @NotEmpty List<String> algorithms,
-    @Min(8) @Max(40) int rows,
-    @Min(8) @Max(60) int cols,
-    String mazeType,
-    boolean[][] walls
-) {}
+		@NotEmpty List<String> algorithms,
+		@Min(8) @Max(40) int rows,
+		@Min(8) @Max(60) int cols,
+		String mazeType,
+		boolean[][] walls
+) {
+}

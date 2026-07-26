@@ -7,8 +7,9 @@ import jakarta.validation.constraints.NotEmpty;
 import java.util.List;
 
 public record SortingSimulationRequest(
-    @NotEmpty List<String> algorithms,
-    String datasetType,
-    @Min(1) @Max(160) int size,
-    List<Integer> customArray
-) {}
+		@NotEmpty List<String> algorithms,
+		String datasetType,
+		@Min(1) @Max(160) int size,
+		List<Integer> customArray
+) {
+}

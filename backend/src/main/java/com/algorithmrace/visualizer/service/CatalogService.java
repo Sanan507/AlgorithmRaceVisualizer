@@ -12,14 +12,14 @@ import java.util.List;
 
 @Service
 public class CatalogService {
-    public CatalogResponse catalog() {
-        return new CatalogResponse(
-            SortingAlgorithmFactory.allNames(),
-            SearchingAlgorithmFactory.allNames(),
-            PathfindingFactory.allNames(),
-            List.of("Random", "Nearly Sorted", "Reversed", "Few Unique"),
-            MazeGenerator.allNames(),
-            ComplexityCatalog.all()
-        );
-    }
+	public CatalogResponse catalog() {
+		return new CatalogResponse(
+				SortingAlgorithmFactory.allNames(),
+				SearchingAlgorithmFactory.allNames(),
+				PathfindingFactory.allNames(),
+				List.of("Random", "Nearly Sorted", "Reversed", "Few Unique"),
+				MazeGenerator.allNames(),
+				ComplexityCatalog.all()
+		);
+	}
 }

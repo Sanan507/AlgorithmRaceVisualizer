@@ -4,42 +4,42 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 
 public class DFSModel extends PathfindingModel {
-    private final Deque<GridCell> stack = new ArrayDeque<>();
+	private final Deque<GridCell> stack = new ArrayDeque<>();
 
-    public DFSModel() {
-        super("DFS");
-    }
+	public DFSModel() {
+		super("DFS");
+	}
 
-    @Override
-    public void step() {
-        if (isDone() || stack.isEmpty()) {
-            markDone();
-            return;
-        }
-        GridCell current = stack.pop();
-        if (current.state == CellState.VISITED) return;
-        if (current == end) {
-            reconstructPath(end);
-            markDone();
-            return;
-        }
-        if (current.state != CellState.START) current.state = CellState.VISITED;
-        addStep();
-        for (GridCell nb : getNeighbors(current)) {
-            // Only push if EMPTY or END, and also check FRONTIER to prevent
-            // duplicate pushes that cause incorrect parent overwrites.
-            if (nb.state == CellState.EMPTY || nb.state == CellState.END) {
-                nb.parent = current;
-                if (nb != end) nb.state = CellState.FRONTIER;
-                stack.push(nb);
-            }
-        }
-    }
+	@Override
+	public void step() {
+		if (isDone() || stack.isEmpty()) {
+			markDone();
+			return;
+		}
+		GridCell current = stack.pop();
+		if (current.state == CellState.VISITED) return;
+		if (current == end) {
+			reconstructPath(end);
+			markDone();
+			return;
+		}
+		if (current.state != CellState.START) current.state = CellState.VISITED;
+		addStep();
+		for (GridCell nb : getNeighbors(current)) {
+			// Only push if EMPTY or END, and also check FRONTIER to prevent
+			// duplicate pushes that cause incorrect parent overwrites.
+			if (nb.state == CellState.EMPTY || nb.state == CellState.END) {
+				nb.parent = current;
+				if (nb != end) nb.state = CellState.FRONTIER;
+				stack.push(nb);
+			}
+		}
+	}
 
-    @Override
-    public void reset() {
-        stack.clear();
-        resetStats();
-        if (start != null) stack.push(start);
-    }
+	@Override
+	public void reset() {
+		stack.clear();
+		resetStats();
+		if (start != null) stack.push(start);
+	}
 }
