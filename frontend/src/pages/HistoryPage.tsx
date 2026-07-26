@@ -160,6 +160,20 @@ const algoDatabase: Record<string, AlgoMeta> = {
     realWorldApp: 'Image processing histogram equalizations, radix sort sub-routines, and survey score tabulations.',
     appDescription: 'Histogram equalizations and survey scoring engines.'
   },
+  'Shell Sort': {
+    name: 'Shell Sort',
+    category: 'Sorting',
+    best: 'O(N log N)',
+    average: 'O(N^1.3)',
+    worst: 'O(N²)',
+    space: 'O(1)',
+    stability: 'Unstable',
+    speedRank: 'Moderate',
+    memoryRank: 'Minimal',
+    recommendedUse: 'Improves on Insertion Sort by comparing and shifting elements at a shrinking gap, useful for medium-sized datasets where O(N²) algorithms become too slow but full O(N log N) overhead is unnecessary.',
+    realWorldApp: 'Embedded systems and libraries needing a simple, low-memory sort that outperforms Insertion Sort without requiring extra allocation.',
+    appDescription: 'Embedded systems and low-memory sorting libraries.'
+},
   // Searching
   'Linear Search': {
     name: 'Linear Search',
@@ -320,12 +334,12 @@ export function HistoryPage({ catalog }: { catalog: CatalogResponse }) {
     { name: 'Binary / Interpolation Search / Radix / Counting Sort / A* Search', type: 'All Arenas', rating: 'Elite', desc: 'O(1), O(log log N), O(N·K) or heuristic optimal' },
     { name: 'Quick Sort / Exponential Search', type: 'Sorting / Searching', rating: 'Elite', desc: 'Ultra-low constant factors, O(N log N) / O(log N)' },
     { name: 'Merge Sort / Heap Sort / Dijkstra', type: 'Sorting / Pathfinding', rating: 'Fast', desc: 'Guaranteed O(N log N) / O(V log V)' },
-    { name: 'Jump Search / BFS / DFS / Comb Sort', type: 'All Arenas', rating: 'Moderate', desc: 'O(√N) / Linear graph traversals / gap sorting' },
+    { name: 'Jump Search / BFS / DFS / Comb Sort / Shell Sort', type: 'All Arenas', rating: 'Moderate', desc: 'O(√N) / Linear graph traversals / gap sorting' },
     { name: 'Bubble / Selection / Insertion / Linear Search / Bellman-Ford', type: 'All Arenas', rating: 'Slow', desc: 'Quadratic O(N²) sorting, O(N) search, O(V·E) pathfinding' }
   ];
 
   const memoryRankings = [
-    { name: 'Bubble / Selection / Insertion / Heap / Comb Sort', type: 'Sorting', rating: 'Minimal', desc: 'O(1) auxiliary space, in-place' },
+    { name: 'Bubble / Selection / Insertion / Heap / Comb Sort / Shell Sort', type: 'Sorting', rating: 'Minimal', desc: 'O(1) auxiliary space, in-place' },
     { name: 'Linear / Binary / Jump / Exponential / Interpolation Search', type: 'Searching', rating: 'Minimal', desc: 'O(1) auxiliary space, index checks' },
     { name: 'Quick Sort / Counting Sort', type: 'Sorting', rating: 'Low', desc: 'O(log N) stack / O(K) frequency count array' },
     { name: 'DFS / Radix Sort / Bellman-Ford', type: 'All Arenas', rating: 'Medium', desc: 'O(Depth) stack / O(N+K) bucket buffers / distance table' },
