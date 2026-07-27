@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import type { CatalogResponse, RaceResponse, SimulationFrame } from '../models/types';
-import { Trophy, Clock, Zap, Download } from 'lucide-react';
+import { Trophy, Clock, Zap, Download, Camera } from 'lucide-react';
 import { triggerConfetti } from '../utils/confetti';
+import { exportComparisonSnapshot } from '../utils/exportComparisonSnapshot';
 
 interface PerformanceComparisonProps {
   response: RaceResponse | null;
@@ -248,6 +249,33 @@ export function PerformanceComparison({
     }
   }
 
+  function handleExportSnapshot() {
+    if (!response) return;
+
+    exportComparisonSnapshot({
+      type,
+      datasetType,
+      datasetSize: response.dataset?.length ?? (type === 'pathfinding' ? 504 : 0),
+      isCompleted,
+      winner: isCompleted ? response.winner : null,
+      efficiencyText: isCompleted ? efficiencyText : undefined,
+      winnerExplanation: (isCompleted && response.winner) ? getWinnerExplanation(response.winner, type) : undefined,
+      laneData: laneData.map(lane => ({
+        name: lane.name,
+        complexity: lane.complexityInfo?.worst,
+        timeMs: lane.timeMs,
+        opLabel: lane.opLabel,
+        opValue: lane.opValue,
+        secLabel: lane.secLabel,
+        secValue: lane.secValue,
+        done: lane.done,
+        nodesVisited: lane.nodesVisited,
+        frontierSize: lane.frontierSize,
+        pathLength: lane.pathLength,
+      }))
+    });
+  }
+
   // Maximum operations for visual bar scale
   const maxOps = Math.max(1, ...laneData.map(l => l.opValue));
   const maxTime = Math.max(1, ...laneData.map(l => l.timeMs));
@@ -257,36 +285,63 @@ export function PerformanceComparison({
 
   return (
     <section className="panel compact performance-comparison-panel">
-      <div className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
         <span>Performance Comparison</span>
-        <button
-          type="button"
-          className="btn btn-secondary csv-export-btn"
-          onClick={handleDownloadCsv}
-          disabled={!isCompleted}
-          title={isCompleted ? "Export scientific benchmark report as CSV" : "Complete the race to export CSV report"}
-          style={{ 
-            display: 'inline-flex', 
-            alignItems: 'center', 
-            gap: '8px',
-            padding: '8px 16px',
-            fontSize: '0.85rem',
-            fontWeight: 600,
-            borderRadius: '8px',
-            border: isCompleted ? '1px solid rgba(56, 189, 248, 0.4)' : '1px solid rgba(255, 255, 255, 0.1)',
-            background: isCompleted 
-              ? 'linear-gradient(135deg, rgba(14, 165, 233, 0.15) 0%, rgba(99, 102, 241, 0.15) 100%)' 
-              : 'rgba(255, 255, 255, 0.04)',
-            color: isCompleted ? '#38bdf8' : 'var(--text-muted)',
-            boxShadow: isCompleted ? '0 2px 12px rgba(14, 165, 233, 0.2)' : 'none',
-            opacity: isCompleted ? 1 : 0.45,
-            cursor: isCompleted ? 'pointer' : 'not-allowed',
-            transition: 'all 0.25s ease'
-          }}
-        >
-          <Download size={15} style={{ color: isCompleted ? '#38bdf8' : 'currentColor' }} /> 
-          <span>Export Benchmark CSV</span>
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <button
+            type="button"
+            className="btn btn-secondary snapshot-export-btn"
+            onClick={handleExportSnapshot}
+            title="Export full race comparison snapshot as PNG image"
+            style={{ 
+              display: 'inline-flex', 
+              alignItems: 'center', 
+              gap: '8px',
+              padding: '8px 16px',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              borderRadius: '8px',
+              border: '1px solid rgba(168, 85, 247, 0.4)',
+              background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(99, 102, 241, 0.15) 100%)',
+              color: '#c084fc',
+              boxShadow: '0 2px 12px rgba(168, 85, 247, 0.2)',
+              cursor: 'pointer',
+              transition: 'all 0.25s ease'
+            }}
+          >
+            <Camera size={15} style={{ color: '#c084fc' }} /> 
+            <span>Export Snapshot PNG</span>
+          </button>
+
+          <button
+            type="button"
+            className="btn btn-secondary csv-export-btn"
+            onClick={handleDownloadCsv}
+            disabled={!isCompleted}
+            title={isCompleted ? "Export scientific benchmark report as CSV" : "Complete the race to export CSV report"}
+            style={{ 
+              display: 'inline-flex', 
+              alignItems: 'center', 
+              gap: '8px',
+              padding: '8px 16px',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              borderRadius: '8px',
+              border: isCompleted ? '1px solid rgba(56, 189, 248, 0.4)' : '1px solid rgba(255, 255, 255, 0.1)',
+              background: isCompleted 
+                ? 'linear-gradient(135deg, rgba(14, 165, 233, 0.15) 0%, rgba(99, 102, 241, 0.15) 100%)' 
+                : 'rgba(255, 255, 255, 0.04)',
+              color: isCompleted ? '#38bdf8' : 'var(--text-muted)',
+              boxShadow: isCompleted ? '0 2px 12px rgba(14, 165, 233, 0.2)' : 'none',
+              opacity: isCompleted ? 1 : 0.45,
+              cursor: isCompleted ? 'pointer' : 'not-allowed',
+              transition: 'all 0.25s ease'
+            }}
+          >
+            <Download size={15} style={{ color: isCompleted ? '#38bdf8' : 'currentColor' }} /> 
+            <span>Export Benchmark CSV</span>
+          </button>
+        </div>
       </div>
 
       <div className="perf-grid">
