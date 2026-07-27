@@ -1,6 +1,6 @@
-import { useState, type ReactNode } from 'react';
+import { useState, useRef, type ReactNode } from 'react';
 import type { RaceLaneResponse, SimulationFrame } from '../models/types';
-import { Clock, Activity, RotateCw, CheckCircle2, AlertCircle, Percent, Code, ChevronDown, ChevronUp } from 'lucide-react';
+import { Clock, Activity, RotateCw, CheckCircle2, AlertCircle, Percent, Code, ChevronDown, ChevronUp, Camera } from 'lucide-react';
 
 export type LaneState = 'ready' | 'running' | 'paused' | 'finished';
 export type ArenaType = 'sorting' | 'searching' | 'pathfinding';
@@ -19,6 +19,20 @@ export function LaneCard({
   children: ReactNode;
 }) {
   const [showCode, setShowCode] = useState(false);
+  const canvasContainerRef = useRef<HTMLDivElement>(null);
+
+  const handleDownload = () => {
+    const canvas = canvasContainerRef.current?.querySelector('canvas');
+    if (canvas) {
+      const dataUrl = canvas.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      const formattedName = lane.name.toLowerCase().replace(/\s+/g, '-');
+      a.download = `algorace-${formattedName}.png`;
+      a.click();
+    }
+  };
+
   const totalFrames = lane.frames.length;
   const progress = totalFrames > 1 ? Math.min(100, Math.round((frame.frame / (totalFrames - 1)) * 100)) : 0;
 
@@ -108,6 +122,14 @@ export function LaneCard({
           <span>{lane.complexity}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button
+            className="btn ghost icon-btn"
+            onClick={handleDownload}
+            title="Download Screenshot"
+            style={{ padding: '4px 8px', fontSize: '12px' }}
+          >
+            <Camera size={13} />
+          </button>
           {pseudocodeText && (
             <button
               className="btn ghost icon-btn"
@@ -124,7 +146,7 @@ export function LaneCard({
         </div>
       </header>
 
-      <div className="lane-canvas-container">
+      <div className="lane-canvas-container" ref={canvasContainerRef}>
         {children}
       </div>
 
