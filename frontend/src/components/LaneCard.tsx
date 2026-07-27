@@ -126,6 +126,7 @@ export function LaneCard({
             className="btn ghost icon-btn"
             onClick={handleDownload}
             title="Download Screenshot"
+            aria-label="Download Screenshot"
             style={{ padding: '4px 8px', fontSize: '12px' }}
           >
             <Camera size={13} />
