@@ -41,6 +41,7 @@ AlgoRace is a high-performance full-stack web application designed for real-time
 ## 🚀 Key Features & Architectural Highlights
 
 - **20+ Algorithms Supported**: Multi-lane comparison across Sorting, Searching, and Pathfinding.
+- **Executive Benchmark PNG & CSV Export**: Export high-resolution (2x Retina scale) PNG visual snapshots and sanitized RFC 4180 CSV performance reports containing execution times, operations, efficiency ratios, and winner analysis.
 - **Deep Linking & "Share This Run" URL Encoding**: Share exact race configurations and exact dataset array elements / custom pathfinding wall grids via copyable URL search parameters (`window.location.search`).
 - **OpenAPI & Swagger UI Documentation**: Interactive backend API documentation and live endpoint testing dashboard at `/swagger-ui.html`.
 - **Spring Boot Actuator Health Monitoring**: Enterprise production health probe endpoint (`/actuator/health`).
