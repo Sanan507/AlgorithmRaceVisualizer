@@ -130,7 +130,7 @@ Synthesized acoustic chimes provide subtle auditory feedback for array swaps, co
 - **Audio**: Native Web Audio API Synthesizer
 
 ### Backend
-- **Language**: Java 21 / 25
+- **Language**: Java 21
 - **Framework**: Spring Boot 3.4.2 REST Engine
 - **Build Tool**: Maven
 
@@ -186,6 +186,7 @@ mvn spring-boot:run
 cd backend
 mvn checkstyle:check       # Fails immediately if style violations are found
 mvn checkstyle:checkstyle  # Generates a detailed report (does not fail the build)
+mvn spotless:apply         #Run this to fix formatting issues
 ```
 *Report is written to `backend/target/checkstyle/checkstyle-report.xml`. Rules follow Google's Java Style Guide (`google_checks.xml`). These checks also run automatically in CI on every push and pull request — see `.github/workflows/ci.yml`.*
 

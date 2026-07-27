@@ -1,5 +1,0 @@
-<suppressions>
-    <suppress
-            files=".*backend/.*"
-            checks="Javadoc.*|MissingJavadoc.*"/>
-</suppressions>

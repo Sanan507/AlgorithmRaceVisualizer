@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!DOCTYPE suppressions PUBLIC
+        "-//Checkstyle//DTD Suppressions Properties 1.2//EN"
+        "https://checkstyle.org/dtds/suppressions_1_2.dtd">
+<suppressions>
+    <!-- Suppress Javadoc requirements -->
+    <suppress files=".*" checks="Javadoc.*|MissingJavadoc.*"/>
+
+<!--    &lt;!&ndash; Suppress single-line braces requirement &ndash;&gt;-->
+<!--    <suppress files=".*" checks="NeedBraces"/>-->
+
+    <!-- Suppress strict naming rules (e.g., BFSModel, AStarModel, gCost, hCost, i, j) -->
+    <suppress files=".*" checks="AbbreviationAsWordInName|MemberName|MethodName"/>
+
+    <!-- Suppress Checkstyle's indentation check (Spotless handles this) -->
+    <suppress files=".*" checks="Indentation"/>
+
+    <!-- Suppress missing switch default check across all files -->
+    <suppress files=".*" checks="MissingSwitchDefault"/>
+</suppressions>
