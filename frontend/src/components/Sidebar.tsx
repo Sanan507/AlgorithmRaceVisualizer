@@ -54,7 +54,15 @@ export function Sidebar({
       <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
         <div className="sidebar-top">
           <div className="brand-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-            <div className="brand" onClick={() => handleNav('landing')} style={{ cursor: 'pointer' }}>
+            <div
+              className="brand"
+              role="button"
+              tabIndex={0}
+              aria-label="Go to Overview"
+              onClick={() => handleNav('landing')}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleNav('landing'); } }}
+              style={{ cursor: 'pointer' }}
+            >
               <div className="brand-mark">
                 <Zap size={22} className="brand-icon-zap" />
               </div>
@@ -70,13 +78,14 @@ export function Sidebar({
             )}
           </div>
 
-          <nav className="nav-list">
+          <nav className="nav-list" role="navigation" aria-label="Main Navigation">
             {items.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
                 className={`nav-item ${active === id ? 'active' : ''}`}
                 onClick={() => handleNav(id)}
                 title={collapsed ? label : undefined}
+                aria-label={label}
               >
                 <div className="nav-item-glow" />
                 <Icon size={19} className="nav-icon" />
@@ -95,6 +104,7 @@ export function Sidebar({
                 setDarkMode(!darkMode);
               }}
               title={collapsed ? (darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode') : undefined}
+              aria-label={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
               style={{
                 border: '1px solid var(--line)',
                 background: 'rgba(255,255,255,0.03)',
@@ -110,6 +120,7 @@ export function Sidebar({
             className="nav-item sidebar-toggle-item" 
             onClick={handleToggle} 
             title={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+            aria-label={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
             style={{ 
               border: '1px dashed var(--line)', 
               background: 'rgba(255,255,255,0.02)',

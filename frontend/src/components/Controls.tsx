@@ -63,23 +63,23 @@ export function Controls({
   return (
     <div className="control-strip flex-wrap">
       <div className="control-group">
-        <button className="btn primary" onClick={handleStart} disabled={disabled}>
+        <button className="btn primary" onClick={handleStart} disabled={disabled} aria-label="Start Race">
           <Play size={17} /> Start Race
         </button>
-        <button className="btn ghost" onClick={handleToggle} disabled={disabled}>
+        <button className="btn ghost" onClick={handleToggle} disabled={disabled} aria-label={playing ? 'Pause' : 'Resume'}>
           {playing ? <Pause size={17} /> : <Play size={17} />} {playing ? 'Pause' : 'Resume'}
         </button>
-        <button className="btn secondary" onClick={handleReset} disabled={disabled}>
+        <button className="btn secondary" onClick={handleReset} disabled={disabled} aria-label={resetLabel}>
           {resetLabel.includes('Random') ? <Shuffle size={17} /> : <RotateCcw size={17} />} {resetLabel}
         </button>
       </div>
 
       {maxFrames > 0 && (
         <div className="control-group step-group">
-          <button className="btn icon-btn" onClick={handleStepBack} disabled={disabled || frameIndex <= 0} title="Step Backward">
+          <button className="btn icon-btn" onClick={handleStepBack} disabled={disabled || frameIndex <= 0} title="Step Backward" aria-label="Step Backward">
             <SkipBack size={16} />
           </button>
-          <button className="btn icon-btn" onClick={handleStepForward} disabled={disabled || frameIndex >= maxFrames - 1} title="Step Forward">
+          <button className="btn icon-btn" onClick={handleStepForward} disabled={disabled || frameIndex >= maxFrames - 1} title="Step Forward" aria-label="Step Forward">
             <SkipForward size={16} />
           </button>
           {onSeek && (
@@ -92,6 +92,7 @@ export function Controls({
                 onChange={(e) => onSeek(Number(e.target.value))}
                 className="timeline-slider"
                 disabled={disabled}
+                aria-label="Timeline"
                 style={{ background: `linear-gradient(to right, #0ea5e9 ${timelinePercent}%, rgba(129, 140, 248, 0.2) ${timelinePercent}%)` }}
               />
               <span className="frame-counter">
@@ -111,6 +112,7 @@ export function Controls({
           value={speed}
           onChange={(event) => onSpeedChange(Number(event.target.value))}
           className="speed-slider"
+          aria-label="Playback Speed"
           style={{ background: `linear-gradient(to right, #0ea5e9 ${speedPercent}%, rgba(129, 140, 248, 0.2) ${speedPercent}%)` }}
         />
         <span className="speed-value">{speed}x</span>
