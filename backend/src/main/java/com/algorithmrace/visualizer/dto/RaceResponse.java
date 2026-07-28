@@ -8,5 +8,4 @@ public record RaceResponse(
     Integer target,
     boolean[][] walls,
     List<RaceLaneResponse> lanes,
-    String winner
-) {}
+    String winner) {}

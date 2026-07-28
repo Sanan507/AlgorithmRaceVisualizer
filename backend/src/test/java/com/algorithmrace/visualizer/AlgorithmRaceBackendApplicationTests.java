@@ -6,8 +6,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest
 class AlgorithmRaceBackendApplicationTests {
 
-    @Test
-    void contextLoads() {
-        // Smoke test to ensure Spring application context initializes without error
-    }
+  @Test
+  void contextLoads() {
+    // Smoke test to ensure Spring application context initializes without error
+  }
 }

@@ -1,7 +1,6 @@
 package com.algorithmrace.visualizer.dto;
 
 import com.algorithmrace.visualizer.model.ComplexityInfo;
-
 import java.util.List;
 
 public record RaceLaneResponse(
@@ -9,5 +8,4 @@ public record RaceLaneResponse(
     String complexity,
     ComplexityInfo complexityInfo,
     List<SimulationFrame> frames,
-    LaneStats stats
-) {}
+    LaneStats stats) {}

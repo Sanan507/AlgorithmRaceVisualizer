@@ -26,3 +26,6 @@ docx_render_oop_final/
 user_request_*.txt
 race_history.csv
 create_github_issues.*
+
+# Maven reports
+dependency-reduced-pom.xml

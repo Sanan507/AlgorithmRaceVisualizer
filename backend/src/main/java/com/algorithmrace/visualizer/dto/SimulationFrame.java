@@ -21,5 +21,4 @@ public record SimulationFrame(
     String[][] grid,
     List<PointDto> path,
     int steps,
-    boolean pathFound
-) {}
+    boolean pathFound) {}

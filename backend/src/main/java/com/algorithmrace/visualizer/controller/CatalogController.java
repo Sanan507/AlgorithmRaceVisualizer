@@ -13,19 +13,20 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/catalog")
 @Tag(name = "Catalog", description = "Endpoints for retrieving supported algorithms and metadata")
 public class CatalogController {
-    private final CatalogService catalogService;
+  private final CatalogService catalogService;
 
-    public CatalogController(CatalogService catalogService) {
-        this.catalogService = catalogService;
-    }
+  public CatalogController(CatalogService catalogService) {
+    this.catalogService = catalogService;
+  }
 
-    @Operation(
-        summary = "Get algorithm catalog", 
-        description = "Retrieves the full catalog of available sorting, searching, and pathfinding algorithms along with their metadata."
-    )
-    @ApiResponse(responseCode = "200", description = "Successfully retrieved catalog")
-    @GetMapping
-    public CatalogResponse catalog() {
-        return catalogService.catalog();
-    }
+  @Operation(
+      summary = "Get algorithm catalog",
+      description =
+          "Retrieves the full catalog of available sorting, searching, and pathfinding algorithms"
+              + " along with their metadata.")
+  @ApiResponse(responseCode = "200", description = "Successfully retrieved catalog")
+  @GetMapping
+  public CatalogResponse catalog() {
+    return catalogService.catalog();
+  }
 }
