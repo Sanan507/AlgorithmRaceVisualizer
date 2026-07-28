@@ -29,3 +29,8 @@ create_github_issues.*
 
 # Maven reports
 dependency-reduced-pom.xml
+
+# Documentation
+DESIGN.md
+PRODUCT.md
+

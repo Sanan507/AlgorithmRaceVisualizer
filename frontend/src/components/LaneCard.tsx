@@ -152,19 +152,19 @@ export function LaneCard({
           <span className="metric-label">
             <Clock size={12} /> Time
           </span>
-          <strong className="metric-value">{frame.timeMs} ms</strong>
+          <strong className="metric-value tabular-nums">{frame.timeMs} ms</strong>
         </div>
         <div className="metric-card">
           <span className="metric-label">
             <Activity size={12} /> {opLabel}
           </span>
-          <strong className="metric-value">{opValue.toLocaleString()}</strong>
+          <strong className="metric-value tabular-nums">{opValue.toLocaleString()}</strong>
         </div>
         <div className="metric-card">
           <span className="metric-label">
             <ActionIcon size={12} /> {actionLabel}
           </span>
-          <strong className="metric-value">
+          <strong className="metric-value tabular-nums">
             {actionValue}
           </strong>
         </div>
@@ -172,7 +172,7 @@ export function LaneCard({
           <span className="metric-label">
             <Percent size={12} /> Progress
           </span>
-          <strong className="metric-value">{progress}%</strong>
+          <strong className="metric-value tabular-nums">{progress}%</strong>
         </div>
       </footer>
     </article>
