@@ -49,6 +49,36 @@
     </dependencies>
 
     <build>
+        <pluginManagement>
+            <plugins>
+                <!-- This configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself. -->
+                <plugin>
+                    <groupId>org.eclipse.m2e</groupId>
+                    <artifactId>lifecycle-mapping</artifactId>
+                    <version>1.0.0</version>
+                    <configuration>
+                        <lifecycleMappingMetadata>
+                            <pluginExecutions>
+                                <pluginExecution>
+                                    <pluginExecutionFilter>
+                                        <groupId>com.diffplug.spotless</groupId>
+                                        <artifactId>spotless-maven-plugin</artifactId>
+                                        <versionRange>[2.43.0,)</versionRange>
+                                        <goals>
+                                            <goal>check</goal>
+                                        </goals>
+                                    </pluginExecutionFilter>
+                                    <action>
+                                        <ignore />
+                                    </action>
+                                </pluginExecution>
+                            </pluginExecutions>
+                        </lifecycleMappingMetadata>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
         <plugins>
             <plugin>
                 <groupId>com.diffplug.spotless</groupId>
@@ -76,9 +106,16 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
                 <version>3.6.0</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.puppycrawl.tools</groupId>
+                        <artifactId>checkstyle</artifactId>
+                        <version>10.18.1</version>
+                    </dependency>
+                </dependencies>
                 <configuration>
                     <configLocation>google_checks.xml</configLocation>
-                    <suppressionsLocation>suppressions.xml</suppressionsLocation>
+                    <suppressionsLocation>${project.basedir}/suppressions.xml</suppressionsLocation>
                     <consoleOutput>false</consoleOutput>
                     <violationSeverity>error</violationSeverity>
                     <failOnViolation>true</failOnViolation>

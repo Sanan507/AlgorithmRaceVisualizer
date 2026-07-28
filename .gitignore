@@ -34,3 +34,7 @@ dependency-reduced-pom.xml
 DESIGN.md
 PRODUCT.md
 
+# Build Cache & Local PR Scripts
+*.tsbuildinfo
+pr_*.txt
+pr_*.sh
