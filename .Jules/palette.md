@@ -1,3 +1,0 @@
-## 2024-03-24 - Missing Accessible Names on Icon-Only Buttons
-**Learning:** Found a pattern where icon-only buttons (like mobile menu toggles, close sidebars, and banner dismiss buttons) were lacking accessible names (`aria-label`), which makes them inaccessible to screen reader users who cannot see the visual icon. The mobile menu toggle also needed an `aria-expanded` state.
-**Action:** Always ensure that any button containing only an icon or symbol (like `✕`, `<X />`, `<Menu />`) includes an `aria-label` describing its action, and for toggleable elements, include `aria-expanded` to communicate state.
