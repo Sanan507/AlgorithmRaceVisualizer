@@ -708,6 +708,17 @@ select:focus, input:focus {
   background-color: #11112d;
 }
 
+button:focus-visible,
+.nav-item:focus-visible,
+.btn:focus-visible,
+input[type="range"]:focus-visible,
+select:focus-visible,
+.brand:focus-visible,
+.mobile-close-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 /* Control strip button UI */
 .control-strip {
   display: flex;

@@ -14,7 +14,7 @@ export function SelectField({
   return (
     <label className="field">
       <span>{label}</span>
-      <select value={value} onChange={(event) => onChange(event.target.value)} disabled={disabled}>
+      <select value={value} onChange={(event) => onChange(event.target.value)} disabled={disabled} aria-label={label}>
         {options.map((option) => (
           <option value={option} key={option}>{option}</option>
         ))}

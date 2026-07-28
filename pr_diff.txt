@@ -1,0 +1,146 @@
+diff --git a/frontend/src/components/Controls.tsx b/frontend/src/components/Controls.tsx
+index d18da7e..2993577 100644
+--- a/frontend/src/components/Controls.tsx
++++ b/frontend/src/components/Controls.tsx
+@@ -63,23 +63,23 @@ export function Controls({
+   return (
+     <div className="control-strip flex-wrap">
+       <div className="control-group">
+-        <button className="btn primary" onClick={handleStart} disabled={disabled}>
++        <button className="btn primary" onClick={handleStart} disabled={disabled} aria-label="Start Race">
+           <Play size={17} /> Start Race
+         </button>
+-        <button className="btn ghost" onClick={handleToggle} disabled={disabled}>
++        <button className="btn ghost" onClick={handleToggle} disabled={disabled} aria-label={playing ? 'Pause' : 'Resume'}>
+           {playing ? <Pause size={17} /> : <Play size={17} />} {playing ? 'Pause' : 'Resume'}
+         </button>
+-        <button className="btn secondary" onClick={handleReset} disabled={disabled}>
++        <button className="btn secondary" onClick={handleReset} disabled={disabled} aria-label={resetLabel}>
+           {resetLabel.includes('Random') ? <Shuffle size={17} /> : <RotateCcw size={17} />} {resetLabel}
+         </button>
+       </div>
+
+       {maxFrames > 0 && (
+         <div className="control-group step-group">
+-          <button className="btn icon-btn" onClick={handleStepBack} disabled={disabled || frameIndex <= 0} title="Step Backward">
++          <button className="btn icon-btn" onClick={handleStepBack} disabled={disabled || frameIndex <= 0} title="Step Backward" aria-label="Step Backward">
+             <SkipBack size={16} />
+           </button>
+-          <button className="btn icon-btn" onClick={handleStepForward} disabled={disabled || frameIndex >= maxFrames - 1} title="Step Forward">
++          <button className="btn icon-btn" onClick={handleStepForward} disabled={disabled || frameIndex >= maxFrames - 1} title="Step Forward" aria-label="Step Forward">
+             <SkipForward size={16} />
+           </button>
+           {onSeek && (
+@@ -92,6 +92,7 @@ export function Controls({
+                 onChange={(e) => onSeek(Number(e.target.value))}
+                 className="timeline-slider"
+                 disabled={disabled}
++                aria-label="Timeline"
+                 style={{ background: `linear-gradient(to right, #0ea5e9 ${timelinePercent}%, rgba(129, 140, 248, 0.2) ${timelinePercent}%)` }}
+               />
+               <span className="frame-counter">
+@@ -111,6 +112,7 @@ export function Controls({
+           value={speed}
+           onChange={(event) => onSpeedChange(Number(event.target.value))}
+           className="speed-slider"
++          aria-label="Playback Speed"
+           style={{ background: `linear-gradient(to right, #0ea5e9 ${speedPercent}%, rgba(129, 140, 248, 0.2) ${speedPercent}%)` }}
+         />
+         <span className="speed-value">{speed}x</span>
+diff --git a/frontend/src/components/SelectField.tsx b/frontend/src/components/SelectField.tsx
+index 56e6970..f410484 100644
+--- a/frontend/src/components/SelectField.tsx
++++ b/frontend/src/components/SelectField.tsx
+@@ -14,7 +14,7 @@ export function SelectField({
+   return (
+     <label className="field">
+       <span>{label}</span>
+-      <select value={value} onChange={(event) => onChange(event.target.value)} disabled={disabled}>
++      <select value={value} onChange={(event) => onChange(event.target.value)} disabled={disabled} aria-label={label}>
+         {options.map((option) => (
+           <option value={option} key={option}>{option}</option>
+         ))}
+diff --git a/frontend/src/components/Sidebar.tsx b/frontend/src/components/Sidebar.tsx
+index 3d2e1af..d9aca02 100644
+--- a/frontend/src/components/Sidebar.tsx
++++ b/frontend/src/components/Sidebar.tsx
+@@ -54,7 +54,15 @@ export function Sidebar({
+       <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
+         <div className="sidebar-top">
+           <div className="brand-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+-            <div className="brand" onClick={() => handleNav('landing')} style={{ cursor: 'pointer' }}>
++            <div
++              className="brand"
++              role="button"
++              tabIndex={0}
++              aria-label="Go to Overview"
++              onClick={() => handleNav('landing')}
++              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleNav('landing'); } }}
++              style={{ cursor: 'pointer' }}
++            >
+               <div className="brand-mark">
+                 <Zap size={22} className="brand-icon-zap" />
+               </div>
+@@ -70,13 +78,14 @@ export function Sidebar({
+             )}
+           </div>
+
+-          <nav className="nav-list">
++          <nav className="nav-list" role="navigation" aria-label="Main Navigation">
+             {items.map(({ id, label, icon: Icon }) => (
+               <button
+                 key={id}
+                 className={`nav-item ${active === id ? 'active' : ''}`}
+                 onClick={() => handleNav(id)}
+                 title={collapsed ? label : undefined}
++                aria-label={label}
+               >
+                 <div className="nav-item-glow" />
+                 <Icon size={19} className="nav-icon" />
+@@ -95,6 +104,7 @@ export function Sidebar({
+                 setDarkMode(!darkMode);
+               }}
+               title={collapsed ? (darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode') : undefined}
++              aria-label={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+               style={{
+                 border: '1px solid var(--line)',
+                 background: 'rgba(255,255,255,0.03)',
+@@ -110,6 +120,7 @@ export function Sidebar({
+             className="nav-item sidebar-toggle-item"
+             onClick={handleToggle}
+             title={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
++            aria-label={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+             style={{
+               border: '1px dashed var(--line)',
+               background: 'rgba(255,255,255,0.02)',
+diff --git a/frontend/src/styles.css b/frontend/src/styles.css
+index 0a4c773..0e3f0b8 100644
+--- a/frontend/src/styles.css
++++ b/frontend/src/styles.css
+@@ -708,6 +708,17 @@ select:focus, input:focus {
+   background-color: #11112d;
+ }
+
++button:focus-visible,
++.nav-item:focus-visible,
++.btn:focus-visible,
++input[type="range"]:focus-visible,
++select:focus-visible,
++.brand:focus-visible,
++.mobile-close-btn:focus-visible {
++  outline: 2px solid var(--accent);
++  outline-offset: 2px;
++}
++
+ /* Control strip button UI */
+ .control-strip {
+   display: flex;
+diff --git a/frontend/tsconfig.tsbuildinfo b/frontend/tsconfig.tsbuildinfo
+index 3ba5b48..6356554 100644
+--- a/frontend/tsconfig.tsbuildinfo
++++ b/frontend/tsconfig.tsbuildinfo
+@@ -1 +1 @@
+-{"root":["./src/App.tsx","./src/main.tsx","./src/vite-env.d.ts","./src/components/AlgorithmComparisonCenter.tsx","./src/components/AlgorithmMatrix.tsx","./src/components/Controls.tsx","./src/components/CustomArraySection.tsx","./src/components/ExplanationPanel.tsx","./src/components/HeroMiniCanvas.tsx","./src/components/LaneCard.tsx","./src/components/MetricChart.tsx","./src/components/PathCanvas.tsx","./src/components/PerformanceComparison.tsx","./src/components/SearchCanvas.tsx","./src/components/SelectField.tsx","./src/components/Sidebar.tsx","./src/components/SortRequirementModal.tsx","./src/components/SortingCanvas.tsx","./src/components/VisualizationLegend.tsx","./src/context/AudioContext.tsx","./src/data/algorithmMetadata.ts","./src/data/fallbackCatalog.ts","./src/hooks/useAudioSettings.ts","./src/hooks/usePlayback.ts","./src/hooks/useSound.ts","./src/models/types.ts","./src/pages/HistoryPage.tsx","./src/pages/LandingPage.tsx","./src/pages/PathfindingPage.tsx","./src/pages/SearchingPage.tsx","./src/pages/SettingsPage.tsx","./src/pages/SortingPage.tsx","./src/services/api.ts","./src/utils/arrayParser.ts","./src/utils/confetti.ts","./src/utils/urlParams.ts"],"version":"5.9.3"}
+\ No newline at end of file
++{"root":["./src/App.tsx","./src/main.tsx","./src/vite-env.d.ts","./src/components/AlgorithmComparisonCenter.tsx","./src/components/AlgorithmMatrix.tsx","./src/components/Controls.tsx","./src/components/CustomArraySection.tsx","./src/components/ExplanationPanel.tsx","./src/components/HeroMiniCanvas.tsx","./src/components/LaneCard.tsx","./src/components/MetricChart.tsx","./src/components/PathCanvas.tsx","./src/components/PerformanceComparison.tsx","./src/components/SearchCanvas.tsx","./src/components/SelectField.tsx","./src/components/Sidebar.tsx","./src/components/SortRequirementModal.tsx","./src/components/SortingCanvas.tsx","./src/components/VisualizationLegend.tsx","./src/context/AudioContext.tsx","./src/data/algorithmMetadata.ts","./src/data/fallbackCatalog.ts","./src/hooks/useAudioSettings.ts","./src/hooks/usePlayback.ts","./src/hooks/useSound.ts","./src/models/types.ts","./src/pages/HistoryPage.tsx","./src/pages/LandingPage.tsx","./src/pages/PathfindingPage.tsx","./src/pages/SearchingPage.tsx","./src/pages/SettingsPage.tsx","./src/pages/SortingPage.tsx","./src/services/api.ts","./src/utils/arrayParser.ts","./src/utils/confetti.ts","./src/utils/exportComparisonSnapshot.ts","./src/utils/urlParams.ts"],"version":"5.9.3"}
+\ No newline at end of file
