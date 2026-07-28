@@ -38,3 +38,7 @@ PRODUCT.md
 *.tsbuildinfo
 pr_*.txt
 pr_*.sh
+diff.txt
+prs.json
+pr_review_payload.json
+test_script.py
