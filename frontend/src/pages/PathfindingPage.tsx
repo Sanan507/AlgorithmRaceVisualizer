@@ -18,6 +18,9 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
   const [algorithms, setAlgorithms] = useState(['BFS', 'Dijkstra', 'A* Search', 'DFS']);
   const [mazeType, setMazeType] = useState('Recursive Backtracker');
   const [walls, setWalls] = useState<boolean[][] | null>(null);
+  const [drawMode, setDrawMode] = useState<'WALL' | 'START' | 'TARGET'>('WALL');
+  const [startNode, setStartNode] = useState<[number, number]>([2, 2]);
+  const [endNode, setEndNode] = useState<[number, number]>([15, 25]);
   const [hasFreshDataset, setHasFreshDataset] = useState(true);
   const [response, setResponse] = useState<RaceResponse | null>(null);
   const [speed, setSpeed] = useState(6);
@@ -42,12 +45,14 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
     async (
       newMaze: boolean,
       autoplay = false,
-      customParams?: { algos?: string[]; mType?: string; walls?: boolean[][] }
+      customParams?: { algos?: string[]; mType?: string; walls?: boolean[][]; start?: [number, number]; end?: [number, number] }
     ) => {
       setLoading(true);
       winnerAnnouncedRef.current = false;
       const useAlgos = customParams?.algos ?? algorithms;
       const useMazeType = customParams?.mType ?? mazeType;
+      const useStart = customParams?.start ?? startNode;
+      const useEnd = customParams?.end ?? endNode;
 
       const sendWalls = customParams?.walls ?? (!newMaze && walls ? walls : null);
 
@@ -57,7 +62,11 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
           rows: 18,
           cols: 28,
           mazeType: useMazeType,
-          walls: sendWalls
+          walls: sendWalls,
+          startRow: useStart[0],
+          startCol: useStart[1],
+          endRow: useEnd[0],
+          endCol: useEnd[1]
         });
         setResponse(data);
         if (data.walls) {
@@ -184,14 +193,22 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
     fetchSimulation(true, false, { mType: nextMazeType });
   }
 
-  function handleToggleWall(r: number, c: number) {
+  function handleGridClick(r: number, c: number) {
     if (playback.playing) return;
-    const currentGrid = walls ?? Array.from({ length: 18 }, () => Array(28).fill(false));
-    const nextGrid = currentGrid.map((rowArr, rowIdx) =>
-      rowArr.map((cell, colIdx) => (rowIdx === r && colIdx === c ? !cell : cell))
-    );
-    setWalls(nextGrid);
-    fetchSimulation(false, false, { walls: nextGrid });
+    if (drawMode === 'WALL') {
+      const currentGrid = walls ?? Array.from({ length: 18 }, () => Array(28).fill(false));
+      const nextGrid = currentGrid.map((rowArr, rowIdx) =>
+        rowArr.map((cell, colIdx) => (rowIdx === r && colIdx === c ? !cell : cell))
+      );
+      setWalls(nextGrid);
+      fetchSimulation(false, false, { walls: nextGrid });
+    } else if (drawMode === 'START') {
+      setStartNode([r, c]);
+      fetchSimulation(false, false, { start: [r, c] });
+    } else if (drawMode === 'TARGET') {
+      setEndNode([r, c]);
+      fetchSimulation(false, false, { end: [r, c] });
+    }
   }
 
   const activeFrames = useMemo(
@@ -224,6 +241,27 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
           <Share2 size={16} /> Share Run
         </button>
       </header>
+
+      <div className="draw-mode-controls" style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+        <button
+          className={`btn ${drawMode === 'WALL' ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={() => setDrawMode('WALL')}
+        >
+          Draw Walls
+        </button>
+        <button
+          className={`btn ${drawMode === 'START' ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={() => setDrawMode('START')}
+        >
+          Set Start (Green)
+        </button>
+        <button
+          className={`btn ${drawMode === 'TARGET' ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={() => setDrawMode('TARGET')}
+        >
+          Set Target (Red)
+        </button>
+      </div>
 
       {toastMessage && (
         <div className="toast-notification">
@@ -286,7 +324,7 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
               <PathCanvas
                 frame={frame}
                 editable={!playback.playing}
-                onToggleWall={handleToggleWall}
+                onGridClick={handleGridClick}
               />
             </LaneCard>
           );
