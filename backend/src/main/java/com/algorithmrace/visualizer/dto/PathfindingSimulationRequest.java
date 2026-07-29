@@ -10,4 +10,8 @@ public record PathfindingSimulationRequest(
     @Min(8) @Max(40) int rows,
     @Min(8) @Max(60) int cols,
     String mazeType,
-    boolean[][] walls) {}
+    boolean[][] walls,
+    @Min(0) Integer startRow,
+    @Min(0) Integer startCol,
+    @Min(0) Integer endRow,
+    @Min(0) Integer endCol) {}

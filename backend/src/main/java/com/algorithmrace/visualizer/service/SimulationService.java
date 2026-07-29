@@ -64,10 +64,15 @@ public class SimulationService {
   public RaceResponse simulatePathfinding(PathfindingSimulationRequest request) {
     int rows = Math.min(MAX_GRID_ROWS, Math.max(5, request.rows() <= 0 ? 18 : request.rows()));
     int cols = Math.min(MAX_GRID_COLS, Math.max(5, request.cols() <= 0 ? 28 : request.cols()));
-    int startRow = 2;
-    int startCol = 2;
-    int endRow = rows - 3;
-    int endCol = cols - 3;
+
+    int startRow =
+        request.startRow() != null ? Math.min(rows - 1, Math.max(0, request.startRow())) : 2;
+    int startCol =
+        request.startCol() != null ? Math.min(cols - 1, Math.max(0, request.startCol())) : 2;
+    int endRow =
+        request.endRow() != null ? Math.min(rows - 1, Math.max(0, request.endRow())) : rows - 3;
+    int endCol =
+        request.endCol() != null ? Math.min(cols - 1, Math.max(0, request.endCol())) : cols - 3;
 
     boolean[][] walls;
     if (request.walls() != null) {

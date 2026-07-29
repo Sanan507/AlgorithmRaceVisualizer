@@ -91,7 +91,8 @@ class PathfindingAlgorithmsTest {
       "Verify SimulationService pathfinding simulation returns valid grid frames and stats")
   void testSimulationServicePathfinding() {
     PathfindingSimulationRequest request =
-        new PathfindingSimulationRequest(algorithms, 10, 10, "Clear Grid", null);
+        new PathfindingSimulationRequest(
+            algorithms, 10, 10, "Clear Grid", null, null, null, null, null);
 
     RaceResponse response = simulationService.simulatePathfinding(request);
 
