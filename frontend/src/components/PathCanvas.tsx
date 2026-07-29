@@ -14,11 +14,11 @@ const stateColor: Record<string, string> = {
 export function PathCanvas({
   frame,
   editable = false,
-  onToggleWall
+  onGridClick
 }: {
   frame: SimulationFrame;
   editable?: boolean;
-  onToggleWall?: (row: number, col: number) => void;
+  onGridClick?: (row: number, col: number) => void;
 }) {
   const ref = useRef<HTMLCanvasElement | null>(null);
   const drawingRef = useRef(false);
@@ -133,7 +133,7 @@ export function PathCanvas({
     if (cellKey === lastDrawnCellRef.current) return;
 
     lastDrawnCellRef.current = cellKey;
-    onToggleWall?.(pos.row, pos.col);
+    onGridClick?.(pos.row, pos.col);
   }
 
   function stopDrawing() {
@@ -143,7 +143,7 @@ export function PathCanvas({
   }
 
   function handlePointerDown(event: React.PointerEvent<HTMLCanvasElement>) {
-    if (!editable || !onToggleWall) return;
+    if (!editable || !onGridClick) return;
     event.preventDefault();
     drawingRef.current = true;
     activePointerIdRef.current = event.pointerId;
@@ -152,7 +152,7 @@ export function PathCanvas({
   }
 
   function handlePointerMove(event: React.PointerEvent<HTMLCanvasElement>) {
-    if (!editable || !onToggleWall || !drawingRef.current || activePointerIdRef.current !== event.pointerId) return;
+    if (!editable || !onGridClick || !drawingRef.current || activePointerIdRef.current !== event.pointerId) return;
     event.preventDefault();
     drawAt(event.clientX, event.clientY);
   }
