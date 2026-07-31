@@ -12,6 +12,7 @@ import { usePlayback } from '../hooks/usePlayback';
 import type { CatalogResponse, RaceLaneResponse, RaceResponse } from '../models/types';
 import { api } from '../services/api';
 import { parseCustomArrayInput } from '../utils/arrayParser';
+import { CsvUploader } from '../components/CsvUploader';
 import { Share2 } from 'lucide-react';
 import { getUrlParams } from '../utils/urlParams';
 
@@ -492,16 +493,19 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
         </div>
 
         {isCustomMode ? (
-          <label className="field custom-values-field">
-            <span>Custom Values (comma-separated)</span>
-            <input
-              type="text"
-              className={`custom-input-inline ${hasInvalidTokens || isCustomEmpty ? 'input-error' : ''}`}
-              value={customArrayStr}
-              placeholder="e.g. 10, 5, 20, 15, 30"
-              onChange={(e) => handleCustomArrayTextChange(e.target.value)}
-            />
-          </label>
+          <div className="field custom-values-field" style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
+            <label style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <span>Custom Values (comma-separated)</span>
+              <input
+                type="text"
+                className={`custom-input-inline ${hasInvalidTokens || isCustomEmpty ? 'input-error' : ''}`}
+                value={customArrayStr}
+                placeholder="e.g. 10, 5, 20, 15, 30"
+                onChange={(e) => handleCustomArrayTextChange(e.target.value)}
+              />
+            </label>
+            <CsvUploader onUploadSuccess={(parsed) => handleCustomArrayTextChange(parsed.join(', '))} />
+          </div>
         ) : (
           <label className="field">
             <span>Array Size</span>
