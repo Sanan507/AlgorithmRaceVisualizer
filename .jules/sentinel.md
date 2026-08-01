@@ -1,0 +1,4 @@
+## 2024-05-18 - Race Condition in Sliding Window Rate Limiter
+**Vulnerability:** A race condition in `RateLimitFilter.java` within the `SlidingWindow` class's `tryAcquire` method allowed multiple concurrent requests to bypass the rate limit if they hit the server simultaneously, because `timestamps.size() >= limit` check and `timestamps.addLast(now)` were not atomic.
+**Learning:** Even when using thread-safe collections like `ConcurrentLinkedDeque`, composite operations (like checking size then adding an element) are not atomic and require synchronization if they must be executed as a single atomic unit to enforce business rules (like rate limits).
+**Prevention:** Always synchronize composite operations on collections in a multi-threaded environment, or use atomic variables/constructs designed for the specific composite operation needed (e.g., atomic counters or higher-level rate limiting libraries like Resilience4j).
