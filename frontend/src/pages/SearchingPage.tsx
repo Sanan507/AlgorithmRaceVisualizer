@@ -9,7 +9,7 @@ import { SearchCanvas } from '../components/SearchCanvas';
 import { SelectField } from '../components/SelectField';
 import { useAudio } from '../context/AudioContext';
 import { usePlayback } from '../hooks/usePlayback';
-import type { CatalogResponse, RaceLaneResponse, RaceResponse } from '../models/types';
+import type { CatalogResponse, RaceLaneResponse, RaceResponse, SimulationFrame } from '../models/types';
 import { api } from '../services/api';
 import { parseCustomArrayInput } from '../utils/arrayParser';
 import { CsvUploader } from '../components/CsvUploader';
@@ -35,7 +35,6 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
   const initialized = useRef(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Custom Array & Target validation helpers
   const parsedCustomArray = useMemo(() => parseCustomArrayInput(customArrayStr), [customArrayStr]);
 
   const invalidCustomTokens = useMemo(() => {
@@ -50,7 +49,6 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
   const hasInvalidTokens = invalidCustomTokens.length > 0;
   const isTargetInvalid = Number.isNaN(target);
 
-  // Instant 0ms Preview Response Generator for Custom Array Editing in Search Arena
   const activeResponse: RaceResponse | null = useMemo(() => {
     if (!isCustomMode || parsedCustomArray.length === 0) {
       return response;
@@ -109,8 +107,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
       lanes: previewLanes,
       winner: null,
     };
-  }, [isCustomMode, parsedCustomArray, response, algorithms, target]);
-
+  }, [isCustomMode, parsedCustomArray, response, algorithms, target, catalog]);
 
   const onFrame = useCallback(
     (event: 'compare' | 'swap' | 'hit' | 'miss' | 'step') => {
@@ -138,47 +135,26 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
       const useTarget = customTarget ?? target;
       const useAlgos = customAlgos ?? algorithms;
       const useDataset = overrideDataset ?? dataset;
-
-      // Dynamically compute size for single-element or multi-element custom arrays
       const useSize = customSize ?? (isCustomMode && useDataset ? Math.max(1, useDataset.length) : size);
 
       try {
-        if (newDataset || !useDataset) {
-          const data = await api.searching({
-            algorithms: useAlgos,
-            size: useSize,
-            target: useTarget,
-            dataset: useDataset ?? undefined,
-          });
+        const data = await api.searching({
+          algorithms: useAlgos,
+          size: useSize,
+          target: useTarget,
+          dataset: useDataset ?? undefined,
+        });
 
-          // Ignore stale out-of-order responses
-          if (requestId !== requestIdRef.current) return;
+        if (requestId !== requestIdRef.current) return;
 
-          setDataset(data.dataset);
-          setResponse(data);
-          setHasFreshDataset(true);
-          playback.reset();
-          if (autoplay) {
-            play('start');
-            playback.setPlaying(true);
-          }
-        } else {
-          const data = await api.searching({
-            algorithms: useAlgos,
-            size: useSize,
-            target: useTarget,
-            dataset: useDataset,
-          });
-
-          // Ignore stale out-of-order responses
-          if (requestId !== requestIdRef.current) return;
-
-          setResponse(data);
-          playback.reset();
-          if (autoplay) {
-            play('start');
-            playback.setPlaying(true);
-          }
+        setDataset(data.dataset);
+        setResponse(data);
+        setHasFreshDataset(true);
+        playback.reset();
+        if (autoplay) {
+          play('start');
+          playback.setPlaying(true);
+          setHasFreshDataset(false);
         }
       } finally {
         if (requestId === requestIdRef.current) {
@@ -221,7 +197,6 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
              const parsed = parseCustomArrayInput(params.cArray);
              setDataset(parsed);
 
-             // Remove query parameters from URL without reloading
              const url = new URL(window.location.href);
              url.search = '';
              window.history.replaceState(null, '', url.href);
@@ -231,7 +206,6 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
            }
         }
 
-        // Remove query parameters from URL without reloading
         const url = new URL(window.location.href);
         url.search = '';
         window.history.replaceState(null, '', url.href);
@@ -391,6 +365,24 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
     [activeResponse, playback.frameIndex]
   );
 
+  const activeFramesMap = useMemo(() => {
+    if (!activeResponse?.lanes || !activeFrames) return {};
+    const map: Record<string, SimulationFrame | null> = {};
+    activeResponse.lanes.forEach((lane, i) => {
+      map[lane.name] = activeFrames[i] ?? null;
+    });
+    return map;
+  }, [activeResponse, activeFrames]);
+
+  const prevFramesMap = useMemo(() => {
+    if (!activeResponse?.lanes || playback.frameIndex <= 0) return {};
+    const map: Record<string, SimulationFrame | null> = {};
+    activeResponse.lanes.forEach((lane) => {
+      map[lane.name] = lane.frames[playback.frameIndex - 1] ?? null;
+    });
+    return map;
+  }, [activeResponse, playback.frameIndex]);
+
   const isCompleted = !!(activeResponse && playback.frameIndex === playback.maxFrames - 1 && playback.maxFrames > 0);
   const winnerLane = activeResponse?.lanes.find((l) => l.name === activeResponse.winner);
 
@@ -540,7 +532,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
           const frame = activeFrames?.[index] ?? lane.frames[0];
           let laneState: LaneState;
           if (!activeResponse) laneState = 'ready';
-          else if (isCompleted || frame.done) laneState = 'finished';
+          else if (isCompleted || (frame && frame.done)) laneState = 'finished';
           else if (!playback.playing && playback.frameIndex > 0) laneState = 'paused';
           else if (playback.playing) laneState = 'running';
           else laneState = 'ready';
@@ -562,7 +554,14 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
           playing={playback.playing}
           datasetType={isCustomMode ? 'Custom' : 'Random'}
         />
-        <AlgorithmComparisonCenter algorithms={catalog.searchingAlgorithms} type="searching" catalog={catalog} />
+        <AlgorithmComparisonCenter
+          algorithms={catalog.searchingAlgorithms}
+          type="searching"
+          catalog={catalog}
+          activeFrames={activeFramesMap}
+          prevFrames={prevFramesMap}
+          maxFrames={playback.maxFrames}
+        />
         <VisualizationLegend type="searching" />
       </div>
     </main>

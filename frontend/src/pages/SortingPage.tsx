@@ -9,7 +9,7 @@ import { SelectField } from '../components/SelectField';
 import { SortingCanvas } from '../components/SortingCanvas';
 import { useAudio } from '../context/AudioContext';
 import { usePlayback } from '../hooks/usePlayback';
-import type { CatalogResponse, RaceLaneResponse, RaceResponse } from '../models/types';
+import type { CatalogResponse, RaceLaneResponse, RaceResponse, SimulationFrame } from '../models/types';
 import { api } from '../services/api';
 import { parseCustomArrayInput } from '../utils/arrayParser';
 import { CsvUploader } from '../components/CsvUploader';
@@ -37,8 +37,8 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
 
   // Filter out "Custom" from Dataset selection dropdown options
   const predefinedOptions = useMemo(
-    () => catalog.datasetTypes.filter((d) => d !== 'Custom'),
-    [catalog.datasetTypes]
+    () => (catalog?.datasetTypes ?? []).filter((d) => d !== 'Custom'),
+    [catalog?.datasetTypes]
   );
 
   // Custom Array validation helpers
@@ -60,15 +60,13 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
     if (!isCustomMode || parsedCustomArray.length === 0) {
       return response;
     }
-    // If backend response matches current custom array, use response
     if (response?.dataset && response.dataset.join(',') === parsedCustomArray.join(',')) {
       return response;
     }
-    // Otherwise, construct an instant local preview response
     const previewLanes: RaceLaneResponse[] = algorithms.map((name) => ({
       name,
-      complexity: catalog?.complexity[name]?.worst || 'O(n²)',
-      complexityInfo: catalog?.complexity[name] || {
+      complexity: catalog?.complexity?.[name]?.worst || 'O(n²)',
+      complexityInfo: catalog?.complexity?.[name] || {
         best: 'O(n)',
         average: 'O(n log n)',
         worst: 'O(n²)',
@@ -116,8 +114,7 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
       lanes: previewLanes,
       winner: null,
     };
-  }, [isCustomMode, parsedCustomArray, response, algorithms]);
-
+  }, [isCustomMode, parsedCustomArray, response, algorithms, catalog]);
 
   const onFrame = useCallback(
     (event: 'compare' | 'swap' | 'hit' | 'miss' | 'step') => {
@@ -149,7 +146,6 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
         sendCustomArray = dataset;
       }
 
-      // Compute actual size dynamically
       const useSize = customParams?.sz ?? (useType === 'Custom' && sendCustomArray ? Math.max(1, sendCustomArray.length) : size);
 
       try {
@@ -161,7 +157,6 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
         };
         const data = await api.sorting(body);
 
-        // Ignore stale out-of-order API responses
         if (requestId !== requestIdRef.current) return;
 
         setResponse(data);
@@ -219,7 +214,6 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
            }
         }
 
-        // Remove query parameters from URL without reloading
         const url = new URL(window.location.href);
         url.search = '';
         window.history.replaceState(null, '', url.href);
@@ -326,8 +320,6 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
   function handleCustomArrayTextChange(text: string) {
     setCustomArrayStr(text);
     const parsed = parseCustomArrayInput(text);
-    
-    // Check validation
     const invalid = text
       .split(',')
       .map((t) => t.trim())
@@ -349,6 +341,24 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
     () => activeResponse?.lanes.map((lane) => lane.frames[Math.min(playback.frameIndex, lane.frames.length - 1)]),
     [activeResponse, playback.frameIndex]
   );
+
+  const activeFramesMap = useMemo(() => {
+    if (!activeResponse?.lanes || !activeFrames) return {};
+    const map: Record<string, SimulationFrame | null> = {};
+    activeResponse.lanes.forEach((lane, i) => {
+      map[lane.name] = activeFrames[i] ?? null;
+    });
+    return map;
+  }, [activeResponse, activeFrames]);
+
+  const prevFramesMap = useMemo(() => {
+    if (!activeResponse?.lanes || playback.frameIndex <= 0) return {};
+    const map: Record<string, SimulationFrame | null> = {};
+    activeResponse.lanes.forEach((lane) => {
+      map[lane.name] = lane.frames[playback.frameIndex - 1] ?? null;
+    });
+    return map;
+  }, [activeResponse, playback.frameIndex]);
 
   const isCompleted = !!(activeResponse && playback.frameIndex === playback.maxFrames - 1 && playback.maxFrames > 0);
   const winnerLane = activeResponse?.lanes.find((l) => l.name === activeResponse.winner);
@@ -485,7 +495,7 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
           const frame = activeFrames?.[index] ?? lane.frames[0];
           let laneState: LaneState;
           if (!activeResponse) laneState = 'ready';
-          else if (isCompleted || frame.done) laneState = 'finished';
+          else if (isCompleted || (frame && frame.done)) laneState = 'finished';
           else if (!playback.playing && playback.frameIndex > 0) laneState = 'paused';
           else if (playback.playing) laneState = 'running';
           else laneState = 'ready';
@@ -507,7 +517,14 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
           playing={playback.playing}
           datasetType={isCustomMode ? 'Custom' : datasetType}
         />
-        <AlgorithmComparisonCenter algorithms={catalog.sortingAlgorithms} type="sorting" catalog={catalog} />
+        <AlgorithmComparisonCenter
+          algorithms={catalog.sortingAlgorithms}
+          type="sorting"
+          catalog={catalog}
+          activeFrames={activeFramesMap}
+          prevFrames={prevFramesMap}
+          maxFrames={playback.maxFrames}
+        />
         <VisualizationLegend type="sorting" />
       </div>
     </main>

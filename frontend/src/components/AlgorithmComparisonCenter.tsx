@@ -1,25 +1,34 @@
 import { useState } from 'react';
-import type { CatalogResponse } from '../models/types';
+import type { CatalogResponse, SimulationFrame } from '../models/types';
 import {
   getSortingMeta,
   getSearchingMeta,
   getPathfindingMeta,
 } from '../data/algorithmMetadata';
+import { PseudocodeViewer } from './PseudocodeViewer';
 
 interface AlgorithmComparisonCenterProps {
   algorithms: string[];
   type: 'sorting' | 'searching' | 'pathfinding';
   catalog: CatalogResponse;
+  activeFrames?: Record<string, SimulationFrame | null> | null;
+  prevFrames?: Record<string, SimulationFrame | null> | null;
+  maxFrames?: number;
 }
 
 export function AlgorithmComparisonCenter({
   algorithms,
   type,
   catalog,
+  activeFrames,
+  prevFrames,
+  maxFrames,
 }: AlgorithmComparisonCenterProps) {
   const [active, setActive] = useState(0);
   const alg = algorithms[active] ?? algorithms[0] ?? '';
-  const info = catalog.complexity[alg];
+  const info = catalog?.complexity?.[alg];
+  const currentFrame = activeFrames?.[alg] ?? null;
+  const prevFrame = prevFrames?.[alg] ?? null;
 
   const meta =
     type === 'sorting'
@@ -46,24 +55,38 @@ export function AlgorithmComparisonCenter({
     weaknessText = m.limitation;
   }
 
+  const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      setActive((index + 1) % algorithms.length);
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      setActive((index - 1 + algorithms.length) % algorithms.length);
+    }
+  };
+
   return (
     <section className="panel compact algo-comparison-center">
       {/* Header */}
       <div className="cmp-header" style={{ padding: '20px 24px 16px 24px' }}>
         <div className="section-title">Algorithm Comparison Center</div>
-        <div className="cmp-subtitle">Pseudocode &amp; Algorithm Deep-Dive</div>
+        <div className="cmp-subtitle">Multi-Language Code &amp; Algorithm Deep-Dive</div>
       </div>
 
       <div className="algo-tab-section" style={{ padding: '0 24px 24px 24px' }}>
         {/* Tab strip */}
-        <div className="algo-tab-strip" role="tablist">
+        <div className="algo-tab-strip" role="tablist" aria-label="Algorithm Deep Dive Tabs">
           {algorithms.map((name, i) => (
             <button
               key={name}
               role="tab"
+              id={`algo-tab-${i}`}
+              aria-controls={`algo-tabpanel-${i}`}
               aria-selected={i === active}
+              tabIndex={i === active ? 0 : -1}
               className={`algo-tab-btn ${i === active ? 'algo-tab-btn--active' : ''}`}
               onClick={() => setActive(i)}
+              onKeyDown={(e) => handleKeyDown(e, i)}
             >
               {name}
             </button>
@@ -71,7 +94,13 @@ export function AlgorithmComparisonCenter({
         </div>
 
         {/* Tab content */}
-        <div className="algo-tab-content" style={{ marginTop: '16px' }}>
+        <div
+          id={`algo-tabpanel-${active}`}
+          role="tabpanel"
+          aria-labelledby={`algo-tab-${active}`}
+          className="algo-tab-content"
+          style={{ marginTop: '16px' }}
+        >
           {/* Theory paragraph */}
           <p className="algo-theory-text" style={{ fontSize: '0.98rem', lineHeight: 1.6 }}>
             {info?.theory ?? 'Select an algorithm to view its explanation.'}
@@ -89,11 +118,14 @@ export function AlgorithmComparisonCenter({
             </div>
           </div>
 
-          {/* Pseudocode */}
+          {/* Clean Multi-Language Reference Code Panel */}
           {info?.pseudocode && (
-            <div className="algo-pseudocode-wrap" style={{ marginTop: '20px' }}>
-              <span className="algo-pseudocode-label">Pseudocode</span>
-              <pre className="algo-pseudocode">{info.pseudocode}</pre>
+            <div style={{ marginTop: '20px' }}>
+              <PseudocodeViewer
+                algorithmName={alg}
+                pseudocode={info.pseudocode}
+                readOnly={true}
+              />
             </div>
           )}
         </div>

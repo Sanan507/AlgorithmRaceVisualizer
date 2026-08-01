@@ -151,7 +151,7 @@ export function PerformanceComparison({
   // Get live data for each lane
   const laneData = response.lanes.map((lane, index) => {
     const frame = activeFrames?.[index] ?? lane.frames[0];
-    const complexityInfo = catalog.complexity[lane.name];
+    const complexityInfo = catalog?.complexity?.[lane.name];
 
     // Metrics depending on type
     const timeMs = frame?.timeMs ?? 0;

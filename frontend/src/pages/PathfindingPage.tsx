@@ -9,7 +9,7 @@ import { PerformanceComparison } from '../components/PerformanceComparison';
 import { VisualizationLegend } from '../components/VisualizationLegend';
 import { useAudio } from '../context/AudioContext';
 import { usePlayback } from '../hooks/usePlayback';
-import type { CatalogResponse, RaceResponse } from '../models/types';
+import type { CatalogResponse, RaceResponse, SimulationFrame } from '../models/types';
 import { api } from '../services/api';
 import { Share2 } from 'lucide-react';
 import { getUrlParams } from '../utils/urlParams';
@@ -49,11 +49,8 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
     ) => {
       setLoading(true);
       winnerAnnouncedRef.current = false;
-      const useAlgos = customParams?.algos ?? algorithms;
-      const useMazeType = customParams?.mType ?? mazeType;
       const useStart = customParams?.start ?? startNode;
       const useEnd = customParams?.end ?? endNode;
-
       const sendWalls = customParams?.walls ?? (!newMaze && walls ? walls : null);
 
       try {
@@ -101,16 +98,16 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
 
         if (urlAlgos) {
           newAlgos = [
-             urlAlgos[0] || algorithms[0],
-             urlAlgos[1] || algorithms[1],
-             urlAlgos[2] || algorithms[2],
-             urlAlgos[3] || algorithms[3]
+            urlAlgos[0] || algorithms[0],
+            urlAlgos[1] || algorithms[1],
+            urlAlgos[2] || algorithms[2],
+            urlAlgos[3] || algorithms[3],
           ].filter(Boolean);
           setAlgorithms(newAlgos);
         }
         if (urlMaze) {
-           newMaze = urlMaze;
-           setMazeType(urlMaze);
+          newMaze = urlMaze;
+          setMazeType(urlMaze);
         }
         if (urlWallsStr) {
           const grid = Array.from({ length: 18 }, () => Array(28).fill(false));
@@ -126,7 +123,6 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
           setWalls(grid);
         }
 
-        // Remove query parameters from URL without reloading
         const url = new URL(window.location.href);
         url.search = '';
         window.history.replaceState(null, '', url.href);
@@ -216,8 +212,26 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
     [response, playback.frameIndex]
   );
 
+  const activeFramesMap = useMemo(() => {
+    if (!response?.lanes || !activeFrames) return {};
+    const map: Record<string, SimulationFrame | null> = {};
+    response.lanes.forEach((lane, i) => {
+      map[lane.name] = activeFrames[i] ?? null;
+    });
+    return map;
+  }, [response, activeFrames]);
+
+  const prevFramesMap = useMemo(() => {
+    if (!response?.lanes || playback.frameIndex <= 0) return {};
+    const map: Record<string, SimulationFrame | null> = {};
+    response.lanes.forEach((lane) => {
+      map[lane.name] = lane.frames[playback.frameIndex - 1] ?? null;
+    });
+    return map;
+  }, [response, playback.frameIndex]);
+
   const isCompleted = !!(response && playback.frameIndex === playback.maxFrames - 1 && playback.maxFrames > 0);
-  const winnerLane = response?.lanes.find(l => l.name === response.winner);
+  const winnerLane = response?.lanes.find((l) => l.name === response.winner);
 
   useEffect(() => {
     if (isCompleted && response && !winnerAnnouncedRef.current) {
@@ -286,13 +300,13 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
         {algorithms.map((value, index) => (
           <SelectField
             key={index}
-            label={`Lane ${index + 1}`}
+            label={`Lane ${index + 1} Algorithm`}
             value={value}
             options={catalog.pathfindingAlgorithms}
-            onChange={(next) => handleAlgorithmChange(index, next)}
+            onChange={(val) => handleAlgorithmChange(index, val)}
           />
         ))}
-        <SelectField label="Maze" value={mazeType} options={catalog.mazeTypes} onChange={handleMazeTypeChange} />
+        <SelectField label="Maze Pattern" value={mazeType} options={catalog.mazeTypes} onChange={handleMazeTypeChange} />
       </section>
 
       <Controls
@@ -310,12 +324,12 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
         onSpeedChange={setSpeed}
       />
 
-      <section className="path-grid">
+      <section className="lane-grid">
         {response?.lanes.map((lane, index) => {
           const frame = activeFrames?.[index] ?? lane.frames[0];
           let laneState: LaneState;
           if (!response) laneState = 'ready';
-          else if (isCompleted || frame.done) laneState = 'finished';
+          else if (isCompleted || (frame && frame.done)) laneState = 'finished';
           else if (!playback.playing && playback.frameIndex > 0) laneState = 'paused';
           else if (playback.playing) laneState = 'running';
           else laneState = 'ready';
@@ -341,7 +355,14 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
           playing={playback.playing}
           datasetType={mazeType}
         />
-        <AlgorithmComparisonCenter algorithms={catalog.pathfindingAlgorithms} type="pathfinding" catalog={catalog} />
+        <AlgorithmComparisonCenter
+          algorithms={catalog.pathfindingAlgorithms}
+          type="pathfinding"
+          catalog={catalog}
+          activeFrames={activeFramesMap}
+          prevFrames={prevFramesMap}
+          maxFrames={playback.maxFrames}
+        />
         <VisualizationLegend type="pathfinding" />
       </div>
     </main>

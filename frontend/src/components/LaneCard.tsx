@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import type { RaceLaneResponse, SimulationFrame } from '../models/types';
 import { Clock, Activity, RotateCw, CheckCircle2, AlertCircle, Percent, Code, ChevronDown, ChevronUp } from 'lucide-react';
+import { PseudocodeViewer } from './PseudocodeViewer';
 
 export type LaneState = 'ready' | 'running' | 'paused' | 'finished';
 export type ArenaType = 'sorting' | 'searching' | 'pathfinding';
@@ -20,10 +21,11 @@ export function LaneCard({
 }) {
   const [showCode, setShowCode] = useState(false);
 
-  const totalFrames = lane.frames.length;
-  const progress = totalFrames > 1 ? Math.min(100, Math.round((frame.frame / (totalFrames - 1)) * 100)) : 0;
+  const totalFrames = lane?.frames?.length ?? 0;
+  const frameNum = frame?.frame ?? 0;
+  const progress = totalFrames > 1 ? Math.min(100, Math.round((frameNum / (totalFrames - 1)) * 100)) : 0;
 
-  const laneFinished = frame.done;
+  const laneFinished = frame?.done ?? false;
 
   let badgeState: LaneState;
   if (laneState === 'ready') {
@@ -54,11 +56,11 @@ export function LaneCard({
     ? sortingStatusLabels[badgeState]
     : defaultStatusLabels[badgeState];
 
-  const opLabel = frame.steps !== undefined && frame.steps > 0 ? 'Steps' : 'Comparisons';
-  const opValue = frame.comparisons || frame.steps || 0;
+  const opLabel = (frame?.steps !== undefined && frame.steps > 0) ? 'Steps' : 'Comparisons';
+  const opValue = frame?.comparisons || frame?.steps || 0;
 
   let actionLabel = 'Swaps';
-  let actionValue: string | number = frame.swaps ?? 0;
+  let actionValue: string | number = frame?.swaps ?? 0;
   let ActionIcon = RotateCw;
 
   const isPathfinding = arenaType === 'pathfinding';
@@ -68,9 +70,9 @@ export function LaneCard({
   if (isPathfinding) {
     actionLabel = 'Status';
     ActionIcon = CheckCircle2;
-    if (frame.pathFound) {
+    if (frame?.pathFound) {
       actionValue = 'Path Found';
-    } else if (frame.done) {
+    } else if (frame?.done) {
       actionValue = 'No Path';
       ActionIcon = AlertCircle;
     } else if (laneState === 'ready') {
@@ -81,9 +83,9 @@ export function LaneCard({
   } else if (isSearching) {
     actionLabel = 'Status';
     ActionIcon = CheckCircle2;
-    if (frame.foundIndex !== null && frame.foundIndex >= 0) {
+    if (frame?.foundIndex !== null && frame?.foundIndex !== undefined && frame.foundIndex >= 0) {
       actionValue = `Found @ ${frame.foundIndex}`;
-    } else if (frame.done) {
+    } else if (frame?.done) {
       actionValue = 'Not Found';
       ActionIcon = AlertCircle;
     } else if (laneState === 'ready') {
@@ -137,13 +139,13 @@ export function LaneCard({
       </div>
 
       {showCode && pseudocodeText && (
-        <div className="code-inspector-box" style={{ background: 'var(--bg-card-alt, rgba(0,0,0,0.2))', padding: '10px 14px', borderRadius: '8px', margin: '8px 0', fontSize: '12px', borderLeft: '3px solid var(--accent, #6366f1)' }}>
-          <div style={{ fontWeight: 600, marginBottom: '4px', opacity: 0.8, display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Code size={12} /> Pseudocode Logic
-          </div>
-          <pre style={{ margin: 0, fontFamily: 'monospace', whiteSpace: 'pre-wrap', opacity: 0.9 }}>
-            {pseudocodeText}
-          </pre>
+        <div style={{ margin: '8px 0' }}>
+          <PseudocodeViewer
+            algorithmName={lane.name}
+            pseudocode={pseudocodeText}
+            currentFrame={frame}
+            onToggleCollapse={() => setShowCode(false)}
+          />
         </div>
       )}
 

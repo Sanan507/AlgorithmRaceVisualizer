@@ -420,7 +420,7 @@ export function HistoryPage({ catalog }: { catalog: CatalogResponse }) {
             <div className="algo-sidebar-panel">
               <div className="algo-sidebar-group">
                 <h5>Sorting</h5>
-                {catalog.sortingAlgorithms.map((name) => (
+                {(catalog?.sortingAlgorithms ?? []).map((name) => (
                   <button
                     key={name}
                     className={`algo-selector-btn ${selectedAlgo === name ? 'active' : ''}`}
@@ -434,7 +434,7 @@ export function HistoryPage({ catalog }: { catalog: CatalogResponse }) {
 
               <div className="algo-sidebar-group">
                 <h5>Searching</h5>
-                {catalog.searchingAlgorithms.map((name) => (
+                {(catalog?.searchingAlgorithms ?? []).map((name) => (
                   <button
                     key={name}
                     className={`algo-selector-btn ${selectedAlgo === name ? 'active' : ''}`}
@@ -448,7 +448,7 @@ export function HistoryPage({ catalog }: { catalog: CatalogResponse }) {
 
               <div className="algo-sidebar-group">
                 <h5>Pathfinding</h5>
-                {catalog.pathfindingAlgorithms.map((name) => (
+                {(catalog?.pathfindingAlgorithms ?? []).map((name) => (
                   <button
                     key={name}
                     className={`algo-selector-btn ${selectedAlgo === name ? 'active' : ''}`}
@@ -619,7 +619,7 @@ export function HistoryPage({ catalog }: { catalog: CatalogResponse }) {
               <span>Space Complexity</span>
             </div>
 
-            {activeTab === 'sorting' && catalog.sortingAlgorithms.map((name) => {
+            {activeTab === 'sorting' && (catalog?.sortingAlgorithms ?? []).map((name) => {
               const data = algoDatabase[name];
               if (!data) return null;
               return (
@@ -633,7 +633,7 @@ export function HistoryPage({ catalog }: { catalog: CatalogResponse }) {
               );
             })}
 
-            {activeTab === 'searching' && catalog.searchingAlgorithms.map((name) => {
+            {activeTab === 'searching' && (catalog?.searchingAlgorithms ?? []).map((name) => {
               const data = algoDatabase[name];
               if (!data) return null;
               return (
@@ -647,7 +647,7 @@ export function HistoryPage({ catalog }: { catalog: CatalogResponse }) {
               );
             })}
 
-            {activeTab === 'pathfinding' && catalog.pathfindingAlgorithms.map((name) => {
+            {activeTab === 'pathfinding' && (catalog?.pathfindingAlgorithms ?? []).map((name) => {
               const normalizedName = getNormalizedName(name);
               const data = algoDatabase[normalizedName];
               if (!data) return null;
