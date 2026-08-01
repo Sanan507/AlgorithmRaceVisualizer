@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public abstract class PathfindingModel {
+  private static final int[][] DIRS = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+
   protected GridCell[][] grid;
   protected int rows;
   protected int cols;
@@ -15,6 +17,8 @@ public abstract class PathfindingModel {
   private boolean done;
   private boolean pathFound;
   private int steps;
+
+  private static final int[][] DIRS = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
 
   protected PathfindingModel(String name) {
     this.name = name;
@@ -37,8 +41,7 @@ public abstract class PathfindingModel {
 
   protected List<GridCell> getNeighbors(GridCell cell) {
     List<GridCell> neighbors = new ArrayList<>();
-    int[][] dirs = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
-    for (int[] d : dirs) {
+    for (int[] d : DIRS) {
       int nr = cell.row + d[0];
       int nc = cell.col + d[1];
       if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && grid[nr][nc].state != CellState.WALL) {
