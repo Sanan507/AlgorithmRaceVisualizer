@@ -49,6 +49,8 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
     ) => {
       setLoading(true);
       winnerAnnouncedRef.current = false;
+      const useAlgos = customParams?.algos ?? algorithms;
+      const useMazeType = customParams?.mType ?? mazeType;
       const useStart = customParams?.start ?? startNode;
       const useEnd = customParams?.end ?? endNode;
       const sendWalls = customParams?.walls ?? (!newMaze && walls ? walls : null);
