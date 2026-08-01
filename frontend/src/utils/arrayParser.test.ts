@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { describe, it, expect } from 'vitest';
 import { parseCustomArrayInput } from './arrayParser';
 
@@ -35,8 +34,9 @@ describe('parseCustomArrayInput', () => {
     expect(parseCustomArrayInput("-5, 0, 10")).toEqual([-5, 0, 10]);
   });
 
-  it('should return an empty array for an empty string', () => {
+  it('should return an empty array for an empty string or all non-numeric input', () => {
     expect(parseCustomArrayInput("")).toEqual([]);
+    expect(parseCustomArrayInput("abc, def")).toEqual([]);
   });
 
   it('should return an empty array for null/undefined/non-string input', () => {
@@ -46,29 +46,5 @@ describe('parseCustomArrayInput', () => {
     expect(parseCustomArrayInput(undefined)).toEqual([]);
     // @ts-expect-error testing invalid input types
     expect(parseCustomArrayInput(123)).toEqual([]);
-=======
-import { parseCustomArrayInput } from './arrayParser';
-
-describe('parseCustomArrayInput', () => {
-  it('parses valid comma-separated numbers correctly', () => {
-    expect(parseCustomArrayInput('5, 10, 15, 20')).toEqual([5, 10, 15, 20]);
-  });
-
-  it('handles negative numbers', () => {
-    expect(parseCustomArrayInput('-5, 0, 10')).toEqual([-5, 0, 10]);
-  });
-
-  it('handles empty spaces and trailing commas', () => {
-    expect(parseCustomArrayInput('5,, 8,')).toEqual([5, 8]);
-  });
-
-  it('filters out non-numeric tokens', () => {
-    expect(parseCustomArrayInput('5, abc, 8')).toEqual([5, 8]);
-  });
-
-  it('returns empty array for invalid or empty inputs', () => {
-    expect(parseCustomArrayInput('')).toEqual([]);
-    expect(parseCustomArrayInput('abc, def')).toEqual([]);
->>>>>>> d017228 (Fix RateLimitFilter IP spoofing, race condition, and add unit tests for arrayParser)
   });
 });
