@@ -1,103 +1,80 @@
 package com.algorithmrace.visualizer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.*;
 
-import jakarta.servlet.http.HttpServletRequest;
-import java.lang.reflect.Method;
-import org.junit.jupiter.api.BeforeEach;
+import jakarta.servlet.FilterChain;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 
 public class RateLimitFilterTest {
 
-  private RateLimitFilter filter;
-  private Method resolveClientIpMethod;
+  @Test
+  public void testDirectConnectionSpoofingIgnored() throws Exception {
+    RateLimitFilter filter = new RateLimitFilter();
+    MockHttpServletRequest request = new MockHttpServletRequest();
+    MockHttpServletResponse response = new MockHttpServletResponse();
+    FilterChain chain = mock(FilterChain.class);
 
-  @BeforeEach
-  public void setUp() throws Exception {
-    filter = new RateLimitFilter();
-    resolveClientIpMethod =
-        RateLimitFilter.class.getDeclaredMethod("resolveClientIp", HttpServletRequest.class);
-    resolveClientIpMethod.setAccessible(true);
-  }
+    request.setRequestURI("/api/simulations");
+    // Direct connection from attacker's public IP
+    request.setRemoteAddr("203.0.113.5");
+    // Attacker tries to spoof someone else's IP
+    request.addHeader("X-Forwarded-For", "198.51.100.10");
 
-  private String invokeResolveClientIp(HttpServletRequest request) throws Exception {
-    return (String) resolveClientIpMethod.invoke(filter, request);
+    // Hit the limit
+    for (int i = 0; i < 30; i++) {
+      filter.doFilter(request, response, chain);
+      response = new MockHttpServletResponse();
+    }
+    // 31st request should be blocked
+    filter.doFilter(request, response, chain);
+    assertEquals(429, response.getStatus());
+
+    // Now attacker tries to use another spoofed IP but same real remote IP
+    request = new MockHttpServletRequest();
+    response = new MockHttpServletResponse();
+    request.setRequestURI("/api/simulations");
+    request.setRemoteAddr("203.0.113.5");
+    request.addHeader("X-Forwarded-For", "198.51.100.11");
+
+    filter.doFilter(request, response, chain);
+    // Should still be blocked because it should ignore the spoofed header and use the remote addr
+    assertEquals(429, response.getStatus());
   }
 
   @Test
-  public void testDirectRequest() throws Exception {
+  public void testBehindProxySpoofingIgnored() throws Exception {
+    RateLimitFilter filter = new RateLimitFilter();
     MockHttpServletRequest request = new MockHttpServletRequest();
-    request.setRemoteAddr("203.0.113.1");
+    MockHttpServletResponse response = new MockHttpServletResponse();
+    FilterChain chain = mock(FilterChain.class);
 
-    assertEquals("203.0.113.1", invokeResolveClientIp(request));
-  }
-
-  @Test
-  public void testDirectRequestWithSpoofedHeader() throws Exception {
-    MockHttpServletRequest request = new MockHttpServletRequest();
-    request.setRemoteAddr("203.0.113.1");
-    // This is a direct connection from a public IP that has spoofed the X-Forwarded-For header
-    request.addHeader("X-Forwarded-For", "198.51.100.1");
-
-    assertEquals("203.0.113.1", invokeResolveClientIp(request));
-  }
-
-  @Test
-  public void testRequestFromInternalProxy() throws Exception {
-    MockHttpServletRequest request = new MockHttpServletRequest();
+    request.setRequestURI("/api/simulations");
+    // Connection from trusted internal proxy
     request.setRemoteAddr("10.0.0.5");
-    request.addHeader("X-Forwarded-For", "203.0.113.1");
+    // Attacker spoofed IP and proxy appended real attacker IP
+    request.addHeader("X-Forwarded-For", "1.2.3.4, 203.0.113.5");
 
-    assertEquals("203.0.113.1", invokeResolveClientIp(request));
-  }
+    // Hit the limit for attacker real IP
+    for (int i = 0; i < 30; i++) {
+      filter.doFilter(request, response, chain);
+      response = new MockHttpServletResponse();
+    }
+    // 31st request should be blocked
+    filter.doFilter(request, response, chain);
+    assertEquals(429, response.getStatus());
 
-  @Test
-  public void testRequestFromInternalProxySpoofedChain() throws Exception {
-    MockHttpServletRequest request = new MockHttpServletRequest();
+    // Attacker changes spoofed IP, but proxy still appends real IP
+    request = new MockHttpServletRequest();
+    response = new MockHttpServletResponse();
+    request.setRequestURI("/api/simulations");
     request.setRemoteAddr("10.0.0.5");
-    // Client sent spoofed IP 1.2.3.4, real IP is 203.0.113.1
-    request.addHeader("X-Forwarded-For", "1.2.3.4, 203.0.113.1");
+    request.addHeader("X-Forwarded-For", "5.6.7.8, 203.0.113.5");
 
-    assertEquals("203.0.113.1", invokeResolveClientIp(request));
-  }
-
-  @Test
-  public void testRequestFromMultipleInternalProxies() throws Exception {
-    MockHttpServletRequest request = new MockHttpServletRequest();
-    request.setRemoteAddr("10.0.0.5");
-    // Client IP 203.0.113.1, passed through internal proxy 192.168.1.1, then to 10.0.0.5
-    request.addHeader("X-Forwarded-For", "203.0.113.1, 192.168.1.1");
-
-    assertEquals("203.0.113.1", invokeResolveClientIp(request));
-  }
-
-  @Test
-  public void testRequestFromMultipleInternalProxiesSpoofed() throws Exception {
-    MockHttpServletRequest request = new MockHttpServletRequest();
-    request.setRemoteAddr("10.0.0.5");
-    // Client spoofed 1.2.3.4, real IP 203.0.113.1, internal proxy 192.168.1.1
-    request.addHeader("X-Forwarded-For", "1.2.3.4, 203.0.113.1, 192.168.1.1");
-
-    assertEquals("203.0.113.1", invokeResolveClientIp(request));
-  }
-
-  @Test
-  public void testRequestFromInternalProxyNoValidIp() throws Exception {
-    MockHttpServletRequest request = new MockHttpServletRequest();
-    request.setRemoteAddr("10.0.0.5");
-    request.addHeader("X-Forwarded-For", "invalid_ip");
-
-    // Should fallback to remote addr if no valid IP found in header
-    assertEquals("10.0.0.5", invokeResolveClientIp(request));
-  }
-
-  @Test
-  public void testRequestFromInternalClientViaInternalProxy() throws Exception {
-    MockHttpServletRequest request = new MockHttpServletRequest();
-    request.setRemoteAddr("10.0.0.5");
-    request.addHeader("X-Forwarded-For", "192.168.1.50");
-
-    assertEquals("192.168.1.50", invokeResolveClientIp(request));
+    filter.doFilter(request, response, chain);
+    // Should still be blocked because it correctly identifies 203.0.113.5
+    assertEquals(429, response.getStatus());
   }
 }

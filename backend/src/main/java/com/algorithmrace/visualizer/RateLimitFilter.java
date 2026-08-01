@@ -75,19 +75,6 @@ public class RateLimitFilter implements Filter {
     chain.doFilter(request, response);
   }
 
-  private boolean isInternalIp(String ip) {
-    if (ip == null) return false;
-    return ip.startsWith("10.")
-        || ip.startsWith("192.168.")
-        || ip.startsWith("127.")
-        || (ip.startsWith("172.")
-            && ip.split("\\.").length == 4
-            && Integer.parseInt(ip.split("\\.")[1]) >= 16
-            && Integer.parseInt(ip.split("\\.")[1]) <= 31)
-        || ip.equals("0:0:0:0:0:0:0:1")
-        || ip.equals("::1");
-  }
-
   private String resolveClientIp(HttpServletRequest request) {
     String remoteAddr = request.getRemoteAddr();
 
