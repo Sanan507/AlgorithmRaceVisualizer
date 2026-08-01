@@ -256,7 +256,9 @@ public class SimulationService {
         null,
         List.of(),
         0,
-        false);
+        false,
+        null,
+        null);
   }
 
   private SimulationFrame searchFrame(int frame, SearchModel model) {
@@ -279,10 +281,30 @@ public class SimulationService {
         null,
         List.of(),
         0,
-        false);
+        false,
+        null,
+        null);
   }
 
   private SimulationFrame pathFrame(int frame, PathfindingModel model, long timeMs) {
+    GridCell[][] grid = model.getGrid();
+    String[][] states = new String[grid.length][grid[0].length];
+    int nodesVisited = 0;
+    int frontierSize = 0;
+
+    for (int r = 0; r < grid.length; r++) {
+      for (int c = 0; c < grid[r].length; c++) {
+        CellState cellState = grid[r][c].state;
+        states[r][c] = cellState.name();
+
+        if (cellState == CellState.VISITED || cellState == CellState.PATH) {
+          nodesVisited++;
+        } else if (cellState == CellState.FRONTIER) {
+          frontierSize++;
+        }
+      }
+    }
+
     return new SimulationFrame(
         frame,
         new int[0],
@@ -299,20 +321,12 @@ public class SimulationService {
         model.isDone() ? "Done" : "Running",
         null,
         new int[0],
-        gridState(model.getGrid()),
+        states,
         model.getPath().stream().map(cell -> new PointDto(cell.row, cell.col)).toList(),
         model.getSteps(),
-        model.isPathFound());
-  }
-
-  private String[][] gridState(GridCell[][] grid) {
-    String[][] states = new String[grid.length][grid[0].length];
-    for (int r = 0; r < grid.length; r++) {
-      for (int c = 0; c < grid[r].length; c++) {
-        states[r][c] = grid[r][c].state.name();
-      }
-    }
-    return states;
+        model.isPathFound(),
+        nodesVisited,
+        frontierSize);
   }
 
   private void markPath(PathfindingModel model) {
