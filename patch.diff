@@ -1,0 +1,26 @@
+--- backend/src/main/java/com/algorithmrace/visualizer/RateLimitFilter.java
++++ backend/src/main/java/com/algorithmrace/visualizer/RateLimitFilter.java
+@@ -87,19 +87,22 @@
+       return remoteAddr;
+     }
+
++    String lastTrustedIp = remoteAddr;
+     String forwarded = request.getHeader("X-Forwarded-For");
+     if (forwarded != null && !forwarded.isBlank()) {
+       // Parse from right-to-left. The rightmost IP is the one added by the last proxy.
+       // We skip internal proxies to find the true client IP.
+       String[] ips = forwarded.split(",");
+       for (int i = ips.length - 1; i >= 0; i--) {
+         String ip = ips[i].trim();
+         if (!isInternalIp(ip)) {
+           if (ip.matches("[0-9a-fA-F.:]+")) {
+             return ip;
+           }
++        } else {
++          lastTrustedIp = ip;
+         }
+       }
+     }
+-    return remoteAddr;
++    return lastTrustedIp;
+   }
