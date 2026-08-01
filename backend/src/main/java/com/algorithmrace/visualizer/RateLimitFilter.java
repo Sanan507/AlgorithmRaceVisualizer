@@ -139,7 +139,7 @@ public class RateLimitFilter implements Filter {
     private final java.util.Deque<Long> timestamps =
         new java.util.concurrent.ConcurrentLinkedDeque<>();
 
-    boolean tryAcquire(int limit) {
+    synchronized boolean tryAcquire(int limit) {
       long now = System.currentTimeMillis();
       long cutoff = now - WINDOW_MS;
 
