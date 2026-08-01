@@ -52,7 +52,7 @@ export function CsvUploader({ onUploadSuccess }: CsvUploaderProps) {
   };
 
   return (
-    <div className="csv-uploader" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+    <div className="csv-uploader-wrap">
       <input
         type="file"
         accept=".csv,.txt"
@@ -61,11 +61,16 @@ export function CsvUploader({ onUploadSuccess }: CsvUploaderProps) {
         style={{ display: 'none' }}
         id={uploadId}
       />
-      <label htmlFor={uploadId} className="btn btn-secondary" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', padding: '0 12px', height: '38px', whiteSpace: 'nowrap' }}>
-        <Upload size={16} /> Upload
+      <label
+        htmlFor={uploadId}
+        className="csv-upload-btn"
+        title="Upload .csv or .txt file containing numbers separated by commas or newlines"
+      >
+        <Upload size={15} />
+        <span>Upload</span>
       </label>
       {error && (
-        <div style={{ color: 'var(--rose)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+        <div className="csv-upload-error">
           <AlertCircle size={14} /> {error}
         </div>
       )}

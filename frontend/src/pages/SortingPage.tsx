@@ -448,18 +448,22 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
         </div>
 
         {isCustomMode ? (
-          <div className="field custom-values-field" style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
-            <label style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <span>Custom Values (comma-separated)</span>
+          <div className="field custom-values-field" style={{ gridColumn: 'span 2' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+              <span>Custom Values (comma-separated or file upload)</span>
+              <span className="field-hint-text">Accepts .csv / .txt</span>
+            </div>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
               <input
                 type="text"
                 className={`custom-input-inline ${hasInvalidTokens || isCustomEmpty ? 'input-error' : ''}`}
                 value={customArrayStr}
                 placeholder="e.g. 5, 3, 8, 1, 9, 2"
                 onChange={(e) => handleCustomArrayTextChange(e.target.value)}
+                style={{ flex: 1, height: '40px' }}
               />
-            </label>
-            <CsvUploader onUploadSuccess={(parsed) => handleCustomArrayTextChange(parsed.join(', '))} />
+              <CsvUploader onUploadSuccess={(parsed) => handleCustomArrayTextChange(parsed.join(', '))} />
+            </div>
           </div>
         ) : (
           <label className="field">

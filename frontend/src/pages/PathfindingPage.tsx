@@ -258,27 +258,6 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
         </button>
       </header>
 
-      <div className="draw-mode-controls" style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-        <button
-          className={`btn ${drawMode === 'WALL' ? 'btn-primary' : 'btn-secondary'}`}
-          onClick={() => setDrawMode('WALL')}
-        >
-          Draw Walls
-        </button>
-        <button
-          className={`btn ${drawMode === 'START' ? 'btn-primary' : 'btn-secondary'}`}
-          onClick={() => setDrawMode('START')}
-        >
-          Set Start (Green)
-        </button>
-        <button
-          className={`btn ${drawMode === 'TARGET' ? 'btn-primary' : 'btn-secondary'}`}
-          onClick={() => setDrawMode('TARGET')}
-        >
-          Set Target (Red)
-        </button>
-      </div>
-
       {toastMessage && (
         <div className="toast-notification">
           {toastMessage}
@@ -309,6 +288,33 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
           />
         ))}
         <SelectField label="Maze Pattern" value={mazeType} options={catalog.mazeTypes} onChange={handleMazeTypeChange} />
+
+        <div className="field">
+          <span>Grid Edit Mode</span>
+          <div className="draw-mode-controls">
+            <button
+              type="button"
+              className={`draw-mode-btn ${drawMode === 'WALL' ? 'active active-wall' : ''}`}
+              onClick={() => setDrawMode('WALL')}
+            >
+              🧱 Walls
+            </button>
+            <button
+              type="button"
+              className={`draw-mode-btn ${drawMode === 'START' ? 'active active-start' : ''}`}
+              onClick={() => setDrawMode('START')}
+            >
+              🟢 Start
+            </button>
+            <button
+              type="button"
+              className={`draw-mode-btn ${drawMode === 'TARGET' ? 'active active-target' : ''}`}
+              onClick={() => setDrawMode('TARGET')}
+            >
+              🔴 Target
+            </button>
+          </div>
+        </div>
       </section>
 
       <Controls
