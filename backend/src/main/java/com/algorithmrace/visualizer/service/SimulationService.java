@@ -20,6 +20,7 @@ import com.algorithmrace.visualizer.utils.ArrayGenerator;
 import com.algorithmrace.visualizer.utils.ComplexityCatalog;
 import com.algorithmrace.visualizer.utils.MazeGenerator;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
@@ -27,6 +28,12 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class SimulationService {
+  private static class FrameState {
+    int[] lastArray = null;
+    int[] lastHighlight = null;
+    int[] lastSearchPath = null;
+  }
+
   private static final int MAX_FRAMES = 5000;
   private static final int MAX_ARRAY_SIZE = 100;
   private static final int MAX_LANES = 6;
@@ -131,12 +138,13 @@ public class SimulationService {
     AlgorithmModel model = SortingAlgorithmFactory.create(name);
     model.resetState(dataset);
     List<SimulationFrame> frames = new ArrayList<>();
-    frames.add(sortFrame(0, model));
+    FrameState state = new FrameState();
+    frames.add(sortFrame(0, model, state));
     int frame = 1;
     while (!model.isDone() && frame < MAX_FRAMES) {
       model.step();
       model.setTimeMs((long) frame * SORT_FRAME_MS);
-      frames.add(sortFrame(frame, model));
+      frames.add(sortFrame(frame, model, state));
       frame++;
     }
     LaneStats stats =
@@ -150,12 +158,13 @@ public class SimulationService {
     model.resetState(dataset);
     model.setTarget(target);
     List<SimulationFrame> frames = new ArrayList<>();
-    frames.add(searchFrame(0, model));
+    FrameState state = new FrameState();
+    frames.add(searchFrame(0, model, state));
     int frame = 1;
     while (!model.isDone() && frame < MAX_FRAMES) {
       model.step();
       model.setTimeMs((long) frame * SEARCH_FRAME_MS);
-      frames.add(searchFrame(frame, model));
+      frames.add(searchFrame(frame, model, state));
       frame++;
     }
     LaneStats stats =
@@ -236,11 +245,17 @@ public class SimulationService {
     return ArrayGenerator.generate(size, ArrayGenerator.ArrayType.RANDOM);
   }
 
-  private SimulationFrame sortFrame(int frame, AlgorithmModel model) {
+  private SimulationFrame sortFrame(int frame, AlgorithmModel model, FrameState state) {
+    if (state.lastArray == null || !Arrays.equals(state.lastArray, model.getArray())) {
+      state.lastArray = model.getArray().clone();
+    }
+    if (state.lastHighlight == null || !Arrays.equals(state.lastHighlight, model.getHighlight())) {
+      state.lastHighlight = model.getHighlight().clone();
+    }
     return new SimulationFrame(
         frame,
-        model.getArray().clone(),
-        model.getHighlight().clone(),
+        state.lastArray,
+        state.lastHighlight,
         model.getSortedBoundary(),
         model.getPivotIndex(),
         model.getMergeRegionStart(),
@@ -256,14 +271,26 @@ public class SimulationService {
         null,
         List.of(),
         0,
-        false);
+        false,
+        null,
+        null);
   }
 
-  private SimulationFrame searchFrame(int frame, SearchModel model) {
+  private SimulationFrame searchFrame(int frame, SearchModel model, FrameState state) {
+    if (state.lastArray == null || !Arrays.equals(state.lastArray, model.getArray())) {
+      state.lastArray = model.getArray().clone();
+    }
+    if (state.lastHighlight == null || !Arrays.equals(state.lastHighlight, model.getHighlight())) {
+      state.lastHighlight = model.getHighlight().clone();
+    }
+    if (state.lastSearchPath == null
+        || !Arrays.equals(state.lastSearchPath, model.getSearchPath())) {
+      state.lastSearchPath = model.getSearchPath().clone();
+    }
     return new SimulationFrame(
         frame,
-        model.getArray().clone(),
-        model.getHighlight().clone(),
+        state.lastArray,
+        state.lastHighlight,
         model.getSortedBoundary(),
         model.getPivotIndex(),
         model.getMergeRegionStart(),
@@ -275,14 +302,34 @@ public class SimulationService {
         model.isDone(),
         model.getStatus(),
         model.getFoundIndex(),
-        model.getSearchPath().clone(),
+        state.lastSearchPath,
         null,
         List.of(),
         0,
-        false);
+        false,
+        null,
+        null);
   }
 
   private SimulationFrame pathFrame(int frame, PathfindingModel model, long timeMs) {
+    GridCell[][] grid = model.getGrid();
+    String[][] states = new String[grid.length][grid[0].length];
+    int nodesVisited = 0;
+    int frontierSize = 0;
+
+    for (int r = 0; r < grid.length; r++) {
+      for (int c = 0; c < grid[r].length; c++) {
+        CellState cellState = grid[r][c].state;
+        states[r][c] = cellState.name();
+
+        if (cellState == CellState.VISITED || cellState == CellState.PATH) {
+          nodesVisited++;
+        } else if (cellState == CellState.FRONTIER) {
+          frontierSize++;
+        }
+      }
+    }
+
     return new SimulationFrame(
         frame,
         new int[0],
@@ -299,20 +346,12 @@ public class SimulationService {
         model.isDone() ? "Done" : "Running",
         null,
         new int[0],
-        gridState(model.getGrid()),
+        states,
         model.getPath().stream().map(cell -> new PointDto(cell.row, cell.col)).toList(),
         model.getSteps(),
-        model.isPathFound());
-  }
-
-  private String[][] gridState(GridCell[][] grid) {
-    String[][] states = new String[grid.length][grid[0].length];
-    for (int r = 0; r < grid.length; r++) {
-      for (int c = 0; c < grid[r].length; c++) {
-        states[r][c] = grid[r][c].state.name();
-      }
-    }
-    return states;
+        model.isPathFound(),
+        nodesVisited,
+        frontierSize);
   }
 
   private void markPath(PathfindingModel model) {

@@ -164,17 +164,9 @@ export function PerformanceComparison({
 
     let nodesVisited = 0;
     let frontierSize = 0;
-    if (type === 'pathfinding' && frame?.grid) {
-      for (let r = 0; r < frame.grid.length; r++) {
-        for (let c = 0; c < frame.grid[r].length; c++) {
-          const cellState = frame.grid[r][c];
-          if (cellState === 'VISITED' || cellState === 'PATH') {
-            nodesVisited++;
-          } else if (cellState === 'FRONTIER') {
-            frontierSize++;
-          }
-        }
-      }
+    if (type === 'pathfinding') {
+      nodesVisited = frame?.nodesVisited ?? 0;
+      frontierSize = frame?.frontierSize ?? 0;
     }
     const pathLength = (type === 'pathfinding' && frame?.path) ? frame.path.length : 0;
 
