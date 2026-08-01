@@ -18,6 +18,8 @@ public abstract class PathfindingModel {
   private boolean pathFound;
   private int steps;
 
+  private static final int[][] DIRS = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+
   protected PathfindingModel(String name) {
     this.name = name;
   }
