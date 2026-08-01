@@ -36,9 +36,9 @@ describe('parseCustomArrayInput', () => {
     expect(parseCustomArrayInput('-5, 0, 10')).toEqual([-5, 0, 10]);
   });
 
-  it('should return empty array for empty string', () => {
-    expect(parseCustomArrayInput('')).toEqual([]);
-    expect(parseCustomArrayInput('   ')).toEqual([]);
+  it('should return an empty array for an empty string or all non-numeric input', () => {
+    expect(parseCustomArrayInput("")).toEqual([]);
+    expect(parseCustomArrayInput("abc, def")).toEqual([]);
   });
 
   it('should return empty array for non-string inputs', () => {

@@ -77,7 +77,6 @@ public class RateLimitFilter implements Filter {
 
   private String resolveClientIp(HttpServletRequest request) {
     String remoteAddr = request.getRemoteAddr();
-
     // If the direct connection is NOT from a trusted internal IP, we cannot trust headers.
     if (!isInternalIp(remoteAddr)) {
       return remoteAddr;
