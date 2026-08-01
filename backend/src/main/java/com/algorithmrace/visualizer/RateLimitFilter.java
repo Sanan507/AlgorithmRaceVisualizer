@@ -75,19 +75,42 @@ public class RateLimitFilter implements Filter {
     chain.doFilter(request, response);
   }
 
+  private boolean isInternalIp(String ip) {
+    if (ip == null) return false;
+    return ip.startsWith("10.")
+        || ip.startsWith("192.168.")
+        || ip.startsWith("127.")
+        || (ip.startsWith("172.")
+            && ip.split("\\.").length == 4
+            && Integer.parseInt(ip.split("\\.")[1]) >= 16
+            && Integer.parseInt(ip.split("\\.")[1]) <= 31)
+        || ip.equals("0:0:0:0:0:0:0:1")
+        || ip.equals("::1");
+  }
+
   private String resolveClientIp(HttpServletRequest request) {
-    // Use X-Forwarded-For only if present (behind reverse proxy),
-    // but always fall back to remote addr to prevent header spoofing
-    String forwarded = request.getHeader("X-Forwarded-For");
-    if (forwarded != null && !forwarded.isBlank()) {
-      // Take only the first IP (client IP, not proxy chain)
-      String ip = forwarded.split(",")[0].trim();
-      // Basic validation: only allow IP-like strings
-      if (ip.matches("[0-9a-fA-F.:]+")) {
-        return ip;
+    String remoteAddr = request.getRemoteAddr();
+
+    // Only trust X-Forwarded-For if the request is routed through our internal proxy
+    if (isInternalIp(remoteAddr)) {
+      String forwarded = request.getHeader("X-Forwarded-For");
+      if (forwarded != null && !forwarded.isBlank()) {
+        String[] ips = forwarded.split(",");
+        // Process from right to left to find the first non-internal IP
+        for (int i = ips.length - 1; i >= 0; i--) {
+          String ip = ips[i].trim();
+          if (!isInternalIp(ip) && ip.matches("[0-9a-fA-F.:]+")) {
+            return ip;
+          }
+        }
+        // If all IPs are internal or invalid, fallback to the first one if valid
+        String fallbackIp = ips[0].trim();
+        if (fallbackIp.matches("[0-9a-fA-F.:]+")) {
+          return fallbackIp;
+        }
       }
     }
-    return request.getRemoteAddr();
+    return remoteAddr;
   }
 
   private String resolveBucket(String path) {

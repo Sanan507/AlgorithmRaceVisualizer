@@ -1,0 +1,4 @@
+## 2026-08-01 - Fix X-Forwarded-For IP Spoofing
+**Vulnerability:** The rate limiter blindly trusted the `X-Forwarded-For` header and took the first IP, allowing attackers to spoof their IP address to bypass rate limiting.
+**Learning:** `X-Forwarded-For` headers are easily spoofed by clients and must never be trusted blindly. If a proxy is not guaranteed to strip the header from external requests, the application must validate the source IP.
+**Prevention:** Only trust `X-Forwarded-For` headers when the connection physically originates from a known, trusted internal proxy IP (e.g., private IP space). Additionally, when parsing proxy chains in `X-Forwarded-For`, process the chain from right-to-left and pick the first non-internal IP. This ensures you find the true client IP appended by the outermost trusted proxy, rather than a spoofed IP supplied by the attacker.
