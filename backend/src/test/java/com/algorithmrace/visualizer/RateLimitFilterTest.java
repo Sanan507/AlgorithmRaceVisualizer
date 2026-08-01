@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
-public class RateLimitFilterTest {
+class RateLimitFilterTest {
 
   @Test
   public void testDirectConnectionSpoofingIgnored() throws Exception {
@@ -76,5 +76,37 @@ public class RateLimitFilterTest {
     filter.doFilter(request, response, chain);
     // Should still be blocked because it correctly identifies 203.0.113.5
     assertEquals(429, response.getStatus());
+  }
+
+  @Test
+  void doFilter_nonApiRoot_bypassesFilter() throws Exception {
+    when(mockRequest.getRequestURI()).thenReturn("/");
+
+    filter.doFilter(mockRequest, mockResponse, mockFilterChain);
+
+    verify(mockFilterChain).doFilter(mockRequest, mockResponse);
+    verify(mockResponse, never()).setStatus(anyInt());
+  }
+
+  @Test
+  void doFilter_untrustedProxyHeader_ignoresSpoofedHeader() throws Exception {
+    when(mockRequest.getRequestURI()).thenReturn("/api/simulations/sorting");
+    when(mockRequest.getRemoteAddr()).thenReturn("203.0.113.195"); // Public IP (not proxy)
+    when(mockRequest.getHeader("X-Forwarded-For")).thenReturn("198.51.100.10"); // Spoofed IP
+
+    filter.doFilter(mockRequest, mockResponse, mockFilterChain);
+
+    verify(mockFilterChain).doFilter(mockRequest, mockResponse);
+  }
+
+  @Test
+  void doFilter_trustedProxyHeader_usesForwardedHeader() throws Exception {
+    when(mockRequest.getRequestURI()).thenReturn("/api/simulations/sorting");
+    when(mockRequest.getRemoteAddr()).thenReturn("127.0.0.1"); // Trusted local proxy
+    when(mockRequest.getHeader("X-Forwarded-For")).thenReturn("198.51.100.10");
+
+    filter.doFilter(mockRequest, mockResponse, mockFilterChain);
+
+    verify(mockFilterChain).doFilter(mockRequest, mockResponse);
   }
 }
