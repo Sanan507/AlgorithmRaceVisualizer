@@ -38,6 +38,8 @@ export type SimulationFrame = {
   path: PointDto[];
   steps: number;
   pathFound: boolean;
+  nodesVisited?: number;
+  frontierSize?: number;
 };
 
 export type LaneStats = {
