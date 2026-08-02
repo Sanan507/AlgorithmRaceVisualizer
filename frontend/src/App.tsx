@@ -40,6 +40,8 @@ const getPageFromHash = (): Page => {
   return 'landing';
 };
 
+import { ThemeProvider } from './context/ThemeContext';
+
 export default function App() {
   const [active, setActive] = useState<Page>(() => getPageFromHash());
   const [catalog, setCatalog] = useState<CatalogResponse>(fallbackCatalog);
@@ -128,62 +130,64 @@ export default function App() {
   }
 
   return (
-    <AudioCtx.Provider value={{ play, audioSettings, setAudioSettings }}>
-      {active === 'landing' ? (
-        <LandingPage onNavigate={setActive} darkMode={darkMode} setDarkMode={setDarkMode} />
-      ) : (
-        <div className={`app-shell ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
-          {/* Mobile Header Bar */}
-          <div className="mobile-header-bar">
-            <div className="mobile-brand" onClick={() => setActive('landing')}>
-              <Zap size={18} className="brand-icon-zap" />
-              <strong>AlgoRace</strong>
+    <ThemeProvider>
+      <AudioCtx.Provider value={{ play, audioSettings, setAudioSettings }}>
+        {active === 'landing' ? (
+          <LandingPage onNavigate={setActive} darkMode={darkMode} setDarkMode={setDarkMode} />
+        ) : (
+          <div className={`app-shell ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+            {/* Mobile Header Bar */}
+            <div className="mobile-header-bar">
+              <div className="mobile-brand" onClick={() => setActive('landing')}>
+                <Zap size={18} className="brand-icon-zap" />
+                <strong>AlgoRace</strong>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <button
+                  type="button"
+                  className="mobile-hamburger-btn"
+                  onClick={() => setDarkMode(!darkMode)}
+                  aria-label={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                >
+                  {darkMode ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} />}
+                </button>
+                <button
+                  type="button"
+                  className="mobile-hamburger-btn"
+                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                  aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+                  aria-expanded={mobileMenuOpen}
+                >
+                  <Menu size={22} />
+                </button>
+              </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <button
-                type="button"
-                className="mobile-hamburger-btn"
-                onClick={() => setDarkMode(!darkMode)}
-                aria-label={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-              >
-                {darkMode ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} />}
-              </button>
-              <button
-                type="button"
-                className="mobile-hamburger-btn"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
-                aria-expanded={mobileMenuOpen}
-              >
-                <Menu size={22} />
-              </button>
+
+            <Sidebar
+              active={active}
+              onChange={setActive}
+              collapsed={sidebarCollapsed}
+              onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+              mobileOpen={mobileMenuOpen}
+              onMobileClose={() => setMobileMenuOpen(false)}
+              darkMode={darkMode}
+              setDarkMode={setDarkMode}
+            />
+
+            <div className="content-shell">
+              {active === 'sorting' && <SortingPage catalog={catalog} />}
+              {active === 'searching' && <SearchingPage catalog={catalog} />}
+              {active === 'pathfinding' && <PathfindingPage catalog={catalog} />}
+              {active === 'history' && <HistoryPage catalog={catalog} />}
+              {active === 'settings' && (
+                <SettingsPage darkMode={darkMode} setDarkMode={setDarkMode} />
+              )}
             </div>
           </div>
-
-          <Sidebar
-            active={active}
-            onChange={setActive}
-            collapsed={sidebarCollapsed}
-            onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-            mobileOpen={mobileMenuOpen}
-            onMobileClose={() => setMobileMenuOpen(false)}
-            darkMode={darkMode}
-            setDarkMode={setDarkMode}
-          />
-
-          <div className="content-shell">
-            {active === 'sorting' && <SortingPage catalog={catalog} />}
-            {active === 'searching' && <SearchingPage catalog={catalog} />}
-            {active === 'pathfinding' && <PathfindingPage catalog={catalog} />}
-            {active === 'history' && <HistoryPage catalog={catalog} />}
-            {active === 'settings' && (
-              <SettingsPage darkMode={darkMode} setDarkMode={setDarkMode} />
-            )}
-          </div>
-        </div>
-      )}
-      <Analytics />
-      <SpeedInsights />
-    </AudioCtx.Provider>
+        )}
+        <Analytics />
+        <SpeedInsights />
+      </AudioCtx.Provider>
+    </ThemeProvider>
   );
 }

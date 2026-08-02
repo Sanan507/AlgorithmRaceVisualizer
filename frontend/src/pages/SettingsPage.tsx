@@ -1,5 +1,6 @@
 import { Moon, Volume2, VolumeX, SlidersHorizontal, AudioWaveform, Volume, User, Github, Linkedin, Mail, BarChart2, Activity, Zap, Clock, Code } from 'lucide-react';
 import { useAudio } from '../context/AudioContext';
+import { useTheme } from '../context/ThemeContext';
 
 export function SettingsPage({
   darkMode,
@@ -9,6 +10,7 @@ export function SettingsPage({
   setDarkMode: (value: boolean) => void;
 }) {
   const { audioSettings, setAudioSettings, play } = useAudio();
+  const { accessibilityMode, setAccessibilityMode } = useTheme();
 
   function handleVolumeChange(key: 'masterVolume' | 'effectsVolume', value: number) {
     setAudioSettings({ [key]: value });
@@ -30,9 +32,9 @@ export function SettingsPage({
         </div>
       </header>
 
-      {/* ── Appearance ─────────────────────────────────────── */}
+      {/* ── Appearance & Accessibility ───────────────────── */}
       <div className="settings-section-header">
-        <span>Appearance</span>
+        <span>Appearance & Accessibility</span>
       </div>
       <section className="settings-grid">
         <label className="settings-card">
@@ -47,6 +49,48 @@ export function SettingsPage({
             onChange={(event) => setDarkMode(event.target.checked)}
           />
         </label>
+
+        <div className="settings-card">
+          <SlidersHorizontal size={22} />
+          <div style={{ flex: 1 }}>
+            <strong>Colorblind & Accessibility Preset</strong>
+            <span>High-contrast color mappings for visual impairments.</span>
+            <div style={{ marginTop: '8px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                className={`btn ${accessibilityMode === 'default' ? 'primary' : 'secondary'}`}
+                style={{ fontSize: '0.8rem', padding: '4px 10px' }}
+                onClick={() => setAccessibilityMode('default')}
+              >
+                {accessibilityMode === 'default' ? '✓ Default Cyber' : 'Default Cyber'}
+              </button>
+              <button
+                type="button"
+                className={`btn ${accessibilityMode === 'deuteranopia' ? 'primary' : 'secondary'}`}
+                style={{ fontSize: '0.8rem', padding: '4px 10px' }}
+                onClick={() => setAccessibilityMode('deuteranopia')}
+              >
+                {accessibilityMode === 'deuteranopia' ? '✓ Deuteranopia' : 'Deuteranopia (Red-Green)'}
+              </button>
+              <button
+                type="button"
+                className={`btn ${accessibilityMode === 'protanopia' ? 'primary' : 'secondary'}`}
+                style={{ fontSize: '0.8rem', padding: '4px 10px' }}
+                onClick={() => setAccessibilityMode('protanopia')}
+              >
+                {accessibilityMode === 'protanopia' ? '✓ Protanopia' : 'Protanopia (Red-Green)'}
+              </button>
+              <button
+                type="button"
+                className={`btn ${accessibilityMode === 'high-contrast' ? 'primary' : 'secondary'}`}
+                style={{ fontSize: '0.8rem', padding: '4px 10px' }}
+                onClick={() => setAccessibilityMode('high-contrast')}
+              >
+                {accessibilityMode === 'high-contrast' ? '✓ High Contrast' : 'High Contrast'}
+              </button>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* ── Audio ──────────────────────────────────────────── */}

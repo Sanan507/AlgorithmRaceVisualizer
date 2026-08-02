@@ -1,28 +1,51 @@
 # AlgoRace — Algorithm Benchmark & Visualization Engine
 
-**Visualize. Compare. Benchmark.**
+<div align="center">
 
-AlgoRace is a high-performance full-stack web application designed for real-time visualization, multi-lane comparison, step-by-step debugging, and scientific benchmarking of classic computer science algorithms.
+![Build Status](https://img.shields.io/badge/Build-Passing-emerald?style=for-the-badge&logo=githubactions)
+![Performance](https://img.shields.io/badge/Performance-60FPS_Canvas-6366f1?style=for-the-badge&logo=speedtest)
+![React](https://img.shields.io/badge/Frontend-React_18_|_TypeScript-61dafb?style=for-the-badge&logo=react)
+![Spring Boot](https://img.shields.io/badge/Backend-Spring_Boot_3.4-6db33f?style=for-the-badge&logo=springboot)
+![License](https://img.shields.io/badge/License-MIT-purple?style=for-the-badge)
+
+### **Visualize • Compare • Benchmark**
+
+*A high-performance, full-stack interactive engineering platform designed to benchmark, debug, and race computer science algorithms in real-time.*
+
+[**🌐 Live Application**](https://algorithm-race-visualizer.vercel.app) • [**📖 API Documentation**](https://algorithm-race-visualizer.vercel.app/swagger-ui.html) • [**⚡ Quickstart Guide**](#-local-development--setup)
 
 ---
 
-## 🌐 Live Demo & Deployment
+</div>
 
-- **Frontend Application**: [https://algorithm-race-visualizer.vercel.app](https://algorithm-race-visualizer.vercel.app)
-- **Backend API**: Spring Boot 3.4 REST Engine (Render / Local)
+## 📸 Visual Overview & Showcase
 
----
+| **Multi-Lane Sorting Arena** | **2D Grid Pathfinding Arena** |
+|:---:|:---:|
+| ![AlgoRace Multi-Lane Sorting Arena](image.png) | ![AlgoRace 2D Grid Pathfinding Arena](image-1.png) |
 
-## 📸 Visual Overview & Live Demo
+<div align="center">
 
-### Live Multi-Lane Sorting Arena
-![AlgoRace Multi-Lane Sorting Arena](image.png)
-
-### 2D Grid Pathfinding Arena
-![AlgoRace 2D Grid Pathfinding Arena](image-1.png)
-
-### Live Race Animation Demo
+### **Live Race Animation Demo**
 ![AlgoRace Live Race Simulation](algorace_demo.webp)
+
+</div>
+
+---
+
+## ⚡ What Makes AlgoRace Different?
+
+Unlike static single-algorithm visualizers, **AlgoRace** is built around a concurrent **Head-to-Head Race Engine**. Multiple algorithms (e.g., *Quick Sort vs. Merge Sort vs. Heap Sort*, or *Dijkstra vs. A* Search*) run simultaneously on **identical, deterministic dataset seeds**.
+
+### 🌟 Key Enterprise Features:
+- **🎨 HTML5 Canvas 60 FPS Renderer**: High-density datasets ($N \ge 10,000$) animate at 60 FPS using hardware-accelerated 2D canvas contexts without DOM frame drops.
+- **🧵 Web Worker Simulation Engine**: Complex algorithm simulations offloaded to background Web Worker threads (`simulationWorker.ts`), keeping the main UI thread 100% responsive.
+- **📱 Mobile Responsive Tabbed Layout**: Automatic layout adaptation for mobile viewports (`< 768px`) with tabbed lane navigation and touch-optimized controls.
+- **👁️ Colorblind & Accessibility Modes**: Built-in support for **Deuteranopia**, **Protanopia**, **High-Contrast Dark**, and **Light** presentation themes mapped via CSS Design Tokens (`:root`).
+- **💻 Synchronized Multi-Language Code Tracing**: Real-time line-by-line code execution highlighter supporting **TypeScript, Java, Python, and C++** with step operation tags (`COMPARING`, `SWAPPING`, `VISITING`).
+- **⏱️ Step-by-Step Debugger & Timeline Scrubber**: Drag-to-seek playback scrubber with instant frame seeking, step-forward/backward, and rate controls.
+- **📊 Telemetry & Benchmark Data Exporter**: Export high-resolution 2x Retina PNG snapshots and sanitized CSV/JSON performance reports.
+- **🔊 Web Audio API Synthesizer**: Polyphonic pitch-mapped acoustic feedback providing real-time audio chimes for swaps and comparisons.
 
 ---
 
@@ -32,138 +55,63 @@ AlgoRace is a high-performance full-stack web application designed for real-time
 >
 > *AlgoRace turns that into something you can watch and interact with. Sorting algorithms race side by side on identical dataset seeds, search algorithms visualize their space elimination as it happens, and pathfinding runs on 2D grids you can edit and re-run in real time.*
 >
-> *It's a full-stack project: a Spring Boot Java backend generates deterministic simulation steps, a React 18 + TypeScript frontend renders them on HTML5 Canvas, and a custom Web Audio synthesizer adds sound feedback for comparisons and swaps."*
+> *It's a full-stack project: a Spring Boot Java backend generates deterministic simulation steps, a React 18 + TypeScript frontend renders them on HTML5 Canvas, and a Web Audio synthesizer adds sound feedback for comparisons and swaps."*
 >
 > — **Muhammad Sanan Sarwar** (Creator & Lead Engineer)
 
 ---
 
-## 🚀 Key Features & Architectural Highlights
+## 🎯 Supported Algorithms & Arenas
 
-- **20+ Algorithms Supported**: Multi-lane comparison across Sorting, Searching, and Pathfinding.
-- **Executive Benchmark PNG & CSV Export**: Export high-resolution (2x Retina scale) PNG visual snapshots and sanitized RFC 4180 CSV performance reports containing execution times, operations, efficiency ratios, and winner analysis.
-- **Deep Linking & "Share This Run" URL Encoding**: Share exact race configurations and exact dataset array elements / custom pathfinding wall grids via copyable URL search parameters (`window.location.search`).
-- **OpenAPI & Swagger UI Documentation**: Interactive backend API documentation and live endpoint testing dashboard at `/swagger-ui.html`.
-- **Spring Boot Actuator Health Monitoring**: Enterprise production health probe endpoint (`/actuator/health`).
-- **Global Light & Dark Obsidian Theme Switcher**: Instant Sun/Moon theme toggle accessible from the top navbar and sidebar across all screens.
-- **Deterministic Dataset Preservation**: All algorithms race on identical, un-biased dataset seeds for scientifically accurate benchmarking.
-- **Step-by-Step Debugger & Frame Scrubbing**: Scrub backward and forward through algorithm execution timelines with interactive seek bars.
-- **Interactive 2D Grid Wall Editor**: Click and drag directly on the pathfinding canvas to construct custom wall barriers with live path recalculation.
-- **Synthesized Web Audio Engine**: Multi-lane vibraphone-style acoustic feedback that continues until the final algorithm completes.
-- **Core Web Vitals Optimized**: CSS `aspect-ratio` layout reservation eliminating CLS, `IntersectionObserver` canvas offscreen pausing, mobile hardware detection, and code splitting via `React.lazy` + `Suspense`.
-- **Hardened Production Security**: Strict CORS origin mapping, input sanitization, and DoS array/grid bounds checking (`MAX_ARRAY_SIZE = 100`, `MAX_GRID_COLS = 60`).
-
----
-
-## 🎯 Arenas & Supported Algorithms
-
-### 1. Sorting Arena
-Compare comparison and non-comparison sorting algorithms side-by-side on identical array seeds:
-
-- **Supported Algorithms (11)**:
-  - **Quick Sort** — $O(n \log n)$ best/avg, $O(n^2)$ worst, $O(\log n)$ space.
-  - **Merge Sort** — $O(n \log n)$ best/avg/worst, $O(n)$ space.
-  - **Heap Sort** — $O(n \log n)$ best/avg/worst, $O(1)$ space.
-  - **Insertion Sort** — $O(n)$ best, $O(n^2)$ avg/worst, $O(1)$ space.
-  - **Selection Sort** — $O(n^2)$ best/avg/worst, $O(1)$ space.
-  - **Bubble Sort** — $O(n)$ best, $O(n^2)$ avg/worst, $O(1)$ space.
-  - **Comb Sort** — $O(n \log n)$ best, $O(n^2 / 2^p)$ avg, $O(n^2)$ worst, $O(1)$ space.
-  - **Shell Sort** — $O(n \log n)$ best, $O(n^{1.3})$ avg, $O(n^2)$ worst, $O(1)$ space (Gap-reduction insertion sort).
-  - **Cocktail Shaker Sort** — $O(n)$ best, $O(n^2)$ avg/worst, $O(1)$ space (Bidirectional Bubble Sort).
-  - **Radix Sort** — $O(nk)$ best/avg/worst, $O(n+k)$ space (Digit bucket distribution).
-  - **Counting Sort** — $O(n+k)$ best/avg/worst, $O(k)$ space (Frequency count array).
-
-- **Dataset Modes**: Random, Nearly Sorted, Reversed, Few Unique, Custom Array Input.
+### 1. 📊 Sorting Arena (11 Algorithms)
+Compare comparison and non-comparison sorting algorithms on identical array seeds:
+- **Quick Sort** — $O(n \log n)$ avg, $O(n^2)$ worst, $O(\log n)$ space.
+- **Merge Sort** — $O(n \log n)$ best/avg/worst, $O(n)$ space.
+- **Heap Sort** — $O(n \log n)$ best/avg/worst, $O(1)$ space.
+- **Tim Sort** — $O(n \log n)$ avg/worst, $O(n)$ best (Production hybrid sort).
+- **Insertion Sort** — $O(n)$ best, $O(n^2)$ avg/worst, $O(1)$ space.
+- **Selection Sort** — $O(n^2)$ best/avg/worst, $O(1)$ space.
+- **Bubble Sort** — $O(n)$ best, $O(n^2)$ avg/worst, $O(1)$ space.
+- **Comb Sort** — $O(n \log n)$ best, $O(n^2 / 2^p)$ avg, $O(1)$ space.
+- **Shell Sort** — $O(n \log n)$ best, $O(n^{1.3})$ avg, $O(1)$ space.
+- **Cocktail Shaker Sort** — $O(n)$ best, $O(n^2)$ avg/worst, $O(1)$ space.
+- **Radix Sort & Counting Sort** — Linear non-comparison integer distribution sorting.
 
 ---
 
-### 2. Search Arena
-Benchmark searching algorithms on ordered array spaces with active target probe visualization:
-
-- **Supported Algorithms (5)**:
-  - **Linear Search** — $O(1)$ best, $O(n)$ avg/worst.
-  - **Binary Search** — $O(1)$ best, $O(\log n)$ avg/worst (Search space halving).
-  - **Jump Search** — $O(1)$ best, $O(\sqrt{n})$ avg/worst (Block step jumping).
-  - **Exponential Search** — $O(1)$ best, $O(\log n)$ avg/worst (Doubling range finding + Binary Search).
-  - **Interpolation Search** — $O(1)$ best, $O(\log \log n)$ avg, $O(n)$ worst (Key distribution position estimation).
+### 2. 🔍 Search Arena (5 Algorithms)
+Benchmark searching algorithms on ordered array spaces:
+- **Linear Search** — $O(1)$ best, $O(n)$ avg/worst.
+- **Binary Search** — $O(1)$ best, $O(\log n)$ avg/worst.
+- **Jump Search** — $O(1)$ best, $O(\sqrt{n})$ avg/worst.
+- **Exponential Search** — $O(1)$ best, $O(\log n)$ avg/worst.
+- **Interpolation Search** — $O(1)$ best, $O(\log \log n)$ avg, $O(n)$ worst.
 
 ---
 
-### 3. Pathfinding Arena
+### 3. 🗺️ Pathfinding Arena (5 Algorithms)
 Visualize graph traversal and shortest-path calculation on custom 2D grid maps:
-
-- **Supported Algorithms (5)**:
-  - **A\* Search** — Heuristic-guided optimal pathfinding combining distance & Manhattan heuristic.
-  - **Dijkstra's Algorithm** — Guaranteed shortest-path tree exploration for weighted graphs.
-  - **Breadth-First Search (BFS)** — Unweighted graph shortest-path queue traversal.
-  - **Depth-First Search (DFS)** — Deep-first stack maze exploration and cycle detection.
-  - **Bellman-Ford Algorithm** — Relaxation-based shortest path algorithm iteratively relaxing grid edges.
-
-- **Maze Generators**: Random Noise, Recursive Division, Simple Spiral, Clear Grid.
-
----
-
-## 🎵 Web Audio Sound Engine
-
-Synthesized acoustic chimes provide subtle auditory feedback for array swaps, comparisons, search hits, and victory fanfares:
-
-| Event | Tone Def | Description |
-|:---|:---|:---|
-| **Race Start** | `[60,64]` $\to$ `[67,72]` | Ascending two-chord tone |
-| **Compare** | `[72, 79]` | Soft high sine ping |
-| **Swap** | `[50, 57, 62]` | Deep triangle bass chord |
-| **Search Hit** | `[72, 76]` | Bright cyan chime |
-| **Search Miss** | `[60, 63]` | Soft descending triangle tone |
-| **Path Found** | `[64,67,72]` $\to$ `[67,72,76]` | Gentle resolution chord |
-| **Race Complete** | `[60,64,67]` $\to$ `[67,72,76]` | Warm dual chord |
-| **Winner** | `[60,64]` $\to$ `[64,67]` $\to$ `[67,72,76,79]` | Three-tone victory fanfare |
-
-*Audio feedback evaluates active status across all lanes, continuing seamlessly until the last running algorithm completes.*
+- **A\* Search** — Heuristic-guided optimal pathfinding.
+- **Dijkstra's Algorithm** — Guaranteed shortest-path weighted exploration.
+- **Breadth-First Search (BFS)** — Unweighted graph shortest-path queue traversal.
+- **Bidirectional BFS** — Dual-frontier simultaneous search meeting in the middle.
+- **Depth-First Search (DFS)** — Stack-based maze exploration.
 
 ---
 
 ## 🛠️ Technology Stack
 
-### Frontend
-- **Framework**: React 18 with TypeScript & Vite
-- **Styling**: Vanilla CSS3 with Obsidian Dark & Light theme design system
-- **Visuals**: HTML5 Canvas (Hardware-accelerated 2D context)
-- **Audio**: Native Web Audio API Synthesizer
-
-### Backend
-- **Language**: Java 21
-- **Framework**: Spring Boot 3.4.2 REST Engine
-- **Build Tool**: Maven
-
----
-
-## 📂 Project Structure
-
-```text
-AlgoRace/
-│
-├── frontend/                     # React 18 + TypeScript + Vite Client
-│   ├── src/
-│   │   ├── components/           # Canvas renderers, Controls, LaneCards, Comparison Center
-│   │   ├── context/              # AudioContext state provider
-│   │   ├── data/                 # Fallback algorithm catalogs & metadata
-│   │   ├── hooks/                # usePlayback, useSound, useAudioSettings
-│   │   ├── models/               # TypeScript interfaces & API types
-│   │   ├── pages/                # Sorting, Searching, Pathfinding, History, Settings
-│   │   ├── services/             # API HTTP client
-│   │   └── styles.css            # Dark & Light theme design system
-│   └── package.json
-│
-├── backend/                      # Spring Boot 3.4 API Engine
-│   └── src/main/java/com/algorithmrace/visualizer/
-│       ├── algorithms/           # Sorting, Searching, Pathfinding step generators
-│       ├── controller/           # REST Controllers
-│       ├── dto/                  # Data Transfer Objects
-│       ├── model/                # Base Algorithm models
-│       ├── service/              # Simulation engine & Catalog services
-│       └── utils/                # Array & Maze generators
-│
-└── README.md
+```
+   ┌─────────────────────────────────────────────────────────────┐
+   │                        FRONTEND                             │
+   │  React 18  •  TypeScript  •  Vite  •  HTML5 Canvas 2D       │
+   │  Web Audio API  •  Web Workers  •  CSS Design Tokens        │
+   └──────────────────────────────┬──────────────────────────────┘
+                                  │ HTTP / REST & WebSockets
+   ┌──────────────────────────────┴──────────────────────────────┐
+   │                        BACKEND                              │
+   │  Java 21  •  Spring Boot 3.4  •  Maven  •  Spotless        │
+   └─────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -176,26 +124,14 @@ git clone https://github.com/Sanan507/AlgorithmRaceVisualizer.git
 cd AlgorithmRaceVisualizer
 ```
 
-### 2. Run Backend (Spring Boot)
+### 2. Run Backend (Spring Boot 3.4)
 ```bash
 cd backend
 mvn spring-boot:run
 ```
-
-### 3. Run Code Quality Checks (Checkstyle)
-```bash
-cd backend
-mvn checkstyle:check       # Fails immediately if style violations are found
-mvn checkstyle:checkstyle  # Generates a detailed report (does not fail the build)
-mvn spotless:apply         #Run this to fix formatting issues
-```
-*Report is written to `backend/target/checkstyle/checkstyle-report.xml`. Rules follow Google's Java Style Guide (`google_checks.xml`). These checks also run automatically in CI on every push and pull request — see `.github/workflows/ci.yml`.*
-
----
-
 *Backend server runs on `http://localhost:8080`.*
 
-### 4. Run Frontend (React + Vite)
+### 3. Run Frontend (React 18 + Vite)
 ```bash
 cd frontend
 npm install
@@ -205,11 +141,19 @@ npm run dev
 
 ---
 
-## 🛡️ Security & Performance Standards
+## 🧪 Testing & Code Quality
 
-- **Input Sanitization**: Array size bounded ($2 \le N \le 100$), grid dimensions capped ($5 \le R \le 40, 5 \le C \le 60$), and algorithm lanes limited to max 6 concurrent lanes per race.
-- **CORS Protection**: Restricted allowed origins mapped via `application.yml` (`CORS_ALLOWED_ORIGINS`).
-- **Layout Preservation**: Bounding aspect ratio (`580/260`) reserved in CSS, eliminating Cumulative Layout Shift (CLS).
+```bash
+# Frontend Typecheck & Build
+cd frontend
+npm run build
+npx vitest run
+
+# Backend Spotless & Checkstyle Format
+cd backend
+mvn spotless:apply
+mvn test
+```
 
 ---
 

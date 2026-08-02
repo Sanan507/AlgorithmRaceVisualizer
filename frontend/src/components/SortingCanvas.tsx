@@ -29,6 +29,12 @@ export function SortingCanvas({ frame }: { frame: SimulationFrame; algorithm?: s
 
     const isLight = document.documentElement.dataset.theme === 'light';
 
+    // Query active accessibility CSS tokens
+    const rootStyle = getComputedStyle(document.documentElement);
+    const customCompare = rootStyle.getPropertyValue('--color-comparing').trim() || colors.compare;
+    const customSorted = rootStyle.getPropertyValue('--color-sorted').trim() || colors.sorted;
+    const customPivot = rootStyle.getPropertyValue('--color-pivot').trim() || colors.pivot;
+
     // Canvas background
     ctx.fillStyle = isLight ? '#f2f7ff' : colors.bg;
     ctx.fillRect(0, 0, rect.width, rect.height);
@@ -117,18 +123,18 @@ export function SortingCanvas({ frame }: { frame: SimulationFrame; algorithm?: s
           grad.addColorStop(1, '#4f46e5');
         }
       } else if (baseColor === colors.sorted) {
-        grad.addColorStop(0, '#00f5d4');
-        grad.addColorStop(1, '#059669');
+        grad.addColorStop(0, customSorted);
+        grad.addColorStop(1, customSorted);
       } else if (baseColor === colors.pivot) {
-        grad.addColorStop(0, '#ff4d6d');
-        grad.addColorStop(1, '#b5179e');
+        grad.addColorStop(0, customPivot);
+        grad.addColorStop(1, customPivot);
       } else if (baseColor === colors.heap) {
         grad.addColorStop(0, '#ffd166');
         grad.addColorStop(1, '#ea580c');
       } else if (baseColor === colors.compare) {
         grad.addColorStop(0, '#ffffff');
-        grad.addColorStop(0.3, '#ff9e00');
-        grad.addColorStop(1, '#d97706');
+        grad.addColorStop(0.3, customCompare);
+        grad.addColorStop(1, customCompare);
       } else if (baseColor === colors.merge) {
         grad.addColorStop(0, '#38bdf8');
         grad.addColorStop(1, '#0284c7');
