@@ -1,346 +1,363 @@
 import subprocess
+import time
 
-def create_issue(title, labels, body):
+def create_issue(title, labels, body, max_retries=5):
     cmd = [
         "gh", "issue", "create",
         "--repo", "Sanan507/AlgorithmRaceVisualizer",
-        "--title", title,
-        "--label", labels,
-        "--body", body
+        "--title", title
     ]
+    if labels:
+        for label in labels.split(","):
+            label = label.strip()
+            if label:
+                cmd.extend(["--label", label])
+    cmd.extend(["--body", body])
+
     print(f"  Creating: {title}")
-    result = subprocess.run(cmd, capture_output=True, text=True)
-    if result.returncode == 0:
-        print(f"  Success : {result.stdout.strip()}")
-    else:
-        print(f"  Error   : {result.stderr.strip()}")
+    for attempt in range(1, max_retries + 1):
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        if result.returncode == 0:
+            print(f"  Success : {result.stdout.strip()}")
+            return
+        else:
+            err_msg = result.stderr.strip().replace("\n", " ")
+            print(f"  [Attempt {attempt}/{max_retries}] Waiting to retry: {err_msg[:90]}...")
+            if attempt < max_retries:
+                time.sleep(4 * attempt)
+    print(f"  Error: Failed after {max_retries} attempts.")
 
 
 # =============================================================================
-# DELETE OR COMMENT OUT any issues below that you do NOT want to push.
-# Then run:  python create_new_issues.py
+# ARCHIVE RECORD: ALL 12 CREATED HIGH-IMPACT ARCHITECTURAL & FEATURE ISSUES
 # =============================================================================
 
 
 # --- ISSUE 1 ------------------------------------------------------------------
 def issue_1():
     create_issue(
-        title="feat(sorting): Add Tim Sort Algorithm",
-        labels="enhancement,good first issue,jule",
+        title="feat(sorting): Add Tim Sort Hybrid Algorithm",
+        labels="enhancement",
         body="""### Overview
-Implement Tim Sort in the backend sorting engine. Tim Sort is Python's and Java's default sort — a hybrid of Merge Sort and Insertion Sort — and its inclusion gives learners insight into real-world production sorting.
+Implement Tim Sort in the backend sorting engine. Tim Sort is Python's and Java's default standard sorting algorithm — a hybrid of Merge Sort and Insertion Sort — and its inclusion provides learners with insight into production-grade sorting mechanics.
 
 ### Implementation Details & File Reference
-- Algorithm Model: Create `backend/src/main/java/com/algorithmrace/visualizer/algorithms/sorting/TimSortModel.java` implementing `AlgorithmModel`.
-  - Split array into chunks (~32 elements), Insertion Sort each chunk, then Merge chunks together recording every swap/comparison as a `SimulationFrame`.
-- Factory Registration: Add `"Tim Sort"` → `TimSortModel` in `SortingAlgorithmFactory.java`.
-- Complexity Catalog: Add entry to `ComplexityCatalog.java` (`O(N log N)` average/worst, `O(N)` best-case).
-- Frontend Metadata: Add entry to `frontend/src/data/algorithmMetadata.ts` (stable: true, inPlace: false).
+- **Algorithm Model**: Create `backend/src/main/java/com/algorithmrace/visualizer/algorithms/sorting/TimSortModel.java` extending `AlgorithmModel`.
+  - Divide array into small runs (e.g. run size = 32), sort each run using Insertion Sort, then merge runs using Merge Sort while emitting `SimulationFrame` objects for every comparison and swap.
+- **Factory Registration**: Add `"Tim Sort"` → `TimSortModel` mapping in `SortingAlgorithmFactory.java`.
+- **Complexity Catalog**: Register complexity metrics (`O(N log N)` average/worst, `O(N)` best-case, `O(N)` space) in `ComplexityCatalog.java`.
+- **Frontend Metadata**: Add entry in `frontend/src/data/algorithmMetadata.ts` with `stable: true` and `inPlace: false`.
 
 ### Definition of Done
-- Tim Sort appears in the Sorting Arena algorithm selector dropdown.
-- Race runs correctly end-to-end with accurate frame-by-frame step recording.
-- Complexity info appears correctly in the Performance Comparison panel.
+- Tim Sort appears in the Sorting Arena dropdown selector.
+- Runs end-to-end with accurate frame-by-frame step recording.
+- Complexity details render correctly in the Performance Comparison panel and Benchmarks page.
 
 ### Skill Level
-Medium — requires understanding of hybrid sorting internals and frame-step recording pattern."""
+Hard — requires implementing hybrid run-building and run-merging logic with exact frame state tracking."""
     )
 
 
 # --- ISSUE 2 ------------------------------------------------------------------
 def issue_2():
     create_issue(
-        title="feat(sorting): Add Counting Sort Algorithm",
-        labels="enhancement,good first issue,jule",
+        title="feat(pathfinding): Add Jump Point Search (JPS) Algorithm",
+        labels="enhancement",
         body="""### Overview
-Add Counting Sort (non-comparison integer sort) to the sorting arena. This gives users a concrete example of a linear-time O(N+K) sort and illustrates the trade-off between time and space complexity.
+Implement Jump Point Search (JPS) for grid pathfinding. JPS is an optimization of A* on uniform-cost grids that skips symmetric paths by jumping across straight lines until a forced neighbor or obstacle is encountered, speeding up pathfinding by up to 10x-100x.
 
 ### Implementation Details & File Reference
-- Algorithm Model: Create `backend/src/main/java/com/algorithmrace/visualizer/algorithms/sorting/CountingSortModel.java` implementing `AlgorithmModel`.
-  - Record a `SimulationFrame` for each count-bucket increment and each element placement into the output array.
-- Factory Registration: Register `"Counting Sort"` in `SortingAlgorithmFactory.java`.
-- Complexity Catalog: Add entry (`O(N+K)` time, `O(K)` space) in `ComplexityCatalog.java`.
-- Frontend Metadata: Add entry to `frontend/src/data/algorithmMetadata.ts` (stable: true, inPlace: false).
+- **Algorithm Model**: Create `backend/src/main/java/com/algorithmrace/visualizer/algorithms/pathfinding/JPSModel.java` extending `PathfindingModel`.
+  - Implement direction-aware jump functions along horizontal, vertical, and diagonal lines.
+  - Record jump points and intermediate visited nodes as `SimulationFrame` frames with distinct `CellState` markers.
+- **Factory Registration**: Register `"Jump Point Search"` in `PathfindingFactory.java`.
+- **Complexity Catalog**: Add entry in `ComplexityCatalog.java` highlighting `O(b^d)` reduced search space.
+- **Frontend Metadata**: Add entry in `frontend/src/data/algorithmMetadata.ts` (`complete: true`, `optimal: true`, `weighted: false`).
 
 ### Definition of Done
-- Counting Sort appears in the Sorting Arena and runs correctly for datasets with non-negative integer values.
-- Frames accurately capture the count-then-place phase transitions.
-- Complexity panel reflects O(N+K) correctly.
+- Jump Point Search is selectable in the Pathfinding Arena.
+- Shows dramatic node expansion reductions compared to standard A*.
+- Path reconstruction from jump points is optimal and accurate.
 
 ### Skill Level
-Good first issue — straightforward algorithm; frame-recording pattern can be copied from existing models."""
+Hard — requires implementing diagonal and cardinal jump pruning rules on 2D grid coordinates."""
     )
 
 
 # --- ISSUE 3 ------------------------------------------------------------------
 def issue_3():
     create_issue(
-        title="feat(pathfinding): Add Greedy Best-First Search Algorithm",
-        labels="enhancement,good first issue,jule",
+        title="feat(pathfinding): Add Bidirectional BFS Algorithm",
+        labels="enhancement",
         body="""### Overview
-Add Greedy Best-First Search to the Pathfinding Arena. Unlike A* which balances cost + heuristic, Greedy BFS uses only the heuristic (Manhattan distance), making it faster but non-optimal — a great educational contrast for learners.
+Implement Bidirectional BFS in the pathfinding engine. It simultaneously expands two frontiers — one from the source node and one from the target node — meeting in the middle to halve search depth and explore significantly fewer nodes.
 
 ### Implementation Details & File Reference
-- Algorithm Model: Create `backend/src/main/java/com/algorithmrace/visualizer/algorithms/pathfinding/GreedyBFSModel.java` implementing `PathfindingModel`.
-  - Priority queue ordered by Manhattan distance heuristic `h(n)` to target node only (no g-cost).
-  - Record each visited cell as a `SimulationFrame` with `CellState`.
-- Factory Registration: Add `"Greedy Best-First"` in `PathfindingFactory.java`.
-- Complexity Catalog: Entry with `O(b^m)` worst-case note in `ComplexityCatalog.java`.
-- Frontend Metadata: Entry in `frontend/src/data/algorithmMetadata.ts` (complete: false, optimal: false, weighted: false).
+- **Algorithm Model**: Create `backend/src/main/java/com/algorithmrace/visualizer/algorithms/pathfinding/BidirectionalBFSModel.java` extending `PathfindingModel`.
+  - Maintain forward queue (`start`) and backward queue (`end`), alternating step expansions.
+  - Record visited cells with distinct `CellState` values (`VISITED_FORWARD`, `VISITED_BACKWARD`) for visual distinction.
+  - Join parent chains when frontiers intersect to reconstruct the complete path.
+- **Factory Registration**: Register `"Bidirectional BFS"` in `PathfindingFactory.java`.
+- **Complexity Catalog**: Add entry with `O(b^(d/2))` time note in `ComplexityCatalog.java`.
+- **Frontend Metadata**: Add entry in `frontend/src/data/algorithmMetadata.ts`.
 
 ### Definition of Done
-- Greedy Best-First Search appears in the Pathfinding Arena selector.
-- Runs end-to-end; visually shows faster but potentially non-optimal path versus A*.
-- Algorithm metadata and complexity are correct.
+- Bidirectional BFS appears in the Pathfinding Arena.
+- Grid visualization displays two expanding frontiers converging in the middle.
+- Metrics accurately display total cells visited and optimal path length.
 
 ### Skill Level
-Good first issue — can directly copy AStarModel.java and remove the g-cost portion."""
+Medium — requires dual-frontier state management and path stitching at intersection."""
     )
 
 
 # --- ISSUE 4 ------------------------------------------------------------------
 def issue_4():
     create_issue(
-        title="feat(searching): Add Ternary Search Algorithm",
-        labels="enhancement,good first issue,jule",
+        title="feat(pathfinding): Add Greedy Best-First Search Algorithm",
+        labels="enhancement,good first issue",
         body="""### Overview
-Add Ternary Search to the Searching Arena. It divides the search space into three parts (vs Binary Search's two), making it a useful visual contrast to Binary Search with O(log3 N) complexity.
+Add Greedy Best-First Search to the Pathfinding Arena. Unlike A* which balances path cost g(n) + heuristic h(n), Greedy BFS relies solely on the Manhattan distance heuristic h(n), providing a fast but non-optimal search for educational contrast.
 
 ### Implementation Details & File Reference
-- Algorithm Model: Create `backend/src/main/java/com/algorithmrace/visualizer/algorithms/searching/TernarySearchModel.java` implementing `SearchModel`.
-  - Record each comparison frame with left boundary (`lo`), right boundary (`hi`), and two midpoints (`mid1`, `mid2`).
-- Factory Registration: Add `"Ternary Search"` in `SearchingAlgorithmFactory.java`.
-- Complexity Catalog: Add entry (`O(log3 N)` time, sorted-array requirement) in `ComplexityCatalog.java`.
-- Frontend Metadata: Add entry in `frontend/src/data/algorithmMetadata.ts`.
+- **Algorithm Model**: Create `backend/src/main/java/com/algorithmrace/visualizer/algorithms/pathfinding/GreedyBFSModel.java` extending `PathfindingModel`.
+  - Use priority queue ordered strictly by heuristic distance `h(cell, end)`.
+- **Factory Registration**: Add `"Greedy Best-First"` in `PathfindingFactory.java`.
+- **Complexity Catalog**: Add entry in `ComplexityCatalog.java` highlighting non-optimality.
+- **Frontend Metadata**: Add entry in `frontend/src/data/algorithmMetadata.ts` (`complete: false`, `optimal: false`).
 
 ### Definition of Done
-- Ternary Search appears in the Searching Arena selector alongside Binary/Linear/Jump/Exponential.
-- Frames correctly show three-zone narrowing per step.
-- Metadata and complexity info display correctly.
+- Greedy Best-First Search appears in the Pathfinding Arena selector.
+- Visually demonstrates aggressive target-seeking movement that can get trapped by obstacles.
+- Metadata indicates `optimal: false`.
 
 ### Skill Level
-Good first issue — can directly reference BinarySearchModel.java as a template."""
+Good first issue — straightforward heuristic priority queue implementation."""
     )
 
 
 # --- ISSUE 5 ------------------------------------------------------------------
 def issue_5():
     create_issue(
-        title="feat(ux): Playback Timeline Scrubber / Frame Seek Bar",
-        labels="enhancement,jule",
+        title="feat(searching): Add Ternary Search Algorithm",
+        labels="enhancement",
         body="""### Overview
-Add a horizontal timeline scrubber below the playback controls that lets users drag to any frame index in the race — similar to a video progress bar. Currently the only way to reach a specific step is by clicking Step Forward repeatedly.
+Implement Ternary Search in the searching engine. Ternary Search divides a sorted array into three equal segments using two midpoints (`mid1`, `mid2`), offering a visual contrast to Binary Search with `O(log3 N)` time complexity.
 
 ### Implementation Details & File Reference
-- Controls Component: Update `frontend/src/components/Controls.tsx` to render an `<input type="range">` scrubber.
-  - `min=0`, `max=maxFrames - 1`, `value=frameIndex`, `onChange` calls `seek(index)` from `usePlayback`.
-- Playback Hook: The `seek(index)` function already exists in `frontend/src/hooks/usePlayback.ts` — wire it up.
-- Styling: Style the range slider using existing CSS variables in `frontend/src/styles.css` to match the cyber dashboard aesthetic. Add a step counter label (`Frame X / N`).
+- **Algorithm Model**: Create `backend/src/main/java/com/algorithmrace/visualizer/algorithms/searching/TernarySearchModel.java` extending `SearchModel`.
+  - Record frame states with left bound (`lo`), right bound (`hi`), `mid1`, and `mid2` highlights per iteration step.
+- **Factory Registration**: Register `"Ternary Search"` in `SearchingAlgorithmFactory.java`.
+- **Complexity Catalog**: Add entry (`O(log3 N)` time complexity) in `ComplexityCatalog.java`.
+- **Frontend Metadata**: Add entry in `frontend/src/data/algorithmMetadata.ts`.
 
 ### Definition of Done
-- Dragging the scrubber thumb updates the visualizer canvas in real time to the selected frame.
-- Step counter label updates correctly on scrub.
-- Scrubbing pauses playback automatically (matches existing `seek` behavior in usePlayback.ts).
+- Ternary Search appears in the Searching Arena dropdown.
+- Visualizer highlights `mid1` and `mid2` bounds during search steps.
+- Search metrics accurately record comparison counts.
 
 ### Skill Level
-Medium — wiring existing hook to new UI element; CSS custom range-input styling."""
+Medium — requires three-way boundary partitioning and frame state recording."""
     )
 
 
 # --- ISSUE 6 ------------------------------------------------------------------
 def issue_6():
     create_issue(
-        title="feat(ux): Race Replay Button Without Re-Fetching",
-        labels="enhancement,good first issue,jule",
+        title="feat(audio): Web Audio Synthesizer with Value-to-Pitch Frequency Mapping",
+        labels="enhancement",
         body="""### Overview
-After a race finishes, add a "Replay ↺" button that instantly restarts the animation from frame 0 without making a new API call to the backend. Currently the user must click "Start Race" again which triggers a full re-fetch.
+Upgrade the audio system into a polyphonic Web Audio API sound synthesizer that maps array values to musical pitches (e.g. pentatonic scale 220Hz - 880Hz). When elements are compared or swapped, the visualizer generates real-time audio tones, creating classic algorithm soundscapes.
 
 ### Implementation Details & File Reference
-- Controls Component: Update `frontend/src/components/Controls.tsx` to show a "Replay ↺" button when `isCompleted === true` and `response !== null`.
-- Playback Hook: Call `reset()` from `frontend/src/hooks/usePlayback.ts` (already implemented), then immediately set `playing = true` via `setPlaying(true)`.
-- Page Wiring: In `frontend/src/pages/SortingPage.tsx`, `SearchingPage.tsx`, and `PathfindingPage.tsx`, pass down an `onReplay` callback prop that invokes `reset()` then `setPlaying(true)`.
+- **Audio Engine**: Update `frontend/src/context/AudioContext.tsx` using native `AudioContext` and `OscillatorNode`.
+  - Function `playToneForValue(value: number, minValue: number, maxValue: number, type: 'compare' | 'swap')`.
+  - Map normalized value `(val - min) / (max - min)` to a pentatonic scale frequency range.
+- **Playback Integration**: Wire sound calls inside playback step hooks in `frontend/src/hooks/usePlayback.ts`.
+- **User Settings**: Add a volume control slider and pitch toggle in `frontend/src/pages/SettingsPage.tsx`.
 
 ### Definition of Done
-- A "Replay ↺" button appears once a race completes.
-- Clicking it restarts the animation from frame 0 without any new API request.
-- Replay works correctly across Sorting, Searching, and Pathfinding arenas.
+- Toggling audio plays real-time harmonic tones during sorting and searching races.
+- Swaps produce higher velocity tones than comparisons.
+- Volume slider in Settings controls gain level smoothly without distortion.
 
 ### Skill Level
-Good first issue — wiring existing `reset()` to a new button; no backend changes needed."""
+Hard — requires Web Audio API synthesis, oscillator management, and non-blocking playback integration."""
     )
 
 
 # --- ISSUE 7 ------------------------------------------------------------------
 def issue_7():
     create_issue(
-        title="feat(ux): Algorithm Info Tooltip on Hover in Selector Dropdown",
-        labels="enhancement,good first issue,jule",
+        title="feat(customization): Interactive Custom Array & Grid Canvas Drawing Tool",
+        labels="enhancement",
         body="""### Overview
-When a user hovers over an algorithm name inside the SelectField dropdown, show a compact tooltip card with its time complexity (best/average/worst) and a one-line description. This turns the selector into an educational on-ramp.
+Allow users to enter custom datasets. For Sorting and Searching, add a custom comma-separated number input box. For Pathfinding, implement an interactive grid canvas drawing tool allowing users to click/drag to draw custom walls, start/target nodes, and weighted terrain.
 
 ### Implementation Details & File Reference
-- SelectField Component: Update `frontend/src/components/SelectField.tsx` to accept an optional `metadata` prop map and render a floating tooltip panel on `onMouseEnter` of each option wrapper.
-- Data Source: Read complexity strings from `frontend/src/data/fallbackCatalog.ts` (already has `complexities`) and `useCase` / `advantage` from `frontend/src/data/algorithmMetadata.ts`.
-- Styling: Style as a floating `<div>` anchored near the hovered row using `position: absolute` and CSS variables from `frontend/src/styles.css`.
+- **Sorting/Searching Custom Input**: Add custom array text input in `frontend/src/pages/SortingPage.tsx` and `SearchingPage.tsx` using `parseCustomArrayInput`.
+- **Pathfinding Canvas Editor**: Update `frontend/src/pages/PathfindingPage.tsx` to handle mouse drag events (`onMouseDown`, `onMouseEnter`) on grid cells to toggle walls or set start/target coordinates.
+- **Backend DTO**: Pass custom grid matrix or array payload in `SortingSimulationRequest` and `PathfindingSimulationRequest`.
 
 ### Definition of Done
-- Hovering any algorithm name in any arena's selector shows a tooltip with best/average/worst time, space complexity, and a one-line use-case description.
-- Tooltip disappears when the cursor leaves the option.
+- Users can type custom array values (e.g. `42, 7, 19, 88`) and race algorithms on them.
+- Users can draw maze walls or relocate start/end nodes directly on the grid before starting a race.
+- Custom setups submit to backend successfully and render simulation frames accurately.
 
 ### Skill Level
-Good first issue — data already exists in the codebase; primarily UI composition."""
+Hard — requires mouse event state handling on canvas/grid and custom payload validation."""
     )
 
 
 # --- ISSUE 8 ------------------------------------------------------------------
 def issue_8():
     create_issue(
-        title="feat(history): Persist Race History to localStorage with Session Restore",
-        labels="enhancement,jule",
+        title="feat(export): Benchmark Performance Telemetry & Race Data Exporter (CSV / JSON)",
+        labels="enhancement",
         body="""### Overview
-Race history (metrics, winner, dataset config) should persist across browser refreshes using `localStorage`, and be restored automatically when the app reloads. Currently all history is lost on page refresh.
+Add an export feature allowing users, researchers, and students to download benchmark race data (execution times, operation counts, winner metrics, array size, algorithm list) as CSV or JSON files for offline analysis and lab reports.
 
 ### Implementation Details & File Reference
-- History Storage Utility: Create `frontend/src/utils/historyStorage.ts` with `saveRaceResult(entry)`, `loadRaceHistory(): RaceHistoryEntry[]`, and `clearHistory()` using `localStorage`.
-- Race History Entry Type: Define `RaceHistoryEntry` interface in `frontend/src/models/types.ts` with fields: `id`, `timestamp`, `arenaType`, `algorithms`, `winner`, `datasetSize`, `datasetType`, `metrics`.
-- Page Wiring: After a race completes in `SortingPage.tsx`, `SearchingPage.tsx`, and `PathfindingPage.tsx`, call `saveRaceResult(entry)`.
-- History Page: Update `frontend/src/pages/HistoryPage.tsx` to load from `loadRaceHistory()` on mount and display actual past results.
-- Settings Page: Wire "Clear History" in `frontend/src/pages/SettingsPage.tsx` to call `clearHistory()` and reset local state.
+- **Export Utility**: Create `frontend/src/utils/exportTelemetry.ts` with `exportRaceToCSV(raceData)` and `exportRaceToJSON(raceData)`.
+  - Format data into clean tabular columns (Algorithm, Operations, Execution Time (ms), Swaps, Winner, Dataset Config).
+  - Use `Blob` and `URL.createObjectURL` to trigger instant browser file downloads.
+- **UI Action Buttons**: Add "Export CSV" and "Export JSON" buttons in the Performance Comparison panel (`frontend/src/components/AlgorithmComparisonCenter.tsx`).
 
 ### Definition of Done
-- After running any race, refreshing the page still shows the result in the History page.
-- History persists across all arena types (Sorting, Searching, Pathfinding).
-- Settings → Clear History wipes localStorage and the History page becomes empty.
+- Clicking "Export CSV" downloads a structured `.csv` file containing complete race metrics.
+- Clicking "Export JSON" downloads a formatted `.json` file containing raw telemetry.
+- Supported across Sorting, Searching, and Pathfinding race results.
 
 ### Skill Level
-Medium — localStorage wiring across multiple pages; type definition needed."""
+Medium — data formatting, Blob creation, and browser download trigger implementation."""
     )
 
 
 # --- ISSUE 9 ------------------------------------------------------------------
 def issue_9():
     create_issue(
-        title="feat(backend): Add Bidirectional BFS Pathfinding Algorithm",
-        labels="enhancement,jule",
+        title="feat(history): Persistent Race Session History & Performance Analytics Center",
+        labels="enhancement",
         body="""### Overview
-Implement Bidirectional BFS in the pathfinding engine. It simultaneously explores from the source and target, meeting in the middle, typically halving the number of cells visited vs standard BFS — a compelling visual learner moment.
+Persist complete race execution history across browser reloads using `localStorage` and build a historical performance analytics dashboard where users can filter past races, compare speed trends over time, and clear stored history.
 
 ### Implementation Details & File Reference
-- Algorithm Model: Create `backend/src/main/java/com/algorithmrace/visualizer/algorithms/pathfinding/BidirectionalBFSModel.java` implementing `PathfindingModel`.
-  - Maintain two BFS frontiers: forward from `start`, backward from `end`.
-  - Alternate one BFS expansion per step; record each visited cell as a `SimulationFrame` with a distinct `CellState` to visually differentiate the two frontiers.
-  - When frontiers intersect, reconstruct the full path and emit final frames.
-- Factory Registration: Add `"Bidirectional BFS"` in `PathfindingFactory.java`.
-- Complexity Catalog: Entry with `O(b^(d/2))` time note in `ComplexityCatalog.java`.
-- Frontend Metadata: Entry in `frontend/src/data/algorithmMetadata.ts` (complete: true, optimal: true, weighted: false).
+- **History Storage**: Create `frontend/src/utils/historyStorage.ts` to read/write `RaceHistoryEntry[]` in `localStorage`.
+- **Event Hook**: Automatically record race completions in `SortingPage.tsx`, `SearchingPage.tsx`, and `PathfindingPage.tsx`.
+- **History Page Update**: Refactor `frontend/src/pages/HistoryPage.tsx` to display real persistent history entries alongside theoretical complexity matrices.
+- **Filtering & Clearing**: Add filter dropdown (by Arena Type / Winner) and a "Clear History" button wired to `localStorage.removeItem()`.
 
 ### Definition of Done
-- Bidirectional BFS runs in Pathfinding Arena and visually shows two expanding frontiers converging.
-- Path reconstruction after the meeting point is correct and matches standard BFS path length.
-- Metrics (cells visited, path length) and completion state are accurate.
+- Refreshing the application preserves past race history logs.
+- History Page displays real race entries with dates, winner badges, and metric summaries.
+- Clear History wipes stored data and updates UI immediately.
 
 ### Skill Level
-Medium — non-trivial path reconstruction at meeting point; requires careful frame ordering."""
+Medium — localStorage state management, type definitions, and history page UI integration."""
     )
 
 
 # --- ISSUE 10 -----------------------------------------------------------------
 def issue_10():
     create_issue(
-        title="test(frontend): Unit Test Suite for usePlayback Hook",
-        labels="enhancement,good first issue,jule",
+        title="feat(comparison): Head-to-Head 1-on-1 Battle Arena with Live Operation Delta Charts",
+        labels="enhancement",
         body="""### Overview
-Write a Vitest unit test suite for the `usePlayback` custom React hook. Currently the frontend has no tests for hook logic. This builds on the arrayParser.ts test suite and extends frontend coverage.
+Create a dedicated 1-on-1 Head-to-Head Battle Arena view that pairs any two selected algorithms in a direct showdown, featuring a real-time differential graph showing operation lead/lag deltas as the race progresses.
 
 ### Implementation Details & File Reference
-- Test File: Create `frontend/src/hooks/usePlayback.test.ts`.
-- Test Framework: Use `vitest` and `@testing-library/react` (`renderHook`) — both available through the existing Vite/Vitest setup.
-- Test Cases:
-  - Initial state: `playing = false`, `frameIndex = 0`.
-  - `stepForward()` increments `frameIndex` by 1 and clamps at `maxFrames - 1`.
-  - `stepBackward()` decrements `frameIndex` and clamps at `0`.
-  - `seek(n)` jumps `frameIndex` to `n` correctly (clamped within `[0, maxFrames-1]`).
-  - `reset()` sets `frameIndex = 0` and `playing = false`.
-  - `setPlaying(true)` with `maxFrames <= 1` does not trigger the interval.
+- **Battle View Component**: Create `frontend/src/components/HeadToHeadBattle.tsx`.
+  - Dual synchronized side-by-side visualizers.
+  - Live difference graph rendering `Algorithm A Ops - Algorithm B Ops` per frame index.
+- **Navigation Route**: Add route `/battle` in `frontend/src/App.tsx` and navbar button.
+- **Victory Analytics**: Display detailed winner summary banner highlighting speed ratio (e.g. "Quick Sort was 4.2x faster than Bubble Sort").
 
 ### Definition of Done
-- All test cases pass with `npx vitest run`.
-- No changes to production source code in `usePlayback.ts`.
+- Head-to-Head Battle mode allows selecting two algorithms for 1-on-1 racing.
+- Differential operation chart updates dynamically during playback.
+- Winner victory breakdown displays accurate speed ratios.
 
 ### Skill Level
-Good first issue — hook is self-contained and already exports all tested functions."""
+Hard — requires synchronized dual-lane rendering and live chart delta calculations."""
     )
 
 
 # --- ISSUE 11 -----------------------------------------------------------------
 def issue_11():
     create_issue(
-        title="fix(ux): Normalize Per-Lane Progress Bar to Show 100% When Lane Finishes",
-        labels="bug,good first issue,jule",
+        title="feat(backend): Server-Sent Events (SSE) Live Frame Streaming Engine",
+        labels="enhancement",
         body="""### Overview
-When algorithms finish at different frame counts (e.g., Quick Sort finishes at frame 40 but Bubble Sort at frame 120), the per-lane progress indicator always shows a unified `frameIndex / maxFrames`. This is misleading — a finished lane shows as 33% done rather than 100%.
+Implement Server-Sent Events (SSE) streaming for simulation endpoints. For large benchmarks ($N > 1000$ or complex $100 \\times 100$ grids), SSE streams simulation frames in real-time as they are computed, eliminating large memory payloads and enabling instant playback start.
 
 ### Implementation Details & File Reference
-- LaneCard Component: Update `frontend/src/components/LaneCard.tsx` to compute per-lane completion ratio as:
-  `Math.min(frameIndex, lane.frames.length - 1) / (lane.frames.length - 1)`
-  instead of `frameIndex / maxFrames`.
-- Controls Component: Keep the global progress bar in `frontend/src/components/Controls.tsx` referencing `maxFrames` for overall timeline position; only individual lane cards use their own total.
+- **SSE Controller**: Create `backend/src/main/java/com/algorithmrace/visualizer/controller/StreamController.java`.
+  - Endpoint `GET /api/simulations/stream/sorting` returning `SseEmitter`.
+- **Streaming Service**: Update backend algorithm models to accept a frame consumer callback `Consumer<SimulationFrame>`, emitting frames directly to the emitter as the loop runs.
+- **Frontend EventSource**: Create `frontend/src/services/sseClient.ts` to consume `EventSource` streams into the `usePlayback` frame buffer.
 
 ### Definition of Done
-- A lane that has finished all its frames shows 100% on its individual progress bar regardless of whether other lanes are still running.
-- Global frame counter still shows the unified `frameIndex / maxFrames` for overall playback position.
+- SSE streaming endpoint streams simulation frames asynchronously.
+- Frontend starts animating instantly without waiting for total simulation completion.
+- Handles connection dropouts and emitter completion cleanly.
 
 ### Skill Level
-Good first issue — small arithmetic fix; no backend changes needed."""
+Hard — Spring SseEmitter implementation, reactive frame streaming, and client EventSource handling."""
     )
 
 
 # --- ISSUE 12 -----------------------------------------------------------------
 def issue_12():
     create_issue(
-        title="refactor(ui): Dark/Light Theme Token Refactor — CSS Custom Properties",
-        labels="enhancement,jule",
+        title="refactor(ui): Modern Design System & CSS Variable Theme Token Architecture",
+        labels="enhancement",
         body="""### Overview
-The current `styles.css` is 146 KB and contains a large number of hardcoded colour values scattered throughout. Refactor all colour references to use a consistent set of CSS custom properties (design tokens) defined in a single `:root` block, with a `[data-theme='light']` override block, so dark/light mode is a single attribute toggle.
+Systematically refactor `frontend/src/styles.css` to replace all scattered hardcoded hex color values with a unified CSS Custom Properties (design tokens) architecture in `:root`, supporting single-attribute `[data-theme='light']` theme swapping.
 
 ### Implementation Details & File Reference
-- Tokens: Define `--color-bg-primary`, `--color-bg-secondary`, `--color-surface`, `--color-border`, `--color-text-primary`, `--color-text-muted`, `--color-accent`, `--color-accent-dim` in `:root` inside `frontend/src/styles.css`.
-- Light Theme Override: Add a `[data-theme='light']` block redefining those same tokens with light-mode values.
-- Replace Hardcodes: Systematically replace all raw hex/rgb colour literals in `styles.css` with the token variable (e.g., `background: var(--color-bg-primary)`).
-- App.tsx Toggle: Ensure the dark mode toggle in `frontend/src/App.tsx` applies `document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light')` rather than toggling a class.
+- **Tokens Definition**: Define semantic CSS variables in `frontend/src/styles.css` (`--color-bg-primary`, `--color-bg-secondary`, `--color-surface`, `--color-border`, `--color-text-primary`, `--color-accent`, `--color-accent-glow`).
+- **Light Theme Tokens**: Add `[data-theme='light']` override selector mapping tokens to high-contrast light theme values.
+- **Refactor Raw Hexes**: Replace all hardcoded hex literals across `styles.css` with token variables.
+- **Theme Toggle**: Update theme switcher in `frontend/src/App.tsx` to set `document.documentElement.setAttribute('data-theme', theme)`.
 
 ### Definition of Done
-- Dark to Light toggle changes all themed colours via a single `data-theme` attribute swap with no visual regression in dark mode.
-- All raw hex colour values for themed colours are replaced by CSS custom property references.
-- Light mode renders correctly with the override token block.
+- Toggling dark/light mode switches all UI component colors seamlessly via a single `data-theme` attribute.
+- Zero visual regressions in dark mode.
+- All raw color literals in CSS are replaced by design token variables.
 
 ### Skill Level
-Medium — large CSS file; requires careful search-and-replace plus visual QA pass."""
+Medium — comprehensive CSS search-and-replace and design token architecture refactoring."""
     )
 
 
 # =============================================================================
-# RUNNER — list only the issues you want to push below
+# ARCHIVE RUNNER — ALL 12 ISSUES ARE SUCCESSFULLY CREATED ON GITHUB
 # =============================================================================
 if __name__ == "__main__":
+    # All 12 issues have been created on GitHub.
+    # To re-push any issue in the future, add its function name to the list below.
     selected = [
-        issue_1,   # feat(sorting): Tim Sort
-        issue_2,   # feat(sorting): Counting Sort
-        issue_3,   # feat(pathfinding): Greedy Best-First Search
-        issue_4,   # feat(searching): Ternary Search
-        issue_5,   # feat(ux): Playback Timeline Scrubber
-        issue_6,   # feat(ux): Race Replay Button
-        issue_7,   # feat(ux): Algorithm Info Tooltip
-        issue_8,   # feat(history): Persist Race History to localStorage
-        issue_9,   # feat(backend): Bidirectional BFS
-        issue_10,  # test(frontend): usePlayback Hook Tests
-        issue_11,  # fix(ux): Per-Lane Progress Bar
-        issue_12,  # refactor(ui): CSS Custom Properties
+        # issue_1,   # feat(sorting): Add Tim Sort Hybrid Algorithm (Created: #92)
+        # issue_2,   # feat(pathfinding): Add Jump Point Search (JPS) (Created: #93)
+        # issue_3,   # feat(pathfinding): Add Bidirectional BFS (Created: #83)
+        # issue_4,   # feat(pathfinding): Add Greedy Best-First Search (Created: #84)
+        # issue_5,   # feat(searching): Add Ternary Search Algorithm (Created: #94)
+        # issue_6,   # feat(audio): Web Audio Synthesizer (Value-to-Pitch) (Created: #85)
+        # issue_7,   # feat(customization): Interactive Custom Map & Array Canvas (Created: #86)
+        # issue_8,   # feat(export): Benchmark Performance Telemetry Exporter (Created: #87)
+        # issue_9,   # feat(history): Persistent Race Session History (Created: #88)
+        # issue_10,  # feat(comparison): Head-to-Head 1-on-1 Battle Arena (Created: #89)
+        # issue_11,  # feat(backend): Server-Sent Events (SSE) Live Streaming (Created: #90)
+        # issue_12,  # refactor(ui): Modern Design System & CSS Token Architecture (Created: #91)
     ]
 
-    print(f"Pushing {len(selected)} issue(s) to Sanan507/AlgorithmRaceVisualizer...\n")
-    for idx, fn in enumerate(selected, 1):
-        print(f"[{idx}/{len(selected)}]")
-        fn()
-        print()
-    print("Done!")
+    if not selected:
+        print("All 12 issues are already published on GitHub! (File preserved for record)")
+    else:
+        print(f"Pushing {len(selected)} issue(s) to Sanan507/AlgorithmRaceVisualizer...\n")
+        for idx, fn in enumerate(selected, 1):
+            print(f"[{idx}/{len(selected)}]")
+            fn()
+            time.sleep(2)
+            print()
+        print("Done!")
