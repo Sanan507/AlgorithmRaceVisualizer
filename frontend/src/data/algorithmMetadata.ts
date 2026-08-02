@@ -169,14 +169,6 @@ export const PATHFINDING_META: Record<string, PathfindingMeta> = {
     advantage: 'Handles negative edge weights cleanly via relaxation passes',
     limitation: 'O(V*E) time complexity is slower than Dijkstra on positive-weight graphs',
   },
-  'Bidirectional BFS': {
-    complete: true,
-    optimal: true,
-    weighted: false,
-    bestFor: 'Large unweighted graphs where both endpoints are known',
-    advantage: 'Explores ~half the nodes compared to standard BFS',
-    limitation: 'Complex implementation; restricted to unweighted graphs',
-  },
   'Greedy Best-First': {
     complete: false,
     optimal: false,
