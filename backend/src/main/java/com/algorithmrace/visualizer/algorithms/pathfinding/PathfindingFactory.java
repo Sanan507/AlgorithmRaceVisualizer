@@ -12,12 +12,13 @@ public final class PathfindingFactory {
       case "Dijkstra" -> new DijkstraModel();
       case "A* Search" -> new AStarModel();
       case "Bellman-Ford" -> new BellmanFordModel();
+      case "Bidirectional BFS" -> new BidirectionalBFSModel();
       default ->
           throw new IllegalArgumentException("Unrecognized pathfinding algorithm requested.");
     };
   }
 
   public static List<String> allNames() {
-    return List.of("BFS", "DFS", "Dijkstra", "A* Search", "Bellman-Ford");
+    return List.of("BFS", "DFS", "Dijkstra", "A* Search", "Bellman-Ford", "Bidirectional BFS");
   }
 }

@@ -189,6 +189,14 @@ public final class ComplexityCatalog {
             + " goal.",
         "choose lowest f = g + h\nrelax neighbors");
     add(
+        "Bidirectional BFS",
+        "O(b^(d/2))",
+        "O(b^(d/2))",
+        "O(b^(d/2))",
+        "O(b^(d/2))",
+        "Explores from both start and end, halving the search depth.",
+        "expand forward\nexpand backward\nstop when frontiers intersect");
+    add(
         "Bellman-Ford",
         "O(V*E)",
         "O(V*E)",

@@ -107,7 +107,7 @@ export function HeroMiniCanvas() {
             array: [...qArr],
             comparing: [j, high],
             swapping: [],
-            sorted: getSortedIndices(low, high, qArr.length),
+            sorted: getSortedIndices(low, high, qArr),
             pivot: high,
           });
           if (qArr[j] < pivotVal) {
@@ -121,7 +121,7 @@ export function HeroMiniCanvas() {
                 array: [...qArr],
                 comparing: [],
                 swapping: [i, j],
-                sorted: getSortedIndices(low, high, qArr.length),
+                sorted: getSortedIndices(low, high, qArr),
                 pivot: high,
               });
             }
@@ -136,7 +136,7 @@ export function HeroMiniCanvas() {
           array: [...qArr],
           comparing: [],
           swapping: [i + 1, high],
-          sorted: getSortedIndices(low, high, qArr.length),
+          sorted: getSortedIndices(low, high, qArr),
           pivot: pIndex,
         });
 
@@ -145,15 +145,10 @@ export function HeroMiniCanvas() {
       }
     };
 
-    const getSortedIndices = (currentLow: number, currentHigh: number, length: number) => {
-      const sortedCount = length - (currentHigh - currentLow + 1);
-      const sorted: number[] = new Array(sortedCount);
-      let idx = 0;
-      for (let k = 0; k < currentLow; k++) {
-        sorted[idx++] = k;
-      }
-      for (let k = currentHigh + 1; k < length; k++) {
-        sorted[idx++] = k;
+    const getSortedIndices = (currentLow: number, currentHigh: number, currentArr: number[]) => {
+      const sorted: number[] = [];
+      for (let k = 0; k < currentArr.length; k++) {
+        if (k < currentLow || k > currentHigh) sorted.push(k);
       }
       return sorted;
     };

@@ -15,7 +15,8 @@ import org.junit.jupiter.api.Test;
 class PathfindingAlgorithmsTest {
 
   private final SimulationService simulationService = new SimulationService();
-  private final List<String> algorithms = List.of("BFS", "DFS", "Dijkstra", "A* Search");
+  private final List<String> algorithms =
+      List.of("BFS", "DFS", "Dijkstra", "A* Search", "Bidirectional BFS");
 
   @Test
   @DisplayName("Verify pathfinding models find path in unblocked grid")
