@@ -15,7 +15,7 @@ public abstract class PathfindingModel {
 
   private final String name;
   private boolean done;
-  private boolean pathFound;
+  protected boolean pathFound;
   private int steps;
 
   protected PathfindingModel(String name) {

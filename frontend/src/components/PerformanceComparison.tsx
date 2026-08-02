@@ -168,7 +168,7 @@ export function PerformanceComparison({
       for (let r = 0; r < frame.grid.length; r++) {
         for (let c = 0; c < frame.grid[r].length; c++) {
           const cellState = frame.grid[r][c];
-          if (cellState === 'VISITED' || cellState === 'PATH') {
+          if (cellState === 'VISITED' || cellState === 'VISITED_FORWARD' || cellState === 'VISITED_BACKWARD' || cellState === 'PATH') {
             nodesVisited++;
           } else if (cellState === 'FRONTIER') {
             frontierSize++;
