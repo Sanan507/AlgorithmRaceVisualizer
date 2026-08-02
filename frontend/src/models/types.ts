@@ -22,6 +22,7 @@ export type SimulationFrame = {
   frame: number;
   array: number[];
   highlight: number[];
+  comparing?: number[];
   sortedBoundary: number;
   pivotIndex: number;
   mergeRegionStart: number;
