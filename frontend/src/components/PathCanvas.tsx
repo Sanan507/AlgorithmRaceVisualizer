@@ -8,7 +8,11 @@ const stateColor: Record<string, string> = {
   END: '#ff0055',
   VISITED: '#1e1b4b',
   FRONTIER: '#6366f1',
-  PATH: '#ffd166'
+  PATH: '#ffd166',
+  VISITED_FORWARD: '#1e1b4b',
+  VISITED_BACKWARD: '#4c1d95',
+  FRONTIER_FORWARD: '#6366f1',
+  FRONTIER_BACKWARD: '#a855f7'
 };
 
 export function PathCanvas({
@@ -77,6 +81,12 @@ export function PathCanvas({
         } else if (state === 'FRONTIER') {
           isGlow = true;
           glowColor = 'rgba(14, 165, 233, 0.5)';
+        } else if (state === 'FRONTIER_FORWARD') {
+          isGlow = true;
+          glowColor = 'rgba(14, 165, 233, 0.5)';
+        } else if (state === 'FRONTIER_BACKWARD') {
+          isGlow = true;
+          glowColor = 'rgba(168, 85, 247, 0.5)';
         }
 
         if (isGlow) {
@@ -90,8 +100,10 @@ export function PathCanvas({
         if (isLight) {
           if (state === 'EMPTY') cellColor = '#f2f7ff';
           else if (state === 'WALL') cellColor = '#dae2fd';
-          else if (state === 'VISITED') cellColor = '#c0e8ff';
-          else if (state === 'FRONTIER') cellColor = '#0ea5e9';
+          else if (state === 'VISITED' || state === 'VISITED_FORWARD') cellColor = '#c0e8ff';
+          else if (state === 'VISITED_BACKWARD') cellColor = '#e9d5ff';
+          else if (state === 'FRONTIER' || state === 'FRONTIER_FORWARD') cellColor = '#0ea5e9';
+          else if (state === 'FRONTIER_BACKWARD') cellColor = '#a855f7';
         }
 
         ctx.fillStyle = cellColor;
