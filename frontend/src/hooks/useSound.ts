@@ -187,5 +187,40 @@ export function useSound(settings: AudioSettings) {
     };
   }, []);
 
-  return { play };
+  const playValueTone = useCallback(
+    (value: number, maxValue: number = 100) => {
+      if (!settings.soundEnabled) return;
+      try {
+        const ctx = ensureCtx();
+        if (!ctx || !masterGainRef.current) return;
+
+        // Map value ratio (0..1) to A-minor pentatonic scale frequencies (220Hz to 880Hz)
+        const ratio = Math.max(0, Math.min(1, value / Math.max(1, maxValue)));
+        const baseFreq = 220; // A3
+        const octaveMultiplier = Math.pow(2, ratio * 2); // 2 octaves range
+        const freq = baseFreq * octaveMultiplier;
+
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+
+        const peakGain = 0.25 * settings.effectsVolume;
+        gain.gain.setValueAtTime(peakGain, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+
+        osc.connect(gain);
+        gain.connect(masterGainRef.current);
+
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.09);
+      } catch {
+        // silent fallback
+      }
+    },
+    [settings.soundEnabled, settings.effectsVolume, ensureCtx]
+  );
+
+  return { play, playValueTone };
 }

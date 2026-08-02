@@ -12,6 +12,8 @@ import { usePlayback } from '../hooks/usePlayback';
 import type { CatalogResponse, RaceLaneResponse, RaceResponse, SimulationFrame } from '../models/types';
 import { api } from '../services/api';
 import { parseCustomArrayInput } from '../utils/arrayParser';
+import { StepExplanationCard } from '../components/StepExplanationCard';
+import { CustomDatasetModal } from '../components/CustomDatasetModal';
 import { CsvUploader } from '../components/CsvUploader';
 import { Share2 } from 'lucide-react';
 import { getUrlParams } from '../utils/urlParams';
@@ -28,8 +30,9 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
   const [speed, setSpeed] = useState(6);
   const [loading, setLoading] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const { play } = useAudio();
+  const { play, playValueTone } = useAudio();
   const winnerAnnouncedRef = useRef(false);
   const requestIdRef = useRef(0);
   const initialized = useRef(false);
@@ -49,17 +52,72 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
   const hasInvalidTokens = invalidCustomTokens.length > 0;
   const isTargetInvalid = Number.isNaN(target);
 
-  const activeResponse: RaceResponse | null = useMemo(() => {
-    if (!isCustomMode || parsedCustomArray.length === 0) {
-      return response;
+  // Instant 0ms Preview & Fallback Response Generator
+  const activeResponse: RaceResponse = useMemo(() => {
+    if (isCustomMode && parsedCustomArray.length > 0) {
+      if (response?.dataset && response.dataset.join(',') === parsedCustomArray.join(',')) {
+        return response;
+      }
+      const previewLanes: RaceLaneResponse[] = algorithms.map((name) => ({
+        name,
+        complexity: catalog?.complexity[name]?.worst || 'O(log n)',
+        complexityInfo: catalog?.complexity[name] || {
+          best: 'O(1)',
+          average: 'O(log n)',
+          worst: 'O(log n)',
+          space: 'O(1)',
+          theory: '',
+          pseudocode: '',
+        },
+        frames: [
+          {
+            frame: 0,
+            array: parsedCustomArray,
+            highlight: [],
+            sortedBoundary: -1,
+            pivotIndex: -1,
+            mergeRegionStart: -1,
+            mergeRegionEnd: -1,
+            heapBoundary: -1,
+            comparisons: 0,
+            swaps: 0,
+            timeMs: 0,
+            done: false,
+            status: 'Ready',
+            foundIndex: null,
+            searchPath: [],
+            grid: null,
+            path: [],
+            steps: 0,
+            pathFound: false,
+          },
+        ],
+        stats: {
+          comparisons: 0,
+          swaps: 0,
+          steps: 0,
+          timeMs: 0,
+          found: false,
+          foundIndex: null,
+        },
+      }));
+      return {
+        type: 'searching',
+        dataset: parsedCustomArray,
+        target,
+        walls: null,
+        lanes: previewLanes,
+        winner: null,
+      };
     }
-    if (response?.dataset && response.dataset.join(',') === parsedCustomArray.join(',')) {
-      return response;
-    }
-    const previewLanes: RaceLaneResponse[] = algorithms.map((name) => ({
+
+    if (response) return response;
+
+    const fallbackArr = Array.from({ length: size }, (_, i) => i * 2 + 5);
+    const fallbackLanes: RaceLaneResponse[] = algorithms.map((name) => ({
       name,
-      complexity: catalog?.complexity[name]?.worst || 'O(log n)',
-      complexityInfo: catalog?.complexity[name] || {
+      complexity: catalog?.complexity?.[name]?.worst || 'O(log n)',
+      complexityInfo: catalog?.complexity?.[name] || {
         best: 'O(1)',
         average: 'O(log n)',
         worst: 'O(log n)',
@@ -70,7 +128,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
       frames: [
         {
           frame: 0,
-          array: parsedCustomArray,
+          array: fallbackArr,
           highlight: [],
           sortedBoundary: -1,
           pivotIndex: -1,
@@ -99,23 +157,33 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
         foundIndex: null,
       },
     }));
+
     return {
       type: 'searching',
-      dataset: parsedCustomArray,
+      dataset: fallbackArr,
       target,
       walls: null,
-      lanes: previewLanes,
+      lanes: fallbackLanes,
       winner: null,
     };
-  }, [isCustomMode, parsedCustomArray, response, algorithms, target, catalog]);
+  }, [isCustomMode, parsedCustomArray, response, algorithms, target, catalog, size]);
 
   const onFrame = useCallback(
     (event: 'compare' | 'swap' | 'hit' | 'miss' | 'step') => {
-      if (event === 'hit') play('searchHit');
-      else if (event === 'miss') play('searchMiss');
-      else play('compare');
+      if (event === 'hit') {
+        play('searchHit');
+      } else if (event === 'miss') {
+        play('searchMiss');
+      } else if (event === 'compare') {
+        if (playValueTone) {
+          const val = Math.floor(Math.random() * 80) + 15;
+          playValueTone(val, 100);
+        } else {
+          play('compare');
+        }
+      }
     },
-    [play]
+    [play, playValueTone]
   );
 
   const playback = usePlayback(activeResponse, speed, onFrame);
@@ -361,7 +429,12 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
   }
 
   const activeFrames = useMemo(
-    () => activeResponse?.lanes.map((lane) => lane.frames[Math.min(playback.frameIndex, lane.frames.length - 1)]),
+    () =>
+      activeResponse?.lanes.map((lane) => {
+        if (!lane.frames || lane.frames.length === 0) return undefined;
+        const safeIdx = Math.max(0, Math.min(playback.frameIndex, lane.frames.length - 1));
+        return lane.frames[safeIdx];
+      }),
     [activeResponse, playback.frameIndex]
   );
 
@@ -475,13 +548,23 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
 
         <div className="field">
           <span>Dataset Mode</span>
-          <button
-            type="button"
-            className={`btn-custom-toggle ${isCustomMode ? 'active' : ''}`}
-            onClick={handleToggleCustomMode}
-          >
-            {isCustomMode ? '✓ Custom Mode' : '⚡ Custom Array'}
-          </button>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              type="button"
+              className={`btn-custom-toggle ${isCustomMode ? 'active' : ''}`}
+              onClick={handleToggleCustomMode}
+            >
+              {isCustomMode ? '✓ Custom Mode' : 'Custom Array'}
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              style={{ fontSize: '0.82rem', padding: '0 12px', height: '38px' }}
+              onClick={() => setIsModalOpen(true)}
+            >
+              ⚡ Math Suite
+            </button>
+          </div>
         </div>
 
         {isCustomMode ? (
@@ -549,6 +632,14 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
       </section>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginTop: '24px' }}>
+        {activeResponse?.lanes && activeResponse.lanes.length > 0 && (
+          <StepExplanationCard
+            lanes={activeResponse.lanes}
+            activeFrames={activeFrames}
+            frameIndex={playback.frameIndex}
+            totalFrames={playback.maxFrames}
+          />
+        )}
         <PerformanceComparison
           response={activeResponse}
           activeFrames={activeFrames}
@@ -568,6 +659,21 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
         />
         <VisualizationLegend type="searching" />
       </div>
+
+      <CustomDatasetModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        currentSize={size}
+        onApplyDataset={(parsedArray, label) => {
+          setIsCustomMode(true);
+          setCustomArrayStr(parsedArray.join(', '));
+          setSize(parsedArray.length);
+          setDataset(parsedArray);
+          fetchSimulation(true, false, target, algorithms, parsedArray.length, parsedArray);
+          setToastMessage(`Applied ${label} dataset (${parsedArray.length} elements)!`);
+          setTimeout(() => setToastMessage(null), 3500);
+        }}
+      />
     </main>
   );
 }

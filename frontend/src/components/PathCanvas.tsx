@@ -44,7 +44,7 @@ export function PathCanvas({
 
   useEffect(() => {
     const canvas = ref.current;
-    if (!canvas || !frame.grid) return;
+    if (!canvas || !frame || !frame.grid) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 

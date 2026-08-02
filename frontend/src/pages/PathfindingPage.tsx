@@ -11,6 +11,7 @@ import { useAudio } from '../context/AudioContext';
 import { usePlayback } from '../hooks/usePlayback';
 import type { CatalogResponse, RaceResponse, SimulationFrame } from '../models/types';
 import { api } from '../services/api';
+import { StepExplanationCard } from '../components/StepExplanationCard';
 import { Share2 } from 'lucide-react';
 import { getUrlParams } from '../utils/urlParams';
 
@@ -26,17 +27,25 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
   const [speed, setSpeed] = useState(6);
   const [loading, setLoading] = useState(false);
 
-  const { play } = useAudio();
+  const { play, playValueTone } = useAudio();
   const winnerAnnouncedRef = useRef(false);
   const initialized = useRef(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const onFrame = useCallback(
     (event: 'compare' | 'swap' | 'hit' | 'miss' | 'step') => {
-      if (event === 'hit') play('pathFound');
-      else play('compare');
+      if (event === 'hit') {
+        play('pathFound');
+      } else {
+        if (playValueTone) {
+          const val = Math.floor(Math.random() * 70) + 20;
+          playValueTone(val, 100);
+        } else {
+          play('compare');
+        }
+      }
     },
-    [play]
+    [play, playValueTone]
   );
 
   const playback = usePlayback(response, speed, onFrame);
@@ -210,7 +219,12 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
   }
 
   const activeFrames = useMemo(
-    () => response?.lanes.map((lane) => lane.frames[Math.min(playback.frameIndex, lane.frames.length - 1)]),
+    () =>
+      response?.lanes.map((lane) => {
+        if (!lane.frames || lane.frames.length === 0) return undefined;
+        const safeIdx = Math.max(0, Math.min(playback.frameIndex, lane.frames.length - 1));
+        return lane.frames[safeIdx];
+      }),
     [response, playback.frameIndex]
   );
 
@@ -354,6 +368,14 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
       </section>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginTop: '24px' }}>
+        {response?.lanes && response.lanes.length > 0 && (
+          <StepExplanationCard
+            lanes={response.lanes}
+            activeFrames={activeFrames}
+            frameIndex={playback.frameIndex}
+            totalFrames={playback.maxFrames}
+          />
+        )}
         <PerformanceComparison
           response={response}
           activeFrames={activeFrames}

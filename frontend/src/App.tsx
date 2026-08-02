@@ -58,7 +58,7 @@ export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const { settings: audioSettings, setSettings: setAudioSettings } = useAudioSettings();
-  const { play } = useSound(audioSettings);
+  const { play, playValueTone } = useSound(audioSettings);
 
   // Listen to browser back/forward and URL hash updates
   useEffect(() => {
@@ -131,7 +131,7 @@ export default function App() {
 
   return (
     <ThemeProvider>
-      <AudioCtx.Provider value={{ play, audioSettings, setAudioSettings }}>
+      <AudioCtx.Provider value={{ play, playValueTone, audioSettings, setAudioSettings }}>
         {active === 'landing' ? (
           <LandingPage onNavigate={setActive} darkMode={darkMode} setDarkMode={setDarkMode} />
         ) : (

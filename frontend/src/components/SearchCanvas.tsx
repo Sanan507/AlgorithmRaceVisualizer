@@ -40,10 +40,8 @@ export function SearchCanvas({ frame, algorithm }: { frame?: SimulationFrame | n
       ctx.stroke();
     }
 
-    if (!frame) return;
-
-    const arr = frame.array ?? [];
-    if (!arr.length) return;
+    if (!frame || !frame.array || !frame.array.length) return;
+    const arr = frame.array;
 
     const min = Math.min(...arr);
     const max = Math.max(...arr);
