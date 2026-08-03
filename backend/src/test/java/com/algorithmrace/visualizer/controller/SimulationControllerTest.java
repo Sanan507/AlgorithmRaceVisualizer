@@ -125,7 +125,8 @@ class SimulationControllerTest {
   @Test
   void pathfinding_validRequest_success() throws Exception {
     PathfindingSimulationRequest request =
-        new PathfindingSimulationRequest(List.of("BFS"), 20, 20, "Clear Grid", null, null, 0, 0, 19, 19);
+        new PathfindingSimulationRequest(
+            List.of("BFS"), 20, 20, "Clear Grid", null, null, 0, 0, 19, 19);
 
     RaceResponse response =
         new RaceResponse("pathfinding", null, null, null, null, new ArrayList<>(), null);
@@ -158,7 +159,8 @@ class SimulationControllerTest {
   @Test
   void pathfinding_outOfBoundsDimensions_badRequest() throws Exception {
     PathfindingSimulationRequest request =
-        new PathfindingSimulationRequest(List.of("BFS"), 7, 20, "Clear Grid", null, null, 0, 0, 6, 19);
+        new PathfindingSimulationRequest(
+            List.of("BFS"), 7, 20, "Clear Grid", null, null, 0, 0, 6, 19);
 
     mockMvc
         .perform(
