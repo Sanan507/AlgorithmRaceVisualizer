@@ -34,7 +34,8 @@ public final class MazeGenerator {
           case PRIM -> prims(rows, cols);
           case RECURSIVE_DIVISION -> recursiveDivision(rows, cols);
           case CELLULAR_AUTOMATA -> cellularAutomata(rows, cols);
-          case WEIGHTED_TERRAIN_MAP -> new boolean[rows][cols]; // Terrain maps rely on weights, not walls
+          case WEIGHTED_TERRAIN_MAP ->
+              new boolean[rows][cols]; // Terrain maps rely on weights, not walls
         };
     clearArea(walls, startRow, startCol, rows, cols);
     clearArea(walls, endRow, endCol, rows, cols);

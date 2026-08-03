@@ -96,8 +96,7 @@ public class SimulationService {
       weights = sanitizeWeights(request.weights(), rows, cols);
     } else {
       weights =
-          MazeGenerator.generateWeights(
-              rows, cols, MazeGenerator.fromName(request.mazeType()));
+          MazeGenerator.generateWeights(rows, cols, MazeGenerator.fromName(request.mazeType()));
     }
 
     List<String> algos = sanitizeAlgorithms(request.algorithms());
