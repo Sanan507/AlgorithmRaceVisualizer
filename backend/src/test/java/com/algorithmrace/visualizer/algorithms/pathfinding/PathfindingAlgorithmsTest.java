@@ -93,7 +93,7 @@ class PathfindingAlgorithmsTest {
   void testSimulationServicePathfinding() {
     PathfindingSimulationRequest request =
         new PathfindingSimulationRequest(
-            algorithms, 10, 10, "Clear Grid", null, null, null, null, null);
+            algorithms, 10, 10, "Clear Grid", null, null, null, null, null, null);
 
     RaceResponse response = simulationService.simulatePathfinding(request);
 
