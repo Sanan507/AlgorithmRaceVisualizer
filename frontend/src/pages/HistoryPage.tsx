@@ -343,6 +343,34 @@ const algoDatabase: Record<string, AlgoMeta> = {
     recommendedUse: 'Graphs containing negative edge weights or requiring detection of negative weight cycles.',
     realWorldApp: 'Distance Vector Routing protocols (RIP - Routing Information Protocol) and financial arbitrage detection.',
     appDescription: 'Network RIP protocols and financial currency arbitrage engines.'
+  },
+  'Greedy Best-First': {
+    name: 'Greedy Best-First',
+    category: 'Pathfinding',
+    best: 'O(1) / O(b^m)',
+    average: 'O(b^m)',
+    worst: 'O(b^m)',
+    space: 'O(b^m)',
+    stability: 'N/A',
+    speedRank: 'Elite',
+    memoryRank: 'Medium',
+    recommendedUse: 'When speed is more important than finding the absolute shortest path, and an accurate heuristic to the target is available.',
+    realWorldApp: 'Video game AI movement toward targets when obstacles are sparse, initial route drafts in map systems.',
+    appDescription: 'Game AI pathing and rapid approximate route draft engines.'
+  },
+  'Bidirectional BFS': {
+    name: 'Bidirectional BFS',
+    category: 'Pathfinding',
+    best: 'O(b^(d/2))',
+    average: 'O(b^(d/2))',
+    worst: 'O(b^(d/2))',
+    space: 'O(b^(d/2))',
+    stability: 'N/A',
+    speedRank: 'Elite',
+    memoryRank: 'High',
+    recommendedUse: 'Finding shortest paths on unweighted graphs when both start and target nodes are known, reducing search space exponentially.',
+    realWorldApp: 'Six degrees of separation social network queries, friend-of-a-friend graphs, and bidirectional puzzle solvers (e.g. Rubik\'s cube).',
+    appDescription: 'Social graph connection paths and bidirectional puzzle solvers.'
   }
 };
 

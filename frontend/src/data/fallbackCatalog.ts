@@ -26,7 +26,9 @@ export const fallbackCatalog: CatalogResponse = {
     'DFS',
     'Dijkstra',
     'A* Search',
-    'Bellman-Ford'
+    'Bellman-Ford',
+    'Greedy Best-First',
+    'Bidirectional BFS'
   ],
   datasetTypes: [
     'Random',
@@ -214,6 +216,22 @@ export const fallbackCatalog: CatalogResponse = {
       space: 'O(V)',
       theory: 'Relaxation-based shortest path algorithm that iteratively relaxes all edges across the graph.',
       pseudocode: 'for i = 1 to V - 1:\n  for each edge (u, v):\n    relax(u, v)'
+    },
+    'Greedy Best-First': {
+      best: 'O(b^m)',
+      average: 'O(b^m)',
+      worst: 'O(b^m)',
+      space: 'O(b^m)',
+      theory: 'Relies solely on a heuristic distance to the goal, providing a fast but non-optimal search.',
+      pseudocode: 'choose lowest h\nrelax neighbors'
+    },
+    'Bidirectional BFS': {
+      best: 'O(b^(d/2))',
+      average: 'O(b^(d/2))',
+      worst: 'O(b^(d/2))',
+      space: 'O(b^(d/2))',
+      theory: 'Explores from both start and end, halving the search depth.',
+      pseudocode: 'expand forward\nexpand backward\nstop when frontiers intersect'
     }
   }
 };

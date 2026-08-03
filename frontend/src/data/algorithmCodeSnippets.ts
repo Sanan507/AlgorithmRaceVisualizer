@@ -1057,6 +1057,159 @@ function merge(L: number[], R: number[]): number[] {
       },
     },
   },
+
+  /* ────────────────── GREEDY BEST-FIRST SEARCH ────────────────── */
+  greedybestfirst: {
+    algorithmId: 'greedybestfirst',
+    algorithmName: 'Greedy Best-First',
+    languages: {
+      typescript: {
+        language: 'typescript', displayName: 'TypeScript',
+        code: `function greedyBestFirst(grid: Grid, start: Node, target: Node): Path {
+  const openSet = new MinHeap<Node>((a, b) => heuristic(a, target) - heuristic(b, target));
+  openSet.push(start);
+  const visited = new Set<Node>([start]);
+  while (!openSet.isEmpty()) {                // process priority queue
+    const curr = openSet.pop()!;              // dequeue lowest h(x)
+    if (curr === target) return getPath(curr); // found!
+    for (const nb of neighbors(curr, grid)) { // expand
+      if (!visited.has(nb)) {
+        visited.add(nb);
+        nb.parent = curr;
+        openSet.push(nb);                     // enqueue
+      }
+    }
+  }
+  return [];                                  // no path
+}`,
+        getHighlight: pathHighlight({ init: 1, dequeue: 5, checkTarget: 6, expand: 7, addNeighbor: 10, found: 6, notFound: 14 }),
+      },
+      java: {
+        language: 'java', displayName: 'Java',
+        code: `List<Node> greedyBestFirst(Grid grid, Node start, Node target) {
+    PriorityQueue<Node> open = new PriorityQueue<>(comparingInt(n -> h(n, target)));
+    open.add(start);
+    Set<Node> visited = new HashSet<>(); visited.add(start);
+    while (!open.isEmpty()) {                 // process queue
+        Node curr = open.poll();              // dequeue lowest h(x)
+        if (curr.equals(target)) return getPath(curr);
+        for (Node nb : grid.neighbors(curr)) { // expand
+            if (!visited.contains(nb)) {
+                visited.add(nb);
+                nb.parent = curr;
+                open.add(nb);                 // enqueue
+            }
+        }
+    }
+    return Collections.emptyList();           // no path
+}`,
+        getHighlight: pathHighlight({ init: 1, dequeue: 5, checkTarget: 6, expand: 7, addNeighbor: 10, found: 6, notFound: 14 }),
+      },
+      python: {
+        language: 'python', displayName: 'Python',
+        code: `def greedy_best_first(grid, start, target):
+    open_set = [(heuristic(start, target), start)]
+    visited = {start}
+    while open_set:                           # process queue
+        _, curr = heapq.heappop(open_set)     # dequeue lowest h(x)
+        if curr == target: return get_path(curr)  # found!
+        for nb in grid.neighbors(curr):       # expand
+            if nb not in visited:
+                visited.add(nb)
+                nb.parent = curr
+                heapq.heappush(open_set, (heuristic(nb, target), nb))
+    return []                                 # no path`,
+        getHighlight: pathHighlight({ init: 1, dequeue: 4, checkTarget: 5, expand: 6, addNeighbor: 10, found: 5, notFound: 11 }),
+      },
+      cpp: {
+        language: 'cpp', displayName: 'C++',
+        code: `vector<Node> greedyBestFirst(Grid& grid, Node start, Node target) {
+    priority_queue<pair<int,Node>> open; open.push({-h(start, target), start});
+    unordered_set<Node> visited = {start};
+    while (!open.empty()) {                   // process queue
+        auto [hVal, curr] = open.top(); open.pop();
+        if (curr == target) return getPath(curr);
+        for (auto& nb : grid.neighbors(curr)) { // expand
+            if (!visited.count(nb)) {
+                visited.insert(nb);
+                nb.parent = curr;
+                open.push({-h(nb, target), nb});
+            }
+        }
+    }
+    return {};                                // no path
+}`,
+        getHighlight: pathHighlight({ init: 1, dequeue: 4, checkTarget: 5, expand: 6, addNeighbor: 10, found: 5, notFound: 14 }),
+      },
+    },
+  },
+
+  /* ────────────────── BIDIRECTIONAL BFS ────────────────── */
+  bidirectionalbfs: {
+    algorithmId: 'bidirectionalbfs',
+    algorithmName: 'Bidirectional BFS',
+    languages: {
+      typescript: {
+        language: 'typescript', displayName: 'TypeScript',
+        code: `function bidirectionalBFS(grid: Grid, start: Node, target: Node): Path {
+  const fQueue = [start], bQueue = [target];
+  const fVisited = new Map([[start, null]]), bVisited = new Map([[target, null]]);
+  while (fQueue.length > 0 && bQueue.length > 0) {
+    let intersect = stepBFS(fQueue, fVisited, bVisited, grid);
+    if (intersect) return buildPath(fVisited, bVisited, intersect);
+    intersect = stepBFS(bQueue, bVisited, fVisited, grid);
+    if (intersect) return buildPath(fVisited, bVisited, intersect);
+  }
+  return []; // no path
+}`,
+        getHighlight: pathHighlight({ init: 1, dequeue: 4, checkTarget: 5, expand: 4, addNeighbor: 5, found: 5, notFound: 8 }),
+      },
+      java: {
+        language: 'java', displayName: 'Java',
+        code: `List<Node> bidirectionalBFS(Grid grid, Node start, Node target) {
+    Queue<Node> fQueue = new LinkedList<>(), bQueue = new LinkedList<>();
+    Map<Node, Node> fParent = new HashMap<>(), bParent = new HashMap<>();
+    fQueue.add(start); bQueue.add(target);
+    while (!fQueue.isEmpty() && !bQueue.isEmpty()) {
+        Node intersect = expandLevel(fQueue, fParent, bParent, grid);
+        if (intersect != null) return buildBidirectionalPath(fParent, bParent, intersect);
+        intersect = expandLevel(bQueue, bParent, fParent, grid);
+        if (intersect != null) return buildBidirectionalPath(fParent, bParent, intersect);
+    }
+    return Collections.emptyList();
+}`,
+        getHighlight: pathHighlight({ init: 1, dequeue: 5, checkTarget: 6, expand: 6, addNeighbor: 6, found: 6, notFound: 10 }),
+      },
+      python: {
+        language: 'python', displayName: 'Python',
+        code: `def bidirectional_bfs(grid, start, target):
+    f_queue, b_queue = deque([start]), deque([target])
+    f_visited, b_visited = {start: None}, {target: None}
+    while f_queue and b_queue:
+        intersect = expand_level(f_queue, f_visited, b_visited, grid)
+        if intersect: return build_path(f_visited, b_visited, intersect)
+        intersect = expand_level(b_queue, b_visited, f_visited, grid)
+        if intersect: return build_path(f_visited, b_visited, intersect)
+    return []`,
+        getHighlight: pathHighlight({ init: 1, dequeue: 4, checkTarget: 5, expand: 5, addNeighbor: 5, found: 5, notFound: 8 }),
+      },
+      cpp: {
+        language: 'cpp', displayName: 'C++',
+        code: `vector<Node> bidirectionalBFS(Grid& grid, Node start, Node target) {
+    queue<Node> fQ, bQ; fQ.push(start); bQ.push(target);
+    unordered_map<Node, Node> fVisited = {{start, {}}}, bVisited = {{target, {}}};
+    while (!fQ.empty() && !bQ.empty()) {
+        auto intersect = stepBFS(fQ, fVisited, bVisited, grid);
+        if (intersect) return joinPaths(fVisited, bVisited, *intersect);
+        intersect = stepBFS(bQ, bVisited, fVisited, grid);
+        if (intersect) return joinPaths(fVisited, bVisited, *intersect);
+    }
+    return {};
+}`,
+        getHighlight: pathHighlight({ init: 1, dequeue: 4, checkTarget: 5, expand: 5, addNeighbor: 5, found: 5, notFound: 9 }),
+      },
+    },
+  },
 };
 
 /* ═══════════════════════════════════════════════════════════════════════════
