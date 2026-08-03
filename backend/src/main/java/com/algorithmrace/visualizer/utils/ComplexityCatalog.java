@@ -189,6 +189,15 @@ public final class ComplexityCatalog {
             + " goal.",
         "choose lowest f = g + h\nrelax neighbors");
     add(
+        "Greedy Best-First",
+        "O(b^m)",
+        "O(b^m)",
+        "O(b^m)",
+        "O(b^m)",
+        "Relies solely on a heuristic distance to the goal, providing a fast but non-optimal"
+            + " search.",
+        "choose lowest h\nrelax neighbors");
+    add(
         "Bidirectional BFS",
         "O(b^(d/2))",
         "O(b^(d/2))",
