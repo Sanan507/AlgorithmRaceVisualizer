@@ -106,6 +106,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
         dataset: parsedCustomArray,
         target,
         walls: null,
+        weights: null,
         lanes: previewLanes,
         winner: null,
       };
@@ -163,6 +164,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
       dataset: fallbackArr,
       target,
       walls: null,
+      weights: null,
       lanes: fallbackLanes,
       winner: null,
     };

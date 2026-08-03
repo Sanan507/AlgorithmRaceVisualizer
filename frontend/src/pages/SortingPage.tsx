@@ -112,6 +112,7 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
         dataset: parsedCustomArray,
         target: null,
         walls: null,
+        weights: null,
         lanes: previewLanes,
         winner: null,
       };
@@ -170,6 +171,7 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
       dataset: fallbackArr,
       target: null,
       walls: null,
+      weights: null,
       lanes: fallbackLanes,
       winner: null,
     };

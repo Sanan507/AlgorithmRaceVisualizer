@@ -35,7 +35,8 @@ class SimulationControllerTest {
     SortingSimulationRequest request =
         new SortingSimulationRequest(List.of("Bubble Sort"), "Random", 50, null);
 
-    RaceResponse response = new RaceResponse("sorting", null, null, null, null, new ArrayList<>(), null);
+    RaceResponse response =
+        new RaceResponse("sorting", null, null, null, null, new ArrayList<>(), null);
 
     when(simulationService.simulateSorting(any(SortingSimulationRequest.class)))
         .thenReturn(response);

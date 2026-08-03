@@ -60,8 +60,12 @@ public final class MazeGenerator {
         int radius = 2 + rng.nextInt(4);
         int w = terrainTypes[rng.nextInt(terrainTypes.length)];
 
-        for (int r = Math.max(0, centerR - radius); r <= Math.min(rows - 1, centerR + radius); r++) {
-          for (int c = Math.max(0, centerC - radius); c <= Math.min(cols - 1, centerC + radius); c++) {
+        for (int r = Math.max(0, centerR - radius);
+            r <= Math.min(rows - 1, centerR + radius);
+            r++) {
+          for (int c = Math.max(0, centerC - radius);
+              c <= Math.min(cols - 1, centerC + radius);
+              c++) {
             if (Math.hypot(r - centerR, c - centerC) <= radius) {
               weights[r][c] = w;
             }
