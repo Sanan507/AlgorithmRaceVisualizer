@@ -4,6 +4,7 @@ public class GridCell {
   public final int row;
   public final int col;
   public CellState state = CellState.EMPTY;
+  public int weight = 1;
   public double gCost = Double.MAX_VALUE;
   public double hCost;
   public GridCell parent;

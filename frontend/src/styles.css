@@ -706,6 +706,13 @@ button, input, select {
   background: #11112d;
 }
 
+.config-panel.pathfinding-config {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 20px !important;
+  align-items: stretch !important;
+}
+
 .config-panel::before {
   content: '';
   position: absolute;
@@ -6805,6 +6812,246 @@ input[type="range"] {
   align-items: center;
   justify-content: flex-end;
   gap: 12px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Luxury Executive Control Suite (Pathfinding Arena)
+   ═══════════════════════════════════════════════════════════════ */
+.control-suite-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.suite-card {
+  background: var(--panel-glass);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: var(--card-shadow);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+:root[data-theme='light'] .suite-card {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(14, 165, 233, 0.18);
+  box-shadow: 0 8px 30px rgba(14, 165, 233, 0.06);
+}
+
+.suite-card:hover {
+  border-color: var(--line-glow);
+  box-shadow: 0 12px 32px rgba(99, 102, 241, 0.12);
+}
+
+.suite-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--accent);
+  margin-bottom: 14px;
+}
+
+.suite-title .suite-icon {
+  color: var(--accent-2);
+}
+
+.suite-controls {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.select-field-container {
+  flex: 1 1 180px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.select-field-container select,
+.select-field-container .field {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.layout-gen-btn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 18px;
+  white-space: nowrap;
+  font-weight: 600;
+  font-size: 0.88rem;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(168, 85, 247, 0.15) 100%);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  color: var(--text);
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.12);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.layout-gen-btn:hover {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(168, 85, 247, 0.25) 100%);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.25);
+}
+
+.draw-mode-controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.draw-mode-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+:root[data-theme='light'] .draw-mode-btn:not(.active) {
+  background: rgba(234, 237, 255, 0.7);
+  border-color: rgba(0, 101, 145, 0.15);
+  color: #334155;
+}
+
+.draw-mode-btn:hover {
+  color: var(--text);
+  border-color: var(--line-glow);
+  transform: translateY(-1px);
+}
+
+/* Active Mode Accent Highlights */
+.draw-mode-btn.mode-wall.active {
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.2) 0%, rgba(180, 83, 9, 0.25) 100%) !important;
+  border-color: #f59e0b !important;
+  color: #d97706 !important;
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.25) !important;
+}
+
+:root[data-theme='dark'] .draw-mode-btn.mode-wall.active {
+  color: #fbbf24 !important;
+}
+
+.draw-mode-btn.mode-start.active {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.25) 100%) !important;
+  border-color: #10b981 !important;
+  color: #059669 !important;
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.25) !important;
+}
+
+:root[data-theme='dark'] .draw-mode-btn.mode-start.active {
+  color: #34d399 !important;
+}
+
+.draw-mode-btn.mode-target.active {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.25) 100%) !important;
+  border-color: #ef4444 !important;
+  color: #dc2626 !important;
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.25) !important;
+}
+
+:root[data-theme='dark'] .draw-mode-btn.mode-target.active {
+  color: #f87171 !important;
+}
+
+.draw-mode-btn.mode-weight.active {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(99, 102, 241, 0.25) 100%) !important;
+  border-color: #a855f7 !important;
+  color: #7c3aed !important;
+  box-shadow: 0 0 16px rgba(168, 85, 247, 0.25) !important;
+}
+
+:root[data-theme='dark'] .draw-mode-btn.mode-weight.active {
+  color: #c084fc !important;
+}
+
+/* Terrain Brush Sub-panel */
+.terrain-brush-container {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  animation: fadeIn 0.25s ease-out;
+}
+
+.terrain-brush-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.terrain-brush-grid {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.terrain-brush-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+:root[data-theme='light'] .terrain-brush-btn:not(.active) {
+  background: rgba(234, 237, 255, 0.6);
+  border-color: rgba(0, 101, 145, 0.12);
+  color: #334155;
+}
+
+.terrain-brush-btn:hover {
+  color: var(--text);
+  border-color: var(--brush-color);
+  background: var(--brush-bg);
+}
+
+.terrain-brush-btn.active {
+  background: var(--brush-bg) !important;
+  border-color: var(--brush-color) !important;
+  color: var(--brush-color) !important;
+  box-shadow: 0 0 14px var(--brush-bg), 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+  font-weight: 700;
+}
+
+:root[data-theme='dark'] .terrain-brush-btn.active {
+  color: #ffffff !important;
+}
+
+.brush-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  box-shadow: 0 0 6px currentColor;
 }
 
 

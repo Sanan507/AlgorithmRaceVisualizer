@@ -11,12 +11,14 @@ export function LaneCard({
   frame,
   laneState = 'ready',
   arenaType,
+  weights,
   children
 }: {
   lane: RaceLaneResponse;
   frame: SimulationFrame;
   laneState?: LaneState;
   arenaType: ArenaType;
+  weights?: number[][] | null;
   children: ReactNode;
 }) {
   const [showCode, setShowCode] = useState(false);
@@ -56,22 +58,34 @@ export function LaneCard({
     ? sortingStatusLabels[badgeState]
     : defaultStatusLabels[badgeState];
 
-  const opLabel = (frame?.steps !== undefined && frame.steps > 0) ? 'Steps' : 'Comparisons';
-  const opValue = frame?.comparisons || frame?.steps || 0;
+  const isPathfinding = arenaType === 'pathfinding';
+  const isSearching = arenaType === 'searching';
+  const isSorting = arenaType === 'sorting';
+
+  let opLabel = 'Comparisons';
+  let opValue = frame?.comparisons || 0;
+
+  if (isPathfinding) {
+    opLabel = 'Explored Steps';
+    opValue = frame?.steps || 0;
+  } else if (isSearching) {
+    opLabel = 'Comparisons';
+    opValue = frame?.comparisons || 0;
+  }
 
   let actionLabel = 'Swaps';
   let actionValue: string | number = frame?.swaps ?? 0;
   let ActionIcon = RotateCw;
 
-  const isPathfinding = arenaType === 'pathfinding';
-  const isSearching = arenaType === 'searching';
-  const isSorting = arenaType === 'sorting';
-
   if (isPathfinding) {
-    actionLabel = 'Status';
+    actionLabel = 'Path Result';
     ActionIcon = CheckCircle2;
-    if (frame?.pathFound) {
-      actionValue = 'Path Found';
+    if (frame?.pathFound && frame?.path && frame.path.length > 0) {
+      const pSteps = frame.path.length;
+      const pCost = weights
+        ? frame.path.reduce((sum, pt) => sum + (weights?.[pt.row]?.[pt.col] ?? 1), 0)
+        : pSteps;
+      actionValue = pCost !== pSteps ? `Cost: ${pCost} (${pSteps} steps)` : `${pSteps} steps`;
     } else if (frame?.done) {
       actionValue = 'No Path';
       ActionIcon = AlertCircle;
@@ -166,7 +180,7 @@ export function LaneCard({
           <span className="metric-label">
             <ActionIcon size={12} /> {actionLabel}
           </span>
-          <strong className="metric-value tabular-nums">
+          <strong className="metric-value tabular-nums" style={{ fontSize: '0.8rem' }}>
             {actionValue}
           </strong>
         </div>

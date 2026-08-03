@@ -11,6 +11,7 @@ export function getUrlParams() {
   const cArray = params.get('cArray');
   const target = params.get('target');
   const walls = params.get('walls');
+  const weights = params.get('weights');
 
   return {
     page,
@@ -21,5 +22,6 @@ export function getUrlParams() {
     cArray: cArray ? cArray : undefined,
     target: target ? parseInt(target, 10) : undefined,
     walls: walls ? walls : undefined,
+    weights: weights ? weights : undefined,
   };
 }

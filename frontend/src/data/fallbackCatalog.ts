@@ -36,10 +36,15 @@ export const fallbackCatalog: CatalogResponse = {
     'Custom'
   ],
   mazeTypes: [
-    'Random Noise',
+    'Recursive Backtracker',
+    'Random Walls',
+    'Spiral',
+    'Rooms',
+    'Binary Tree',
+    "Prim's Algorithm",
     'Recursive Division',
-    'Simple Spiral',
-    'Clear Grid'
+    'Cellular Automata',
+    'Weighted Terrain Map'
   ],
   complexity: {
     'Bubble Sort': {

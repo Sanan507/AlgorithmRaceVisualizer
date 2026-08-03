@@ -35,7 +35,7 @@ public class AStarModel extends PathfindingModel {
       if (nb.state == CellState.VISITED) {
         continue;
       }
-      double tentativeG = current.gCost + 1;
+      double tentativeG = current.gCost + nb.weight;
       if (tentativeG < nb.gCost) {
         nb.gCost = tentativeG;
         nb.hCost = heuristic(nb, end);

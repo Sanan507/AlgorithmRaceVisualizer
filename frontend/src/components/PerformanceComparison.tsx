@@ -12,6 +12,7 @@ interface PerformanceComparisonProps {
   catalog: CatalogResponse;
   playing?: boolean;
   datasetType?: string;
+  weights?: number[][] | null;
 }
 
 // Security: RFC 4180 CSV field sanitizer preventing CSV Formula Injection (Excel macro execution)
@@ -75,7 +76,8 @@ export function PerformanceComparison({
   isCompleted,
   catalog,
   playing = false,
-  datasetType
+  datasetType,
+  weights,
 }: PerformanceComparisonProps) {
   useEffect(() => {
     if (isCompleted && response?.winner) {
@@ -108,27 +110,98 @@ export function PerformanceComparison({
       ''
     ].join('\r\n');
 
-    const headers = [
-      'Arena',
-      'Algorithm',
-      'Dataset Mode',
-      'Dataset Size',
-      'Execution Time (ms)',
-      type === 'pathfinding' ? 'Steps' : 'Comparisons',
-      type === 'sorting' ? 'Swaps' : (type === 'searching' ? 'Target Found (1/0)' : 'Path Length'),
-      'Outcome'
-    ];
+    let headers: string[] = [];
+    let rows: string[][] = [];
 
-    const rows = laneData.map((lane) => [
-      formattedArena,
-      lane.name,
-      datasetType || 'Standard',
-      (response?.dataset?.length ?? (type === 'pathfinding' ? 504 : 0)).toString(),
-      lane.timeMs.toString(),
-      lane.opValue.toString(),
-      lane.secValue.toString(),
-      response?.winner ? (response.winner === lane.name ? 'WINNER 🏆' : 'RUNNER UP') : 'FINISHED',
-    ]);
+    if (type === 'pathfinding') {
+      headers = [
+        'Arena',
+        'Algorithm',
+        'Maze / Layout Mode',
+        'Grid Size',
+        'Execution Time (ms)',
+        'Nodes Visited',
+        'Frontier Size',
+        'Path Steps',
+        'Path Cost',
+        'Path Found',
+        'Outcome'
+      ];
+      rows = laneData.map((lane) => {
+        const isWinner = response?.winner === lane.name;
+        const outcome = response?.winner ? (isWinner ? 'WINNER 🏆' : 'RUNNER UP') : 'FINISHED';
+        const pathFoundStr = lane.pathFound ? 'YES' : (lane.done ? 'NO PATH' : 'IN PROGRESS');
+        return [
+          formattedArena,
+          lane.name,
+          datasetType || 'Standard',
+          '18x28 (504 cells)',
+          lane.timeMs.toString(),
+          lane.nodesVisited.toString(),
+          lane.frontierSize.toString(),
+          lane.pathLength.toString(),
+          lane.pathCost.toString(),
+          pathFoundStr,
+          outcome,
+        ];
+      });
+    } else if (type === 'searching') {
+      headers = [
+        'Arena',
+        'Algorithm',
+        'Dataset Mode',
+        'Dataset Size',
+        'Execution Time (ms)',
+        'Comparisons',
+        'Target Found',
+        'Found Index',
+        'Outcome'
+      ];
+      rows = laneData.map((lane) => {
+        const isWinner = response?.winner === lane.name;
+        const outcome = response?.winner ? (isWinner ? 'WINNER 🏆' : 'RUNNER UP') : 'FINISHED';
+        const isFound = lane.foundIndex !== null && lane.foundIndex >= 0;
+        return [
+          formattedArena,
+          lane.name,
+          datasetType || 'Standard',
+          (response?.dataset?.length ?? 0).toString(),
+          lane.timeMs.toString(),
+          lane.opValue.toString(),
+          isFound ? 'YES' : (lane.done ? 'NO' : 'SEARCHING'),
+          isFound ? lane.foundIndex!.toString() : 'N/A',
+          outcome,
+        ];
+      });
+    } else {
+      headers = [
+        'Arena',
+        'Algorithm',
+        'Dataset Mode',
+        'Dataset Size',
+        'Execution Time (ms)',
+        'Comparisons',
+        'Swaps',
+        'Total Operations',
+        'Outcome'
+      ];
+      rows = laneData.map((lane) => {
+        const isWinner = response?.winner === lane.name;
+        const outcome = response?.winner ? (isWinner ? 'WINNER 🏆' : 'RUNNER UP') : 'FINISHED';
+        const totalOps = lane.opValue + lane.secValue;
+        return [
+          formattedArena,
+          lane.name,
+          datasetType || 'Standard',
+          (response?.dataset?.length ?? 0).toString(),
+          lane.timeMs.toString(),
+          lane.opValue.toString(),
+          lane.secValue.toString(),
+          totalOps.toString(),
+          outcome,
+        ];
+      });
+    }
 
     const formattedTable = [headers, ...rows]
       .map((row) => row.map(sanitizeCsvField).join(','))
@@ -176,7 +249,11 @@ export function PerformanceComparison({
         }
       }
     }
+    const effectiveWeights = response?.weights ?? weights;
     const pathLength = (type === 'pathfinding' && frame?.path) ? frame.path.length : 0;
+    const pathCost = (type === 'pathfinding' && frame?.path)
+      ? frame.path.reduce((sum, pt) => sum + (effectiveWeights?.[pt.row]?.[pt.col] ?? 1), 0)
+      : pathLength;
 
     if (type === 'sorting') {
       opLabel = 'Comparisons';
@@ -209,6 +286,7 @@ export function PerformanceComparison({
       nodesVisited,
       frontierSize,
       pathLength,
+      pathCost,
     };
   });
 
@@ -272,6 +350,7 @@ export function PerformanceComparison({
         nodesVisited: lane.nodesVisited,
         frontierSize: lane.frontierSize,
         pathLength: lane.pathLength,
+        pathCost: lane.pathCost,
       }))
     });
   }
@@ -282,6 +361,7 @@ export function PerformanceComparison({
   const maxNodesVisited = Math.max(1, ...laneData.map(l => l.nodesVisited || 1));
   const maxFrontier = Math.max(1, ...laneData.map(l => l.frontierSize || 1));
   const maxPathLength = Math.max(1, ...laneData.map(l => l.pathLength || 1));
+  const maxPathCost = Math.max(1, ...laneData.map(l => l.pathCost || 1));
 
   return (
     <section className="panel compact performance-comparison-panel">
@@ -392,7 +472,7 @@ export function PerformanceComparison({
                       </div>
 
                       <div className="perf-bar-container">
-                        <span className="perf-bar-label">Path Length: {lane.pathLength || (lane.done ? 'No path' : '0')}</span>
+                        <span className="perf-bar-label">Path Steps: {lane.pathLength || (lane.done ? 'No path' : '0')}</span>
                         <div className="chart-track">
                           <div 
                             className="chart-fill path-fill" 
@@ -405,13 +485,13 @@ export function PerformanceComparison({
                       </div>
 
                       <div className="perf-bar-container">
-                        <span className="perf-bar-label">Execution Time</span>
+                        <span className="perf-bar-label">Path Cost: {lane.pathCost || (lane.done ? 'No path' : '0')}</span>
                         <div className="chart-track">
                           <div 
                             className="chart-fill time-fill" 
                             style={{ 
-                              width: `${timePercent}%`,
-                              background: 'linear-gradient(90deg, #f472b6, #db2777)'
+                              width: `${Math.max(3, (lane.pathCost / maxPathCost) * 100)}%`,
+                              background: 'linear-gradient(90deg, #10b981, #059669)'
                             }} 
                           />
                         </div>

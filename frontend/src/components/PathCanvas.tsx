@@ -15,12 +15,21 @@ const stateColor: Record<string, string> = {
   FRONTIER_BACKWARD: '#a855f7'
 };
 
+const terrainColorMap: Record<number, string> = {
+  3: '#78350f',  // Mud
+  5: '#0284c7',  // Water
+  8: '#15803d',  // Forest
+  15: '#475569'  // Mountain
+};
+
 export function PathCanvas({
   frame,
+  weights,
   editable = false,
   onGridClick
 }: {
   frame: SimulationFrame;
+  weights?: number[][] | null;
   editable?: boolean;
   onGridClick?: (row: number, col: number) => void;
 }) {
@@ -78,10 +87,7 @@ export function PathCanvas({
         } else if (state === 'PATH') {
           isGlow = true;
           glowColor = 'rgba(255, 209, 102, 0.9)';
-        } else if (state === 'FRONTIER') {
-          isGlow = true;
-          glowColor = 'rgba(14, 165, 233, 0.5)';
-        } else if (state === 'FRONTIER_FORWARD') {
+        } else if (state === 'FRONTIER' || state === 'FRONTIER_FORWARD') {
           isGlow = true;
           glowColor = 'rgba(14, 165, 233, 0.5)';
         } else if (state === 'FRONTIER_BACKWARD') {
@@ -96,10 +102,15 @@ export function PathCanvas({
           ctx.shadowBlur = 0;
         }
 
+        const cellWeight = weights?.[r]?.[c] ?? 1;
         let cellColor = stateColor[state] ?? stateColor.EMPTY;
-        if (isLight) {
-          if (state === 'EMPTY') cellColor = '#f2f7ff';
-          else if (state === 'WALL') cellColor = '#dae2fd';
+
+        if (cellWeight > 1 && state === 'EMPTY') {
+          cellColor = terrainColorMap[cellWeight] ?? '#d97706';
+        } else if (isLight) {
+          if (state === 'EMPTY') {
+            cellColor = cellWeight > 1 ? (terrainColorMap[cellWeight] ?? '#d97706') : '#f2f7ff';
+          } else if (state === 'WALL') cellColor = '#dae2fd';
           else if (state === 'VISITED' || state === 'VISITED_FORWARD') cellColor = '#c0e8ff';
           else if (state === 'VISITED_BACKWARD') cellColor = '#e9d5ff';
           else if (state === 'FRONTIER' || state === 'FRONTIER_FORWARD') cellColor = '#0ea5e9';
@@ -117,9 +128,34 @@ export function PathCanvas({
         );
         ctx.fill();
         ctx.shadowBlur = 0;
+
+        // Draw overlay for visited/path states over weighted terrain
+        if (cellWeight > 1 && state !== 'EMPTY' && state !== 'WALL' && state !== 'START' && state !== 'END') {
+          ctx.fillStyle = terrainColorMap[cellWeight] ?? '#d97706';
+          ctx.globalAlpha = 0.45;
+          ctx.beginPath();
+          ctx.roundRect(
+            c * cellW + 1.5,
+            r * cellH + 1.5,
+            Math.max(1, cellW - 3),
+            Math.max(1, cellH - 3),
+            Math.min(cellW / 3, 4)
+          );
+          ctx.fill();
+          ctx.globalAlpha = 1.0;
+        }
+
+        // Draw weight text badge if cell size allows and cell has weight > 1
+        if (cellWeight > 1 && cellW >= 12 && cellH >= 12 && state !== 'START' && state !== 'END') {
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 9px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(`${cellWeight}`, c * cellW + cellW / 2, r * cellH + cellH / 2);
+        }
       });
     });
-  }, [frame, canvasSizeVersion]);
+  }, [frame, weights, canvasSizeVersion]);
 
   function getGridPos(clientX: number, clientY: number) {
     const canvas = ref.current;

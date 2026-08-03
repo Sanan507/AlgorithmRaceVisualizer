@@ -42,7 +42,7 @@ public class SimulationService {
     List<String> algos = sanitizeAlgorithms(request.algorithms());
     List<RaceLaneResponse> lanes =
         algos.stream().map(name -> simulateSortingLane(name, dataset)).toList();
-    return new RaceResponse("sorting", dataset, null, null, lanes, winner(lanes));
+    return new RaceResponse("sorting", dataset, null, null, null, lanes, winner(lanes));
   }
 
   public RaceResponse simulateSearching(SearchingSimulationRequest request) {
@@ -58,7 +58,7 @@ public class SimulationService {
     List<String> algos = sanitizeAlgorithms(request.algorithms());
     List<RaceLaneResponse> lanes =
         algos.stream().map(name -> simulateSearchLane(name, dataset, target)).toList();
-    return new RaceResponse("searching", dataset, target, null, lanes, winner(lanes));
+    return new RaceResponse("searching", dataset, target, null, null, lanes, winner(lanes));
   }
 
   public RaceResponse simulatePathfinding(PathfindingSimulationRequest request) {
@@ -91,14 +91,43 @@ public class SimulationService {
               MazeGenerator.fromName(request.mazeType()));
     }
 
+    int[][] weights;
+    if (request.weights() != null) {
+      weights = sanitizeWeights(request.weights(), rows, cols);
+    } else {
+      weights =
+          MazeGenerator.generateWeights(
+              rows, cols, MazeGenerator.fromName(request.mazeType()));
+    }
+
     List<String> algos = sanitizeAlgorithms(request.algorithms());
     List<RaceLaneResponse> lanes =
         algos.stream()
             .map(
                 name ->
-                    simulatePathLane(name, rows, cols, startRow, startCol, endRow, endCol, walls))
+                    simulatePathLane(
+                        name, rows, cols, startRow, startCol, endRow, endCol, walls, weights))
             .toList();
-    return new RaceResponse("pathfinding", null, null, walls, lanes, winner(lanes));
+    return new RaceResponse("pathfinding", null, null, walls, weights, lanes, winner(lanes));
+  }
+
+  private int[][] sanitizeWeights(int[][] clientWeights, int rows, int cols) {
+    int[][] safe = new int[rows][cols];
+    for (int r = 0; r < rows; r++) {
+      for (int c = 0; c < cols; c++) {
+        safe[r][c] = 1;
+      }
+    }
+    int srcRows = Math.min(clientWeights.length, rows);
+    for (int r = 0; r < srcRows; r++) {
+      if (clientWeights[r] != null) {
+        int srcCols = Math.min(clientWeights[r].length, cols);
+        for (int c = 0; c < srcCols; c++) {
+          safe[r][c] = Math.max(1, clientWeights[r][c]);
+        }
+      }
+    }
+    return safe;
   }
 
   /**
@@ -178,13 +207,17 @@ public class SimulationService {
       int startCol,
       int endRow,
       int endCol,
-      boolean[][] walls) {
+      boolean[][] walls,
+      int[][] weights) {
     PathfindingModel model = PathfindingFactory.create(name);
     model.initGrid(rows, cols);
     for (int r = 0; r < rows; r++) {
       for (int c = 0; c < cols; c++) {
         if (r < walls.length && c < walls[r].length && walls[r][c]) {
           model.getGrid()[r][c].state = CellState.WALL;
+        }
+        if (weights != null && r < weights.length && c < weights[r].length) {
+          model.getGrid()[r][c].weight = Math.max(1, weights[r][c]);
         }
       }
     }

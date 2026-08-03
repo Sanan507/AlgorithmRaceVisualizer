@@ -121,6 +121,26 @@ export function VisualizationLegend({ type }: VisualizationLegendProps) {
         name: 'Goal Node',
         color: '#ef4444',
         desc: 'The exit node/destination target where the path ends.'
+      },
+      {
+        name: 'Mud (3x Cost)',
+        color: '#78350f',
+        desc: 'Weighted terrain adding 3x cost penalty.'
+      },
+      {
+        name: 'Water (5x Cost)',
+        color: '#0284c7',
+        desc: 'Weighted terrain adding 5x cost penalty.'
+      },
+      {
+        name: 'Forest (8x Cost)',
+        color: '#15803d',
+        desc: 'Weighted terrain adding 8x cost penalty.'
+      },
+      {
+        name: 'Mountain (15x Cost)',
+        color: '#475569',
+        desc: 'High weight terrain adding 15x cost penalty.'
       }
     ]
   };

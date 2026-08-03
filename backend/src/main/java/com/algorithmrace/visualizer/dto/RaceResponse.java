@@ -7,5 +7,6 @@ public record RaceResponse(
     int[] dataset,
     Integer target,
     boolean[][] walls,
+    int[][] weights,
     List<RaceLaneResponse> lanes,
     String winner) {}

@@ -39,7 +39,7 @@ public class BellmanFordModel extends PathfindingModel {
     addStep();
 
     for (GridCell nb : getNeighbors(current)) {
-      double newCost = current.gCost + 1.0;
+      double newCost = current.gCost + nb.weight;
       if (newCost < nb.gCost) {
         nb.gCost = newCost;
         nb.parent = current;

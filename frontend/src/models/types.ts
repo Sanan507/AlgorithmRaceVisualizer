@@ -64,6 +64,7 @@ export type RaceResponse = {
   dataset: number[] | null;
   target: number | null;
   walls: boolean[][] | null;
+  weights: number[][] | null;
   lanes: RaceLaneResponse[];
   winner: string | null;
 };

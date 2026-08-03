@@ -10,6 +10,7 @@ export interface SnapshotLaneData {
   nodesVisited?: number;
   frontierSize?: number;
   pathLength?: number;
+  pathCost?: number;
 }
 
 export interface SnapshotExportOptions {
@@ -189,6 +190,7 @@ export function exportComparisonSnapshot(options: SnapshotExportOptions) {
   const maxNodesVisited = Math.max(1, ...laneData.map(l => l.nodesVisited || 1));
   const maxFrontierSize = Math.max(1, ...laneData.map(l => l.frontierSize || 1));
   const maxPathLength = Math.max(1, ...laneData.map(l => l.pathLength || 1));
+  const maxPathCost = Math.max(1, ...laneData.map(l => l.pathCost || 1));
   const maxTime = Math.max(1, ...laneData.map(l => l.timeMs || 1));
   const maxOps = Math.max(1, ...laneData.map(l => l.opValue || 1));
   const maxSec = Math.max(1, ...laneData.map(l => l.secValue || 1));
@@ -283,16 +285,16 @@ export function exportComparisonSnapshot(options: SnapshotExportOptions) {
           grad: ['#a855f7', '#c084fc'] // Purple
         },
         {
-          label: 'PATH LENGTH',
+          label: 'PATH STEPS',
           valStr: lane.pathLength ? String(lane.pathLength) : (lane.done ? 'No Path' : '0'),
           ratio: (lane.pathLength ?? 0) / maxPathLength,
           grad: ['#f59e0b', '#fbbf24'] // Amber
         },
         {
-          label: 'EXECUTION TIME',
-          valStr: `${lane.timeMs} ms`,
-          ratio: lane.timeMs / maxTime,
-          grad: ['#ec4899', '#f472b6'] // Pink
+          label: 'PATH COST',
+          valStr: lane.pathCost ? String(lane.pathCost) : (lane.done ? 'No Path' : '0'),
+          ratio: (lane.pathCost ?? 0) / maxPathCost,
+          grad: ['#10b981', '#34d399'] // Emerald
         }
       ];
     } else if (type === 'sorting') {

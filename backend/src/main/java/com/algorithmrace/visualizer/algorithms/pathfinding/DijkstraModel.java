@@ -27,7 +27,7 @@ public class DijkstraModel extends PathfindingModel {
     addStep();
     for (GridCell nb : getNeighbors(current)) {
       if (nb.state == CellState.VISITED) continue;
-      double newCost = current.gCost + 1;
+      double newCost = current.gCost + nb.weight;
       if (newCost < nb.gCost) {
         nb.gCost = newCost;
         nb.parent = current;
