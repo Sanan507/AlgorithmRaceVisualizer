@@ -8,4 +8,8 @@ public record RaceLaneResponse(
     String complexity,
     ComplexityInfo complexityInfo,
     List<SimulationFrame> frames,
-    LaneStats stats) {}
+    LaneStats stats) {
+  public String algorithm() {
+    return name;
+  }
+}

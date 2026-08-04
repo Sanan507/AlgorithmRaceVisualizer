@@ -103,12 +103,14 @@ class SortingAlgorithmsTest {
         .lanes()
         .forEach(
             lane -> {
-              assertFalse(lane.frames().isEmpty(), lane.name() + " frames should not be empty");
+              assertFalse(
+                  lane.frames().isEmpty(), lane.algorithm() + " frames should not be empty");
               assertTrue(
                   lane.stats().comparisons() >= 0,
-                  lane.name() + " comparisons count should be non-negative");
+                  lane.algorithm() + " comparisons count should be non-negative");
               assertTrue(
-                  lane.stats().swaps() >= 0, lane.name() + " swaps count should be non-negative");
+                  lane.stats().swaps() >= 0,
+                  lane.algorithm() + " swaps count should be non-negative");
             });
   }
 }

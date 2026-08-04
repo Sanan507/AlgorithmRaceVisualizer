@@ -358,7 +358,7 @@ public class SimulationService {
   private String winner(List<RaceLaneResponse> lanes) {
     return lanes.stream()
         .min(Comparator.comparingLong(lane -> lane.stats().timeMs()))
-        .map(RaceLaneResponse::name)
+        .map(RaceLaneResponse::algorithm)
         .orElse(null);
   }
 }

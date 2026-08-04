@@ -106,8 +106,9 @@ class PathfindingAlgorithmsTest {
         .lanes()
         .forEach(
             lane -> {
-              assertFalse(lane.frames().isEmpty(), lane.name() + " frames should not be empty");
-              assertNotNull(lane.stats(), lane.name() + " stats should not be null");
+              assertFalse(
+                  lane.frames().isEmpty(), lane.algorithm() + " frames should not be empty");
+              assertNotNull(lane.stats(), lane.algorithm() + " stats should not be null");
             });
   }
 }
