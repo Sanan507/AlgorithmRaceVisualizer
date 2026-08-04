@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { RaceResponse } from '../models/types';
+import { useAudio } from '../context/AudioContext';
 
 export type FrameEvent = 'compare' | 'swap' | 'hit' | 'miss' | 'step';
 
@@ -10,6 +11,7 @@ export function usePlayback(
 ) {
   const [playing, setPlaying] = useState(false);
   const [frameIndex, setFrameIndex] = useState(0);
+  const { play, playToneForValue, audioSettings } = useAudio();
 
   const maxFrames = useMemo(() => {
     if (!response?.lanes || response.lanes.length === 0) return 0;
@@ -40,11 +42,22 @@ export function usePlayback(
           return current;
         }
         const next = current + 1;
-        if (onFrame && response) {
+        if (response) {
           let hasSwap = false;
           let hasHit = false;
           let hasMiss = false;
           let isAnyLaneActive = false;
+
+          let activeValue = 0;
+          let minVal = 0;
+          let maxVal = 100;
+
+          if (response.dataset && response.dataset.length > 0) {
+            minVal = Math.min(...response.dataset);
+            maxVal = Math.max(...response.dataset);
+          }
+
+          let extractedValue = false;
 
           for (const lane of response.lanes) {
             if (next < lane.frames.length) {
@@ -63,25 +76,52 @@ export function usePlayback(
                 if (frame.found === false && frame.done === true) {
                   hasMiss = true;
                 }
+
+                if (!extractedValue && frame.array && Array.isArray(frame.array)) {
+                  if (frame.comparing && Array.isArray(frame.comparing) && frame.comparing.length > 0) {
+                    activeValue = frame.array[frame.comparing[0]];
+                    extractedValue = true;
+                  } else if (frame.highlight && Array.isArray(frame.highlight) && frame.highlight.length > 0) {
+                    activeValue = frame.array[frame.highlight[0]];
+                    extractedValue = true;
+                  }
+                }
               }
             }
           }
 
+          if (!extractedValue) {
+            activeValue = Math.floor(Math.random() * (maxVal - minVal + 1)) + minVal;
+          }
+
           if (hasHit) {
-            onFrame('hit', next);
+            if (onFrame) onFrame('hit', next);
+            if (response.type === 'pathfinding') play('pathFound');
+            else play('searchHit');
           } else if (hasSwap) {
-            onFrame('swap', next);
+            if (onFrame) onFrame('swap', next);
+            if (audioSettings.synthEnabled && playToneForValue) {
+              playToneForValue(activeValue, minVal, maxVal, 'swap');
+            } else {
+              play('swap');
+            }
           } else if (hasMiss) {
-            onFrame('miss', next);
+            if (onFrame) onFrame('miss', next);
+            play('searchMiss');
           } else if (isAnyLaneActive) {
-            onFrame('compare', next);
+            if (onFrame) onFrame('compare', next);
+            if (audioSettings.synthEnabled && playToneForValue) {
+              playToneForValue(activeValue, minVal, maxVal, 'compare');
+            } else {
+              play('compare');
+            }
           }
         }
         return next;
       });
     }, delay);
     return () => window.clearInterval(id);
-  }, [playing, maxFrames, speed, onFrame, response]);
+  }, [playing, maxFrames, speed, onFrame, response, play, playToneForValue, audioSettings.synthEnabled]);
 
   function stepForward() {
     setPlaying(false);

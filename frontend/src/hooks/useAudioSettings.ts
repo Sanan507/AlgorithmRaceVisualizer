@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 export interface AudioSettings {
   soundEnabled: boolean;
+  synthEnabled: boolean;
   masterVolume: number;  // 0–1
   effectsVolume: number; // 0–1
 }
@@ -10,6 +11,7 @@ const STORAGE_KEY = 'algorace:audio';
 
 const DEFAULTS: AudioSettings = {
   soundEnabled: true,
+  synthEnabled: true,
   masterVolume: 0.6,
   effectsVolume: 0.7,
 };
