@@ -32,7 +32,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const { play, playValueTone } = useAudio();
+  const { play } = useAudio();
   const winnerAnnouncedRef = useRef(false);
   const requestIdRef = useRef(0);
   const initialized = useRef(false);
@@ -170,23 +170,9 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
     };
   }, [isCustomMode, parsedCustomArray, response, algorithms, target, catalog, size]);
 
-  const onFrame = useCallback(
-    (event: 'compare' | 'swap' | 'hit' | 'miss' | 'step') => {
-      if (event === 'hit') {
-        play('searchHit');
-      } else if (event === 'miss') {
-        play('searchMiss');
-      } else if (event === 'compare') {
-        if (playValueTone) {
-          const val = Math.floor(Math.random() * 80) + 15;
-          playValueTone(val, 100);
-        } else {
-          play('compare');
-        }
-      }
-    },
-    [play, playValueTone]
-  );
+  const onFrame = useCallback((event: 'compare' | 'swap' | 'hit' | 'miss' | 'step') => {
+    // Audio is now handled centrally in usePlayback hook
+  }, []);
 
   const playback = usePlayback(activeResponse, speed, onFrame);
 

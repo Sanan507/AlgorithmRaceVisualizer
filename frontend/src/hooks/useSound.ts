@@ -187,40 +187,53 @@ export function useSound(settings: AudioSettings) {
     };
   }, []);
 
-  const playValueTone = useCallback(
-    (value: number, maxValue: number = 100) => {
-      if (!settings.soundEnabled) return;
+  const playToneForValue = useCallback(
+    (value: number, minValue: number, maxValue: number, type: 'compare' | 'swap') => {
+      if (!settings.soundEnabled || !settings.synthEnabled) return;
       try {
         const ctx = ensureCtx();
         if (!ctx || !masterGainRef.current) return;
 
-        // Map value ratio (0..1) to A-minor pentatonic scale frequencies (220Hz to 880Hz)
-        const ratio = Math.max(0, Math.min(1, value / Math.max(1, maxValue)));
-        const baseFreq = 220; // A3
-        const octaveMultiplier = Math.pow(2, ratio * 2); // 2 octaves range
-        const freq = baseFreq * octaveMultiplier;
+        // Map value to pentatonic scale frequencies between 220Hz and 880Hz
+        const range = Math.max(1, maxValue - minValue);
+        const ratio = Math.max(0, Math.min(1, (value - minValue) / range));
+
+        // A-minor pentatonic notes from A3 (220Hz) to A5 (880Hz)
+        // 11 distinct frequencies across 2 octaves
+        const freqs = [
+          220.00, 261.63, 293.66, 329.63, 392.00,
+          440.00, 523.25, 587.33, 659.25, 783.99,
+          880.00
+        ];
+
+        const noteIndex = Math.floor(ratio * (freqs.length - 1));
+        const freq = freqs[noteIndex];
 
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
 
-        osc.type = 'sine';
+        const isSwap = type === 'swap';
+        osc.type = isSwap ? 'triangle' : 'sine';
         osc.frequency.setValueAtTime(freq, ctx.currentTime);
 
-        const peakGain = 0.25 * settings.effectsVolume;
+        // Swaps produce higher velocity tones
+        const peakGain = (isSwap ? 0.45 : 0.25) * settings.effectsVolume;
+        const duration = isSwap ? 0.12 : 0.08;
+
         gain.gain.setValueAtTime(peakGain, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
 
         osc.connect(gain);
         gain.connect(masterGainRef.current);
 
         osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + 0.09);
+        osc.stop(ctx.currentTime + duration + 0.01);
       } catch {
         // silent fallback
       }
     },
-    [settings.soundEnabled, settings.effectsVolume, ensureCtx]
+    [settings.soundEnabled, settings.synthEnabled, settings.effectsVolume, ensureCtx]
   );
 
-  return { play, playValueTone };
+  return { play, playToneForValue };
 }

@@ -42,7 +42,7 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
   const [speed, setSpeed] = useState(6);
   const [loading, setLoading] = useState(false);
 
-  const { play, playValueTone } = useAudio();
+  const { play } = useAudio();
   const winnerAnnouncedRef = useRef(false);
   const initialized = useRef(false);
   const latestFetchIdRef = useRef(0);
@@ -57,21 +57,9 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
     return defaultMazeTypes;
   }, [catalog]);
 
-  const onFrame = useCallback(
-    (event: 'compare' | 'swap' | 'hit' | 'miss' | 'step') => {
-      if (event === 'hit') {
-        play('pathFound');
-      } else {
-        if (playValueTone) {
-          const val = Math.floor(Math.random() * 70) + 20;
-          playValueTone(val, 100);
-        } else {
-          play('compare');
-        }
-      }
-    },
-    [play, playValueTone]
-  );
+  const onFrame = useCallback((event: 'compare' | 'swap' | 'hit' | 'miss' | 'step') => {
+    // Audio is now handled centrally in usePlayback hook
+  }, []);
 
   const playback = usePlayback(response, speed, onFrame);
 
