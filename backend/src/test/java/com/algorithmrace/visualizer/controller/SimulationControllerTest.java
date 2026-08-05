@@ -174,12 +174,15 @@ class SimulationControllerTest {
   @Test
   void tree_validRequest_success() throws Exception {
     com.algorithmrace.visualizer.dto.TreeSimulationRequest request =
-        new com.algorithmrace.visualizer.dto.TreeSimulationRequest("avl", "insert", List.of(50, 30), 40, null);
+        new com.algorithmrace.visualizer.dto.TreeSimulationRequest(
+            "avl", "insert", List.of(50, 30), 40, null);
 
     com.algorithmrace.visualizer.dto.TreeSimulationResponse response =
-        new com.algorithmrace.visualizer.dto.TreeSimulationResponse("avl", new ArrayList<>(), new ArrayList<>());
+        new com.algorithmrace.visualizer.dto.TreeSimulationResponse(
+            "avl", new ArrayList<>(), new ArrayList<>());
 
-    when(simulationService.simulateTree(any(com.algorithmrace.visualizer.dto.TreeSimulationRequest.class)))
+    when(simulationService.simulateTree(
+            any(com.algorithmrace.visualizer.dto.TreeSimulationRequest.class)))
         .thenReturn(response);
 
     mockMvc

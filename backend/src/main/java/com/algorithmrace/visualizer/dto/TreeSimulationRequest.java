@@ -7,5 +7,4 @@ public record TreeSimulationRequest(
     String operation,
     List<Integer> values,
     Integer target,
-    String traversalType
-) {}
+    String traversalType) {}

@@ -44,9 +44,16 @@ public class SimulationService {
   private static final int PATH_FRAME_MS = 20;
 
   public TreeSimulationResponse simulateTree(TreeSimulationRequest request) {
-    String type = request != null && request.treeType() != null ? request.treeType().toLowerCase() : "bst";
-    String op = request != null && request.operation() != null ? request.operation().toLowerCase() : "build";
-    List<Integer> initialValues = request != null && request.values() != null ? request.values() : List.of(50, 30, 70, 20, 40, 60, 80);
+    String type =
+        request != null && request.treeType() != null ? request.treeType().toLowerCase() : "bst";
+    String op =
+        request != null && request.operation() != null
+            ? request.operation().toLowerCase()
+            : "build";
+    List<Integer> initialValues =
+        request != null && request.values() != null
+            ? request.values()
+            : List.of(50, 30, 70, 20, 40, 60, 80);
 
     List<TreeSimulationFrame> frames = new ArrayList<>();
     List<Integer> traversalOutput = new ArrayList<>();

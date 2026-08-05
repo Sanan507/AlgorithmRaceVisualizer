@@ -10,5 +10,4 @@ public record TreeSimulationFrame(
     String explanation,
     String eventType,
     String rotationType,
-    int codeLine
-) {}
+    int codeLine) {}
