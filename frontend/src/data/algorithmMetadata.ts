@@ -187,6 +187,101 @@ export const PATHFINDING_META: Record<string, PathfindingMeta> = {
   },
 };
 
+// ── Algorithm Detailed Metadata ─────────────────────────────────────────────
+export const algorithmMetadata: Record<string, {
+  name: string;
+  description: string;
+  timeComplexity: string;
+  spaceComplexity: string;
+  pseudocode: string[];
+}> = {
+  '0/1 Knapsack': {
+    name: '0/1 Knapsack Problem',
+    description: 'Select items with given weights and values to maximize total value without exceeding knapsack capacity.',
+    timeComplexity: 'O(N * W)',
+    spaceComplexity: 'O(N * W)',
+    pseudocode: [
+      'for i = 0 to N:',
+      '  for w = 0 to W:',
+      '    if wt[i-1] <= w:',
+      '      dp[i][w] = max(dp[i-1][w], val[i-1] + dp[i-1][w - wt[i-1]])',
+      '    else:',
+      '      dp[i][w] = dp[i-1][w]',
+      'return dp[N][W]',
+    ],
+  },
+  'Longest Common Subsequence': {
+    name: 'Longest Common Subsequence (LCS)',
+    description: 'Finds the longest sequence that appears in the same relative order in both input strings.',
+    timeComplexity: 'O(M * N)',
+    spaceComplexity: 'O(M * N)',
+    pseudocode: [
+      'for i = 1 to M:',
+      '  for j = 1 to N:',
+      '    if s1[i-1] == s2[j-1]:',
+      '      dp[i][j] = 1 + dp[i-1][j-1]',
+      '    else:',
+      '      dp[i][j] = max(dp[i-1][j], dp[i][j-1])',
+      'return dp[M][N]',
+    ],
+  },
+  'Edit Distance': {
+    name: 'Edit Distance (Levenshtein)',
+    description: 'Computes minimum operations (insertion, deletion, substitution) to convert string S1 into S2.',
+    timeComplexity: 'O(M * N)',
+    spaceComplexity: 'O(M * N)',
+    pseudocode: [
+      'for i = 1 to M:',
+      '  for j = 1 to N:',
+      '    if s1[i-1] == s2[j-1]:',
+      '      dp[i][j] = dp[i-1][j-1]',
+      '    else:',
+      '      dp[i][j] = 1 + min(dp[i-1][j-1], dp[i][j-1], dp[i-1][j])',
+      'return dp[M][N]',
+    ],
+  },
+  'Binary Search Tree': {
+    name: 'Binary Search Tree (BST)',
+    description: 'A binary tree structure where each node left child < parent and right child > parent.',
+    timeComplexity: 'O(log N) Avg / O(N) Worst',
+    spaceComplexity: 'O(N)',
+    pseudocode: [
+      'insert(node, val):',
+      '  if node is null: return new Node(val)',
+      '  if val < node.val: node.left = insert(node.left, val)',
+      '  else: node.right = insert(node.right, val)',
+      '  return node',
+    ],
+  },
+  'AVL Tree': {
+    name: 'AVL Tree (Self-Balancing)',
+    description: 'Self-balancing BST maintaining balance factor |height(L) - height(R)| <= 1 via 4 rotation types (LL, RR, LR, RL).',
+    timeComplexity: 'O(log N) Guaranteed',
+    spaceComplexity: 'O(N)',
+    pseudocode: [
+      'insert(node, val):',
+      '  node = standard_bst_insert(node, val)',
+      '  bf = height(node.left) - height(node.right)',
+      '  if bf > 1 and val < node.left.val: return rotateRight(node)',
+      '  if bf < -1 and val > node.right.val: return rotateLeft(node)',
+      '  return node',
+    ],
+  },
+  'Red-Black Tree': {
+    name: 'Red-Black Tree',
+    description: 'Self-balancing BST using red/black node coloring and restructuring to ensure max path length <= 2 * min path length.',
+    timeComplexity: 'O(log N) Guaranteed',
+    spaceComplexity: 'O(N)',
+    pseudocode: [
+      'insert(val):',
+      '  node = bst_insert(val, color=RED)',
+      '  while node.parent is RED:',
+      '    recolor_and_rotate(node)',
+      '  root.color = BLACK',
+    ],
+  },
+};
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 /** Returns SortingMeta or a sensible default */
@@ -224,3 +319,5 @@ export function getPathfindingMeta(name: string): PathfindingMeta {
     }
   );
 }
+
+

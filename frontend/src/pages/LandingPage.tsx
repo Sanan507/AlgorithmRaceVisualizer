@@ -24,7 +24,7 @@ const HeroMiniCanvas = lazy(() => import('../components/HeroMiniCanvas').then(m 
 const AlgorithmMatrix = lazy(() => import('../components/AlgorithmMatrix').then(m => ({ default: m.AlgorithmMatrix })));
 
 interface Props {
-  onNavigate: (page: 'sorting' | 'searching' | 'pathfinding' | 'history' | 'settings') => void;
+  onNavigate: (page: 'sorting' | 'searching' | 'pathfinding' | 'dp' | 'trees' | 'history' | 'settings') => void;
   darkMode?: boolean;
   setDarkMode?: (val: boolean) => void;
 }
@@ -169,6 +169,22 @@ export function LandingPage({ onNavigate, darkMode, setDarkMode }: Props) {
             >
               <GitBranch size={18} className="text-cyan-400" />
               <span>Pathfinding Arena</span>
+            </button>
+
+            <button
+              className="hero-btn-secondary"
+              onClick={() => onNavigate('dp')}
+            >
+              <Layers size={18} className="text-purple-400" />
+              <span>DP Arena</span>
+            </button>
+
+            <button
+              className="hero-btn-secondary"
+              onClick={() => onNavigate('trees')}
+            >
+              <Cpu size={18} className="text-amber-400" />
+              <span>Tree Arena</span>
             </button>
 
             <button

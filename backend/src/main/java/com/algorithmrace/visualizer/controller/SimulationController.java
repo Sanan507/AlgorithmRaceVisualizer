@@ -55,4 +55,15 @@ public class SimulationController {
   public RaceResponse pathfinding(@Valid @RequestBody PathfindingSimulationRequest request) {
     return simulationService.simulatePathfinding(request);
   }
+
+  @Operation(
+      summary = "Run tree simulation",
+      description =
+          "Executes tree data structure operations (BST, AVL, Red-Black) and returns step-by-step tree visualization frames.")
+  @ApiResponse(responseCode = "200", description = "Tree simulation executed successfully")
+  @PostMapping("/tree")
+  public com.algorithmrace.visualizer.dto.TreeSimulationResponse tree(
+      @RequestBody com.algorithmrace.visualizer.dto.TreeSimulationRequest request) {
+    return simulationService.simulateTree(request);
+  }
 }

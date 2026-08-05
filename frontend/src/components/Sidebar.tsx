@@ -1,13 +1,15 @@
-import { BarChart3, Binary, GitBranch, History, Settings, ChevronLeft, ChevronRight, Zap, LayoutGrid, X, Sun, Moon } from 'lucide-react';
+import { BarChart3, Binary, GitBranch, History, Settings, ChevronLeft, ChevronRight, Zap, LayoutGrid, X, Sun, Moon, Layers, FolderTree } from 'lucide-react';
 import { useAudio } from '../context/AudioContext';
 
-type Page = 'landing' | 'sorting' | 'searching' | 'pathfinding' | 'history' | 'settings';
+type Page = 'landing' | 'sorting' | 'searching' | 'pathfinding' | 'dp' | 'trees' | 'history' | 'settings';
 
 const items = [
   { id: 'landing',     label: 'Overview',            icon: LayoutGrid },
   { id: 'sorting',     label: 'Sorting Arena',      icon: BarChart3  },
   { id: 'searching',   label: 'Search Arena',        icon: Binary     },
   { id: 'pathfinding', label: 'Pathfinding Arena',   icon: GitBranch  },
+  { id: 'dp',          label: 'DP Arena',            icon: Layers     },
+  { id: 'trees',       label: 'Tree Arena',          icon: FolderTree },
   { id: 'history',     label: 'Benchmarks',          icon: History    },
   { id: 'settings',    label: 'Settings',            icon: Settings   },
 ] as const;

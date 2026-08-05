@@ -9,6 +9,8 @@ import { PathfindingPage } from './pages/PathfindingPage';
 import { SearchingPage } from './pages/SearchingPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { SortingPage } from './pages/SortingPage';
+import { DPPage } from './pages/DPPage';
+import { TreesPage } from './pages/TreesPage';
 import type { CatalogResponse } from './models/types';
 import { api } from './services/api';
 import { AudioCtx } from './context/AudioContext';
@@ -17,7 +19,7 @@ import { useSound } from './hooks/useSound';
 
 import { fallbackCatalog } from './data/fallbackCatalog';
 
-type Page = 'landing' | 'sorting' | 'searching' | 'pathfinding' | 'history' | 'settings';
+type Page = 'landing' | 'sorting' | 'searching' | 'pathfinding' | 'dp' | 'trees' | 'history' | 'settings';
 
 const getPageFromHash = (): Page => {
   const searchParams = new URLSearchParams(window.location.search);
@@ -27,6 +29,8 @@ const getPageFromHash = (): Page => {
     if (pageParam === 'sorting') return 'sorting';
     if (pageParam === 'searching') return 'searching';
     if (pageParam === 'pathfinding') return 'pathfinding';
+    if (pageParam === 'dp') return 'dp';
+    if (pageParam === 'trees') return 'trees';
     if (pageParam === 'history') return 'history';
     if (pageParam === 'settings') return 'settings';
   }
@@ -35,6 +39,8 @@ const getPageFromHash = (): Page => {
   if (hash === 'sorting' || hash === 'sorting-arena') return 'sorting';
   if (hash === 'searching' || hash === 'search' || hash === 'search-arena') return 'searching';
   if (hash === 'pathfinding' || hash === 'pathfinding-arena') return 'pathfinding';
+  if (hash === 'dp' || hash === 'dp-arena' || hash === 'dynamic-programming') return 'dp';
+  if (hash === 'trees' || hash === 'trees-arena' || hash === 'tree-structures') return 'trees';
   if (hash === 'history' || hash === 'benchmarks') return 'history';
   if (hash === 'settings') return 'settings';
   return 'landing';
@@ -178,6 +184,8 @@ export default function App() {
               {active === 'sorting' && <SortingPage catalog={catalog} />}
               {active === 'searching' && <SearchingPage catalog={catalog} />}
               {active === 'pathfinding' && <PathfindingPage catalog={catalog} />}
+              {active === 'dp' && <DPPage />}
+              {active === 'trees' && <TreesPage />}
               {active === 'history' && <HistoryPage catalog={catalog} />}
               {active === 'settings' && (
                 <SettingsPage darkMode={darkMode} setDarkMode={setDarkMode} />

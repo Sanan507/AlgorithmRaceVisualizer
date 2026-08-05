@@ -7054,6 +7054,517 @@ input[type="range"] {
   box-shadow: 0 0 6px currentColor;
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   Dynamic Programming & Tree Visualizer Styles
+   ═══════════════════════════════════════════════════════════════ */
+.dp-page-container, .trees-page-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.dp-content-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 24px;
+}
+
+@media (max-width: 1024px) {
+  .dp-content-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dp-main-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.dp-sidebar-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* DP Formula Callout */
+.dp-formula-banner {
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  padding: 12px 18px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.formula-badge {
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+}
+
+.formula-text {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+/* DP Matrix Table */
+.dp-grid-wrapper {
+  overflow-x: auto;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.dp-matrix-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 6px;
+}
+
+.dp-corner-header, .dp-col-header, .dp-row-header {
+  padding: 10px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 6px;
+  text-align: center;
+}
+
+.dp-header-highlight {
+  background: rgba(99, 102, 241, 0.25) !important;
+  color: #818cf8 !important;
+  font-weight: 700;
+}
+
+.dp-header-idx {
+  display: block;
+  font-size: 0.7rem;
+  opacity: 0.6;
+}
+
+.dp-cell {
+  width: 58px;
+  height: 58px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  text-align: center;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.dp-cell-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  position: relative;
+}
+
+.dp-cell-value {
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.dp-cell-active {
+  background: rgba(245, 158, 11, 0.2) !important;
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.4);
+}
+
+.dp-cell-dependent {
+  background: rgba(59, 130, 246, 0.2) !important;
+  border-color: #3b82f6 !important;
+}
+
+.dp-cell-backtrack {
+  background: rgba(16, 185, 129, 0.25) !important;
+  border-color: #10b981 !important;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+}
+
+.dp-dep-tag {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  font-size: 0.65rem;
+  color: #3b82f6;
+  font-weight: 700;
+}
+
+.dp-backtrack-icon {
+  position: absolute;
+  bottom: 3px;
+  right: 3px;
+  color: #10b981;
+}
+
+/* Tree Visualizer */
+.tree-canvas-wrapper {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+  position: relative;
+  min-height: 480px;
+}
+
+.tree-canvas {
+  width: 100%;
+  height: 480px;
+  display: block;
+}
+
+.rotation-banner {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  padding: 8px 14px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 10;
+}
+
+.rotation-badge {
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.tree-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--panel);
+  padding: 12px 18px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.toolbar-input-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.input-num {
+  width: 90px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--text);
+}
+
+.traversal-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+.btn-chip {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--line);
+  color: var(--text);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-chip:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ─── DP Arena Refined UI Styles ────────────────────────────────────────── */
+
+/* Compact Controls & Replay Bar */
+.dp-controls-bar-compact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: var(--panel);
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  margin-bottom: 12px;
+}
+
+.dp-step-badge {
+  background: rgba(168, 85, 247, 0.12);
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  color: var(--neon-purple, #c084fc);
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+/* Light & Dark Theme-Aware Form Fields & Sidebar Item List */
+.dp-item-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 210px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.dp-item-row-header {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) minmax(0, 1fr) 24px;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 0 4px 2px 4px;
+  letter-spacing: 0.04em;
+}
+
+.dp-item-row {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) minmax(0, 1fr) 24px;
+  gap: 6px;
+  align-items: center;
+  background: var(--panel-2);
+  padding: 5px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  transition: border-color 0.2s ease;
+}
+
+.dp-item-row:hover {
+  border-color: var(--line-glow);
+}
+
+.dp-item-idx {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-align: center;
+}
+
+.dp-input-field {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 5px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.dp-input-field:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+.dp-input-field::placeholder {
+  color: var(--muted);
+  opacity: 0.6;
+}
+
+.dp-delete-btn {
+  background: transparent;
+  border: none;
+  color: var(--rose, #ef4444);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background 0.15s ease;
+}
+
+.dp-delete-btn:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.dp-delete-btn:disabled {
+  color: var(--muted);
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Result Pending Neutral Card */
+.dp-result-pending-card {
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+/* Compact Inline Legend in DPCanvas */
+.dp-canvas-footer-compact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.dp-legend-inline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.dp-legend-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.dp-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.dp-legend-dot.box-active {
+  background: #f59e0b;
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.4);
+}
+
+.dp-legend-dot.box-dep {
+  background: #3b82f6;
+  box-shadow: 0 0 6px rgba(59, 130, 246, 0.4);
+}
+
+.dp-legend-dot.box-backtrack {
+  background: #10b981;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
+}
+
+/* ─── Tree Arena Refined UI Styles ───────────────────────────────────────── */
+.tree-toolbar-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: var(--panel);
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  margin-bottom: 12px;
+}
+
+.tree-traversal-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  background: var(--panel-2);
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  margin-bottom: 12px;
+}
+
+.tree-num-input {
+  width: 76px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 500;
+  box-sizing: border-box;
+}
+
+.tree-num-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+.tree-timeline-container {
+  max-height: 140px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tree-timeline-item {
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  transition: all 0.15s ease;
+}
+
+.tree-timeline-item:hover {
+  border-color: var(--line-glow);
+}
+
+.tree-timeline-item.active {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.5);
+}
+
+
+
+
 
 
 

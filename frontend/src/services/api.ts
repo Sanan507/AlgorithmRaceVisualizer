@@ -1,4 +1,4 @@
-import type { CatalogResponse, RaceResponse } from '../models/types';
+import type { CatalogResponse, RaceResponse, TreeSimulationRequest, TreeSimulationResponse } from '../models/types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
@@ -29,5 +29,8 @@ export const api = {
   searching: (body: unknown) =>
     request<RaceResponse>('/api/simulations/searching', { method: 'POST', body: JSON.stringify(body) }),
   pathfinding: (body: unknown) =>
-    request<RaceResponse>('/api/simulations/pathfinding', { method: 'POST', body: JSON.stringify(body) })
+    request<RaceResponse>('/api/simulations/pathfinding', { method: 'POST', body: JSON.stringify(body) }),
+  tree: (body: TreeSimulationRequest) =>
+    request<TreeSimulationResponse>('/api/simulations/tree', { method: 'POST', body: JSON.stringify(body) })
 };
+

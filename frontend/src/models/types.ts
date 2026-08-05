@@ -68,3 +68,38 @@ export type RaceResponse = {
   lanes: RaceLaneResponse[];
   winner: string | null;
 };
+
+export type TreeNodeDto = {
+  val: number;
+  height?: number;
+  balanceFactor?: number;
+  color?: 'RED' | 'BLACK';
+  left?: TreeNodeDto | null;
+  right?: TreeNodeDto | null;
+};
+
+export type TreeSimulationFrame = {
+  frameIndex: number;
+  root: TreeNodeDto | null;
+  activeNodeVal?: number | null;
+  highlightNodes?: number[];
+  explanation: string;
+  eventType: string;
+  rotationType?: 'LL' | 'RR' | 'LR' | 'RL' | 'LEFT' | 'RIGHT' | null;
+  codeLine?: number;
+};
+
+export type TreeSimulationRequest = {
+  treeType: 'bst' | 'avl' | 'red_black';
+  operation?: 'build' | 'insert' | 'search' | 'traversal' | 'clear';
+  values?: number[];
+  target?: number;
+  traversalType?: 'in' | 'pre' | 'post' | 'level';
+};
+
+export type TreeSimulationResponse = {
+  treeType: string;
+  frames: TreeSimulationFrame[];
+  traversalOutput?: number[];
+};
+

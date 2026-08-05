@@ -4,11 +4,11 @@ import { Bot, Sparkles, BrainCircuit, Layers } from 'lucide-react';
 
 export interface StepExplanationCardProps {
   lanes?: RaceLaneResponse[];
-  activeFrames?: (SimulationFrame | null | undefined)[];
+  activeFrames?: (Partial<SimulationFrame> | null | undefined)[];
   frameIndex: number;
   totalFrames: number;
   algorithmName?: string;
-  frame?: SimulationFrame | null;
+  frame?: Partial<SimulationFrame> | null;
 }
 
 export function StepExplanationCard({

@@ -6,11 +6,11 @@ interface LegendItem {
 }
 
 interface VisualizationLegendProps {
-  type: 'sorting' | 'searching' | 'pathfinding';
+  type: 'sorting' | 'searching' | 'pathfinding' | 'dp' | 'trees';
 }
 
 export function VisualizationLegend({ type }: VisualizationLegendProps) {
-  const legendItems: Record<'sorting' | 'searching' | 'pathfinding', LegendItem[]> = {
+  const legendItems: Record<'sorting' | 'searching' | 'pathfinding' | 'dp' | 'trees', LegendItem[]> = {
     sorting: [
       {
         name: 'Unprocessed',
@@ -141,6 +141,69 @@ export function VisualizationLegend({ type }: VisualizationLegendProps) {
         name: 'Mountain (15x Cost)',
         color: '#475569',
         desc: 'High weight terrain adding 15x cost penalty.'
+      }
+    ],
+    dp: [
+      {
+        name: 'Active Cell',
+        color: '#f59e0b',
+        gradient: 'linear-gradient(135deg, #fbbf24, #d97706)',
+        desc: 'The current subproblem cell being evaluated in the matrix.'
+      },
+      {
+        name: 'Source Subproblems',
+        color: '#3b82f6',
+        gradient: 'linear-gradient(135deg, #60a5fa, #2563eb)',
+        desc: 'Subproblem values referenced to calculate the active cell.'
+      },
+      {
+        name: 'Optimal Choice Path',
+        color: '#10b981',
+        gradient: 'linear-gradient(135deg, #34d399, #059669)',
+        desc: 'Cells backtracked to reconstruct the optimal item selection or string alignment.'
+      },
+      {
+        name: 'Computed State',
+        color: '#6366f1',
+        gradient: 'linear-gradient(135deg, #818cf8, #4f46e5)',
+        desc: 'Previously calculated DP state stored in the memoization table.'
+      }
+    ],
+    trees: [
+      {
+        name: 'Standard Node',
+        color: '#1e293b',
+        gradient: 'linear-gradient(135deg, #334155, #1e293b)',
+        desc: 'Unvisited binary search tree node in the hierarchy.'
+      },
+      {
+        name: 'Active / Visited Node',
+        color: '#f59e0b',
+        gradient: 'linear-gradient(135deg, #fbbf24, #d97706)',
+        desc: 'Node currently being inspected, searched, or traversed.'
+      },
+      {
+        name: 'Search Highlight',
+        color: '#2563eb',
+        gradient: 'linear-gradient(135deg, #60a5fa, #2563eb)',
+        desc: 'Node along the active search comparison path.'
+      },
+      {
+        name: 'Red Node / Link',
+        color: '#ef4444',
+        gradient: 'linear-gradient(135deg, #f87171, #dc2626)',
+        desc: 'Red link in Red-Black Tree maintaining height balance.'
+      },
+      {
+        name: 'Black Node / Link',
+        color: '#0f172a',
+        gradient: 'linear-gradient(135deg, #1e293b, #0f172a)',
+        desc: 'Black node in Red-Black Tree satisfying black-height invariants.'
+      },
+      {
+        name: 'Balance Factor (AVL)',
+        color: '#10b981',
+        desc: 'Height difference tag (lH - rH) evaluated at each AVL node.'
       }
     ]
   };

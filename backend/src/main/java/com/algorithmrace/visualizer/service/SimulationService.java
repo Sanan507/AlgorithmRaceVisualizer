@@ -7,6 +7,9 @@ import com.algorithmrace.visualizer.algorithms.pathfinding.PathfindingModel;
 import com.algorithmrace.visualizer.algorithms.searching.SearchModel;
 import com.algorithmrace.visualizer.algorithms.searching.SearchingAlgorithmFactory;
 import com.algorithmrace.visualizer.algorithms.sorting.SortingAlgorithmFactory;
+import com.algorithmrace.visualizer.algorithms.trees.AVLTreeModel;
+import com.algorithmrace.visualizer.algorithms.trees.BSTModel;
+import com.algorithmrace.visualizer.algorithms.trees.RedBlackTreeModel;
 import com.algorithmrace.visualizer.dto.LaneStats;
 import com.algorithmrace.visualizer.dto.PathfindingSimulationRequest;
 import com.algorithmrace.visualizer.dto.PointDto;
@@ -15,6 +18,9 @@ import com.algorithmrace.visualizer.dto.RaceResponse;
 import com.algorithmrace.visualizer.dto.SearchingSimulationRequest;
 import com.algorithmrace.visualizer.dto.SimulationFrame;
 import com.algorithmrace.visualizer.dto.SortingSimulationRequest;
+import com.algorithmrace.visualizer.dto.TreeSimulationFrame;
+import com.algorithmrace.visualizer.dto.TreeSimulationRequest;
+import com.algorithmrace.visualizer.dto.TreeSimulationResponse;
 import com.algorithmrace.visualizer.model.AlgorithmModel;
 import com.algorithmrace.visualizer.utils.ArrayGenerator;
 import com.algorithmrace.visualizer.utils.ComplexityCatalog;
@@ -36,6 +42,49 @@ public class SimulationService {
   private static final int SORT_FRAME_MS = 16;
   private static final int SEARCH_FRAME_MS = 18;
   private static final int PATH_FRAME_MS = 20;
+
+  public TreeSimulationResponse simulateTree(TreeSimulationRequest request) {
+    String type = request != null && request.treeType() != null ? request.treeType().toLowerCase() : "bst";
+    String op = request != null && request.operation() != null ? request.operation().toLowerCase() : "build";
+    List<Integer> initialValues = request != null && request.values() != null ? request.values() : List.of(50, 30, 70, 20, 40, 60, 80);
+
+    List<TreeSimulationFrame> frames = new ArrayList<>();
+    List<Integer> traversalOutput = new ArrayList<>();
+
+    if ("avl".equals(type)) {
+      AVLTreeModel model = new AVLTreeModel();
+      frames.addAll(model.buildTree(initialValues));
+      if ("insert".equals(op) && request.target() != null) {
+        model.insertWithFrames(request.target(), frames);
+      } else if ("search".equals(op) && request.target() != null) {
+        frames.addAll(model.searchWithFrames(request.target()));
+      } else if ("traversal".equals(op)) {
+        frames.addAll(model.traverseWithFrames(request.traversalType(), traversalOutput));
+      }
+    } else if ("red_black".equals(type) || "redblack".equals(type)) {
+      RedBlackTreeModel model = new RedBlackTreeModel();
+      frames.addAll(model.buildTree(initialValues));
+      if ("insert".equals(op) && request.target() != null) {
+        model.insertWithFrames(request.target(), frames);
+      } else if ("search".equals(op) && request.target() != null) {
+        frames.addAll(model.searchWithFrames(request.target()));
+      } else if ("traversal".equals(op)) {
+        frames.addAll(model.traverseWithFrames(request.traversalType(), traversalOutput));
+      }
+    } else {
+      BSTModel model = new BSTModel();
+      frames.addAll(model.buildTree(initialValues));
+      if ("insert".equals(op) && request.target() != null) {
+        model.insertWithFrames(request.target(), frames);
+      } else if ("search".equals(op) && request.target() != null) {
+        frames.addAll(model.searchWithFrames(request.target()));
+      } else if ("traversal".equals(op)) {
+        frames.addAll(model.traverseWithFrames(request.traversalType(), traversalOutput));
+      }
+    }
+
+    return new TreeSimulationResponse(type, frames, traversalOutput);
+  }
 
   public RaceResponse simulateSorting(SortingSimulationRequest request) {
     int[] dataset = resolveSortingDataset(request);

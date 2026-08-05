@@ -232,6 +232,54 @@ export const fallbackCatalog: CatalogResponse = {
       space: 'O(b^(d/2))',
       theory: 'Explores from both start and end, halving the search depth.',
       pseudocode: 'expand forward\nexpand backward\nstop when frontiers intersect'
+    },
+    '0/1 Knapsack': {
+      best: 'O(N*W)',
+      average: 'O(N*W)',
+      worst: 'O(N*W)',
+      space: 'O(N*W)',
+      theory: 'Fills dynamic programming matrix cell-by-cell comparing item selection options.',
+      pseudocode: 'dp[i][w] = max(dp[i-1][w], val + dp[i-1][w-wt])'
+    },
+    'Longest Common Subsequence': {
+      best: 'O(M*N)',
+      average: 'O(M*N)',
+      worst: 'O(M*N)',
+      space: 'O(M*N)',
+      theory: 'Evaluates character matches and builds maximum matching length table.',
+      pseudocode: 'if s1[i]==s2[j]: dp[i][j]=1+dp[i-1][j-1]'
+    },
+    'Edit Distance': {
+      best: 'O(M*N)',
+      average: 'O(M*N)',
+      worst: 'O(M*N)',
+      space: 'O(M*N)',
+      theory: 'Calculates minimum string edit transformations (insert, delete, replace).',
+      pseudocode: 'dp[i][j] = 1 + min(replace, insert, delete)'
+    },
+    'Binary Search Tree': {
+      best: 'O(log N)',
+      average: 'O(log N)',
+      worst: 'O(N)',
+      space: 'O(N)',
+      theory: 'Binary tree structure with ordered left and right subtrees.',
+      pseudocode: 'insert(val, node)'
+    },
+    'AVL Tree': {
+      best: 'O(log N)',
+      average: 'O(log N)',
+      worst: 'O(log N)',
+      space: 'O(N)',
+      theory: 'Self-balancing binary search tree maintaining height balance factor.',
+      pseudocode: 'insert and balance with LL/RR/LR/RL rotations'
+    },
+    'Red-Black Tree': {
+      best: 'O(log N)',
+      average: 'O(log N)',
+      worst: 'O(log N)',
+      space: 'O(N)',
+      theory: 'Self-balancing BST using red and black node coloring rules.',
+      pseudocode: 'insert red node and perform recolor/rotation'
     }
   }
 };

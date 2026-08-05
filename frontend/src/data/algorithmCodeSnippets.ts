@@ -1210,6 +1210,254 @@ function merge(L: number[], R: number[]): number[] {
       },
     },
   },
+
+  /* ────────────────── BINARY SEARCH TREE ────────────────── */
+  binarysearchtree: {
+    algorithmId: 'binarysearchtree',
+    algorithmName: 'Binary Search Tree',
+    languages: {
+      typescript: {
+        language: 'typescript', displayName: 'TypeScript',
+        code: `class TreeNode {
+  val: number;
+  left: TreeNode | null = null;
+  right: TreeNode | null = null;
+  constructor(val: number) { this.val = val; }
+}
+
+function insertBST(root: TreeNode | null, val: number): TreeNode {
+  if (!root) return new TreeNode(val);
+  if (val < root.val) root.left = insertBST(root.left, val);
+  else if (val > root.val) root.right = insertBST(root.right, val);
+  return root;
+}`,
+        getHighlight: () => ({ line: 7, operation: 'loop' }),
+      },
+      java: {
+        language: 'java', displayName: 'Java',
+        code: `public class BSTNode {
+  public int val;
+  public BSTNode left, right;
+  public BSTNode(int val) { this.val = val; }
+
+  public BSTNode insert(BSTNode root, int val) {
+    if (root == null) return new BSTNode(val);
+    if (val < root.val) root.left = insert(root.left, val);
+    else if (val > root.val) root.right = insert(root.right, val);
+    return root;
+  }
+}`,
+        getHighlight: () => ({ line: 6, operation: 'loop' }),
+      },
+      python: {
+        language: 'python', displayName: 'Python',
+        code: `class TreeNode:
+    def __init__(self, val):
+        self.val = val
+        self.left = None
+        self.right = None
+
+def insert_bst(root, val):
+    if not root:
+        return TreeNode(val)
+    if val < root.val:
+        root.left = insert_bst(root.left, val)
+    elif val > root.val:
+        root.right = insert_bst(root.right, val)
+    return root`,
+        getHighlight: () => ({ line: 7, operation: 'loop' }),
+      },
+      cpp: {
+        language: 'cpp', displayName: 'C++',
+        code: `struct Node {
+    int val;
+    Node* left = nullptr;
+    Node* right = nullptr;
+    Node(int v) : val(v) {}
+};
+
+Node* insertBST(Node* root, int val) {
+    if (!root) return new Node(val);
+    if (val < root->val) root->left = insertBST(root->left, val);
+    else if (val > root->val) root->right = insertBST(root->right, val);
+    return root;
+}`,
+        getHighlight: () => ({ line: 8, operation: 'loop' }),
+      },
+    },
+  },
+
+  /* ────────────────── AVL TREE ────────────────── */
+  avltree: {
+    algorithmId: 'avltree',
+    algorithmName: 'AVL Tree',
+    languages: {
+      typescript: {
+        language: 'typescript', displayName: 'TypeScript',
+        code: `function insertAVL(node: AVLNode | null, val: number): AVLNode {
+  if (!node) return new AVLNode(val);
+  if (val < node.val) node.left = insertAVL(node.left, val);
+  else if (val > node.val) node.right = insertAVL(node.right, val);
+  else return node;
+
+  node.height = 1 + Math.max(getHeight(node.left), getHeight(node.right));
+  const bf = getBalance(node);
+
+  if (bf > 1 && val < node.left!.val) return rotateRight(node);  // LL
+  if (bf < -1 && val > node.right!.val) return rotateLeft(node); // RR
+  if (bf > 1 && val > node.left!.val) {                          // LR
+    node.left = rotateLeft(node.left!);
+    return rotateRight(node);
+  }
+  if (bf < -1 && val < node.right!.val) {                         // RL
+    node.right = rotateRight(node.right!);
+    return rotateLeft(node);
+  }
+  return node;
+}`,
+        getHighlight: () => ({ line: 7, operation: 'loop' }),
+      },
+      java: {
+        language: 'java', displayName: 'Java',
+        code: `public Node insert(Node node, int val) {
+  if (node == null) return new Node(val);
+  if (val < node.val) node.left = insert(node.left, val);
+  else if (val > node.val) node.right = insert(node.right, val);
+  else return node;
+
+  node.height = 1 + Math.max(height(node.left), height(node.right));
+  int balance = getBalance(node);
+
+  if (balance > 1 && val < node.left.val) return rotateRight(node);  // LL
+  if (balance < -1 && val > node.right.val) return rotateLeft(node); // RR
+  if (balance > 1 && val > node.left.val) {                          // LR
+    node.left = rotateLeft(node.left);
+    return rotateRight(node);
+  }
+  if (balance < -1 && val < node.right.val) {                         // RL
+    node.right = rotateRight(node.right);
+    return rotateLeft(node);
+  }
+  return node;
+}`,
+        getHighlight: () => ({ line: 7, operation: 'loop' }),
+      },
+      python: {
+        language: 'python', displayName: 'Python',
+        code: `def insert_avl(root, val):
+    if not root: return AVLNode(val)
+    if val < root.val: root.left = insert_avl(root.left, val)
+    elif val > root.val: root.right = insert_avl(root.right, val)
+    else: return root
+
+    root.height = 1 + max(get_height(root.left), get_height(root.right))
+    balance = get_balance(root)
+
+    if balance > 1 and val < root.left.val: return rotate_right(root)
+    if balance < -1 and val > root.right.val: return rotate_left(root)
+    if balance > 1 and val > root.left.val:
+        root.left = rotate_left(root.left)
+        return rotate_right(root)
+    if balance < -1 and val < root.right.val:
+        root.right = rotate_right(root.right)
+        return rotate_left(root)
+    return root`,
+        getHighlight: () => ({ line: 7, operation: 'loop' }),
+      },
+      cpp: {
+        language: 'cpp', displayName: 'C++',
+        code: `Node* insertAVL(Node* node, int val) {
+    if (!node) return new Node(val);
+    if (val < node->val) node->left = insertAVL(node->left, val);
+    else if (val > node->val) node->right = insertAVL(node->right, val);
+    else return node;
+
+    node->height = 1 + max(height(node->left), height(node->right));
+    int balance = getBalance(node);
+
+    if (balance > 1 && val < node->left->val) return rotateRight(node);
+    if (balance < -1 && val > node->right->val) return rotateLeft(node);
+    if (balance > 1 && val > node->left->val) {
+        node->left = rotateLeft(node->left);
+        return rotateRight(node);
+    }
+    if (balance < -1 && val < node->right->val) {
+        node->right = rotateRight(node->right);
+        return rotateLeft(node);
+    }
+    return node;
+}`,
+        getHighlight: () => ({ line: 7, operation: 'loop' }),
+      },
+    },
+  },
+
+  /* ────────────────── RED-BLACK TREE ────────────────── */
+  redblacktree: {
+    algorithmId: 'redblacktree',
+    algorithmName: 'Red-Black Tree',
+    languages: {
+      typescript: {
+        language: 'typescript', displayName: 'TypeScript',
+        code: `function insertRB(h: RBNode | null, val: number): RBNode {
+  if (!h) return { val, color: 'RED' };
+  if (val < h.val) h.left = insertRB(h.left, val);
+  else if (val > h.val) h.right = insertRB(h.right, val);
+
+  if (isRed(h.right) && !isRed(h.left)) h = rotateLeft(h);
+  if (isRed(h.left) && isRed(h.left?.left)) h = rotateRight(h);
+  if (isRed(h.left) && isRed(h.right)) flipColors(h);
+
+  return h;
+}`,
+        getHighlight: () => ({ line: 5, operation: 'loop' }),
+      },
+      java: {
+        language: 'java', displayName: 'Java',
+        code: `public Node insert(Node h, int val) {
+  if (h == null) return new Node(val, RED);
+  if (val < h.val) h.left = insert(h.left, val);
+  else if (val > h.val) h.right = insert(h.right, val);
+
+  if (isRed(h.right) && !isRed(h.left)) h = rotateLeft(h);
+  if (isRed(h.left) && isRed(h.left.left)) h = rotateRight(h);
+  if (isRed(h.left) && isRed(h.right)) flipColors(h);
+
+  return h;
+}`,
+        getHighlight: () => ({ line: 5, operation: 'loop' }),
+      },
+      python: {
+        language: 'python', displayName: 'Python',
+        code: `def insert_rb(h, val):
+    if not h: return RBNode(val, RED)
+    if val < h.val: h.left = insert_rb(h.left, val)
+    elif val > h.val: h.right = insert_rb(h.right, val)
+
+    if is_red(h.right) and not is_red(h.left): h = rotate_left(h)
+    if is_red(h.left) and is_red(h.left.left): h = rotate_right(h)
+    if is_red(h.left) and is_red(h.right): flip_colors(h)
+
+    return h`,
+        getHighlight: () => ({ line: 5, operation: 'loop' }),
+      },
+      cpp: {
+        language: 'cpp', displayName: 'C++',
+        code: `Node* insertRB(Node* h, int val) {
+    if (!h) return new Node(val, RED);
+    if (val < h->val) h->left = insertRB(h->left, val);
+    else if (val > h->val) h->right = insertRB(h->right, val);
+
+    if (isRed(h->right) && !isRed(h->left)) h = rotateLeft(h);
+    if (isRed(h->left) && isRed(h->left->left)) h = rotateRight(h);
+    if (isRed(h->left) && isRed(h->right)) flipColors(h);
+
+    return h;
+}`,
+        getHighlight: () => ({ line: 5, operation: 'loop' }),
+      },
+    },
+  },
 };
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -1222,7 +1470,17 @@ export function getAlgorithmCodeSnippet(
 ): CodeSnippet | null {
   const clean = (algorithmName || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 
-  for (const key of Object.keys(ALGORITHM_CODE_SNIPPETS)) {
+  if (ALGORITHM_CODE_SNIPPETS[clean]) {
+    return (
+      ALGORITHM_CODE_SNIPPETS[clean].languages[language] ??
+      ALGORITHM_CODE_SNIPPETS[clean].languages['typescript']
+    );
+  }
+
+  // Sort keys by length descending so longer keys like "binarysearchtree" (16) match before "binarysearch" (12)
+  const sortedKeys = Object.keys(ALGORITHM_CODE_SNIPPETS).sort((a, b) => b.length - a.length);
+
+  for (const key of sortedKeys) {
     if (clean.includes(key)) {
       return (
         ALGORITHM_CODE_SNIPPETS[key].languages[language] ??
@@ -1232,3 +1490,4 @@ export function getAlgorithmCodeSnippet(
   }
   return null;
 }
+
