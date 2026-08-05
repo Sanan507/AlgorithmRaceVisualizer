@@ -18,6 +18,8 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
+      - name: Run Spotless check
+        run: mvn -B spotless:check || { echo "Spotless check failed. Run 'mvn spotless:apply' inside backend directory locally, commit, and push."; exit 1; }
       - name: Run Checkstyle (fail on violations)
         run: mvn -B checkstyle:check
       - name: Generate Checkstyle report
