@@ -609,6 +609,7 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
           activeFrames={activeFramesMap}
           prevFrames={prevFramesMap}
           maxFrames={playback.maxFrames}
+          raceResponse={activeResponse}
         />
         <VisualizationLegend type="sorting" />
       </div>

@@ -583,6 +583,7 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
           activeFrames={activeFramesMap}
           prevFrames={prevFramesMap}
           maxFrames={playback.maxFrames}
+          raceResponse={response}
         />
         <VisualizationLegend type="pathfinding" />
       </div>
