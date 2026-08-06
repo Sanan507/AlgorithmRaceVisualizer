@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import type { CatalogResponse, SimulationFrame } from '../models/types';
+import type { RaceResponse } from '../models/types';
 import {
   getSortingMeta,
   getSearchingMeta,
   getPathfindingMeta,
 } from '../data/algorithmMetadata';
 import { PseudocodeViewer } from './PseudocodeViewer';
+import { Download } from 'lucide-react';
+import { exportRaceToCSV, exportRaceToJSON } from '../utils/exportTelemetry';
 
 interface AlgorithmComparisonCenterProps {
   algorithms: string[];
@@ -14,6 +17,7 @@ interface AlgorithmComparisonCenterProps {
   activeFrames?: Record<string, SimulationFrame | null> | null;
   prevFrames?: Record<string, SimulationFrame | null> | null;
   maxFrames?: number;
+  raceResponse?: RaceResponse | null;
 }
 
 export function AlgorithmComparisonCenter({
@@ -23,6 +27,7 @@ export function AlgorithmComparisonCenter({
   activeFrames,
   prevFrames,
   maxFrames,
+  raceResponse,
 }: AlgorithmComparisonCenterProps) {
   const [active, setActive] = useState(0);
   const alg = algorithms[active] ?? algorithms[0] ?? '';
@@ -68,9 +73,29 @@ export function AlgorithmComparisonCenter({
   return (
     <section className="panel compact algo-comparison-center">
       {/* Header */}
-      <div className="cmp-header" style={{ padding: '20px 24px 16px 24px' }}>
-        <div className="section-title">Algorithm Comparison Center</div>
-        <div className="cmp-subtitle">Multi-Language Code &amp; Algorithm Deep-Dive</div>
+      <div className="cmp-header" style={{ padding: '20px 24px 16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <div className="section-title">Algorithm Comparison Center</div>
+          <div className="cmp-subtitle">Multi-Language Code &amp; Algorithm Deep-Dive</div>
+        </div>
+        {raceResponse && (
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              className="btn btn-secondary"
+              onClick={() => exportRaceToCSV(raceResponse)}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', padding: '6px 12px' }}
+            >
+              <Download size={16} /> Export CSV
+            </button>
+            <button
+              className="btn btn-secondary"
+              onClick={() => exportRaceToJSON(raceResponse)}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', padding: '6px 12px' }}
+            >
+              <Download size={16} /> Export JSON
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="algo-tab-section" style={{ padding: '0 24px 24px 24px' }}>
