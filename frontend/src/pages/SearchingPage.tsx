@@ -644,7 +644,6 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
           activeFrames={activeFramesMap}
           prevFrames={prevFramesMap}
           maxFrames={playback.maxFrames}
-          raceResponse={activeResponse}
         />
         <VisualizationLegend type="searching" />
       </div>
