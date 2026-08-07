@@ -35,6 +35,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
 
   const { play } = useAudio();
   const winnerAnnouncedRef = useRef(false);
+  const hasStartedPlaybackRef = useRef(false);
   const requestIdRef = useRef(0);
   const initialized = useRef(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -189,6 +190,11 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
       const requestId = ++requestIdRef.current;
       setLoading(true);
       winnerAnnouncedRef.current = false;
+      if (autoplay) {
+        hasStartedPlaybackRef.current = true;
+      } else {
+        hasStartedPlaybackRef.current = false;
+      }
       const useTarget = customTarget ?? target;
       const useAlgos = customAlgos ?? algorithms;
       const useDataset = overrideDataset ?? dataset;
@@ -247,20 +253,23 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
            newSize = urlSize;
            setSize(urlSize);
         }
-        if (urlMode) {
-           if (urlMode === 'Custom' && params.cArray) {
-             setIsCustomMode(true);
-             setCustomArrayStr(params.cArray);
-             const parsed = parseCustomArrayInput(params.cArray);
-             setDataset(parsed);
+        if (params.cArray) {
+          setIsCustomMode(true);
+          setCustomArrayStr(params.cArray);
+          const parsed = parseCustomArrayInput(params.cArray);
+          setDataset(parsed);
+          if (parsed.length > 0) newSize = parsed.length;
+          if (params.target !== undefined) {
+            newTarget = params.target;
+            setTarget(params.target);
+          }
 
-             const url = new URL(window.location.href);
-             url.search = '';
-             window.history.replaceState(null, '', url.href);
+          const url = new URL(window.location.href);
+          url.search = '';
+          window.history.replaceState(null, '', url.href);
 
-             fetchSimulation(true, false, newTarget, newAlgos, newSize, parsed);
-             return;
-           }
+          fetchSimulation(true, false, newTarget, newAlgos, newSize, parsed);
+          return;
         }
 
         const url = new URL(window.location.href);
@@ -318,11 +327,13 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
 
     if (hasFreshDataset && activeResponse) {
       winnerAnnouncedRef.current = false;
+      hasStartedPlaybackRef.current = true;
       play('start');
       playback.reset();
       playback.setPlaying(true);
       setHasFreshDataset(false);
     } else {
+      hasStartedPlaybackRef.current = true;
       await fetchSimulation(true, true);
       setHasFreshDataset(false);
     }
@@ -449,8 +460,11 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
   const winnerLane = activeResponse?.lanes.find((l) => l.name === activeResponse.winner);
 
   useEffect(() => {
-    if (isCompleted && activeResponse && !winnerAnnouncedRef.current) {
+    if (isCompleted && activeResponse && hasStartedPlaybackRef.current && !winnerAnnouncedRef.current) {
       winnerAnnouncedRef.current = true;
+      hasStartedPlaybackRef.current = false;
+
+      const datasetArrayStr = activeResponse.dataset ? activeResponse.dataset.join(',') : undefined;
 
       appendHistory({
         id: Date.now().toString(),
@@ -458,10 +472,21 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
         arenaType: 'searching',
         winner: activeResponse.winner || 'Tie',
         datasetSize: size,
+        datasetType: isCustomMode ? 'Custom' : 'Sorted List',
+        targetValue: target,
+        replayParams: {
+          page: 'searching',
+          algos: algorithms.join(','),
+          mode: 'Custom',
+          cArray: datasetArrayStr || '',
+          target: target.toString(),
+          size: (activeResponse.dataset?.length || size).toString()
+        },
         lanes: activeResponse.lanes.map(l => ({
           name: l.name,
           comparisons: l.stats.comparisons,
-          timeMs: l.stats.timeMs
+          timeMs: l.stats.timeMs,
+          found: l.stats.found
         }))
       });
 
@@ -471,7 +496,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
         setTimeout(() => play('raceComplete'), 120);
       }
     }
-  }, [isCompleted, activeResponse, play]);
+  }, [isCompleted, activeResponse, play, size, isCustomMode, target, algorithms]);
 
   return (
     <main className="page">

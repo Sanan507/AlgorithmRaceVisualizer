@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import type { CatalogResponse } from '../models/types';
 import { 
   Trophy, 
@@ -15,9 +15,23 @@ import {
   ArrowRight,
   Sparkles,
   Info,
-  Trash2
+  Trash2,
+  Download,
+  Upload,
+  BarChart2,
+  X,
+  Play,
+  RotateCcw
 } from 'lucide-react';
-import { getHistory, clearHistory, type RaceHistoryEntry, type ArenaType } from '../utils/historyStorage';
+import { 
+  getHistory, 
+  clearHistory, 
+  exportHistoryToJSON, 
+  exportHistoryToCSV, 
+  importHistoryFromJSON, 
+  type RaceHistoryEntry, 
+  type ArenaType 
+} from '../utils/historyStorage';
 
 interface AlgoMeta {
   name: string;
@@ -172,8 +186,8 @@ const algoDatabase: Record<string, AlgoMeta> = {
     stability: 'Unstable',
     speedRank: 'Moderate',
     memoryRank: 'Minimal',
-    recommendedUse: 'Improves on Insertion Sort by comparing and shifting elements at a shrinking gap, useful for medium-sized datasets where O(N²) algorithms become too slow but full O(N log N) overhead is unnecessary.',
-    realWorldApp: 'Embedded systems and libraries needing a simple, low-memory sort that outperforms Insertion Sort without requiring extra allocation.',
+    recommendedUse: 'Improves on Insertion Sort by comparing and shifting elements at a shrinking gap.',
+    realWorldApp: 'Embedded systems and low-memory sorting libraries.',
     appDescription: 'Embedded systems and low-memory sorting libraries.'
   },
   'Cocktail Sort': {
@@ -186,9 +200,9 @@ const algoDatabase: Record<string, AlgoMeta> = {
     stability: 'Stable',
     speedRank: 'Slow',
     memoryRank: 'Minimal',
-    recommendedUse: 'Bidirectional variant of Bubble Sort that traverses the list in alternate directions. Fixes the turtle problem where small elements at the end move very slowly.',
-    realWorldApp: 'Educational algorithm design, teaching bidirectional list traversal, and nearly-sorted arrays.',
-    appDescription: 'Bidirectional array sorting and teaching.'
+    recommendedUse: 'Bidirectional variant of Bubble Sort.',
+    realWorldApp: 'Educational algorithm design.',
+    appDescription: 'Bidirectional array sorting.'
   },
   'Cocktail Shaker Sort': {
     name: 'Cocktail Shaker Sort',
@@ -200,9 +214,9 @@ const algoDatabase: Record<string, AlgoMeta> = {
     stability: 'Stable',
     speedRank: 'Slow',
     memoryRank: 'Minimal',
-    recommendedUse: 'Bidirectional variant of Bubble Sort that traverses the list in alternate directions. Fixes the turtle problem where small elements at the end move very slowly.',
-    realWorldApp: 'Educational algorithm design, teaching bidirectional list traversal, and nearly-sorted arrays.',
-    appDescription: 'Bidirectional array sorting and teaching.'
+    recommendedUse: 'Bidirectional variant of Bubble Sort.',
+    realWorldApp: 'Educational algorithm design.',
+    appDescription: 'Bidirectional array sorting.'
   },
   // Searching
   'Linear Search': {
@@ -215,8 +229,8 @@ const algoDatabase: Record<string, AlgoMeta> = {
     stability: 'N/A',
     speedRank: 'Slow',
     memoryRank: 'Minimal',
-    recommendedUse: 'Unsorted arrays, small collections, or list checks that are executed infrequently.',
-    realWorldApp: 'Boot-up checks, linear settings parses, or scanning key-value configuration values.',
+    recommendedUse: 'Unsorted arrays or small collections.',
+    realWorldApp: 'Boot-up checks, linear settings parses.',
     appDescription: 'Boot up configuration parses.'
   },
   'Binary Search': {
@@ -229,8 +243,8 @@ const algoDatabase: Record<string, AlgoMeta> = {
     stability: 'N/A',
     speedRank: 'Elite',
     memoryRank: 'Minimal',
-    recommendedUse: 'Searching in pre-sorted datasets. An absolute necessity for high-frequency search arrays.',
-    realWorldApp: 'Database indexing (B-Tree searches), Git bisection tool, and IP address routing table matches.',
+    recommendedUse: 'Searching in pre-sorted datasets.',
+    realWorldApp: 'Database indexing, Git bisection, IP routing.',
     appDescription: 'B-Tree database index lookups.'
   },
   'Jump Search': {
@@ -243,8 +257,8 @@ const algoDatabase: Record<string, AlgoMeta> = {
     stability: 'N/A',
     speedRank: 'Moderate',
     memoryRank: 'Minimal',
-    recommendedUse: 'Sorted arrays where moving backward in memory is expensive (e.g. tape drives or disk block reads).',
-    realWorldApp: 'Block lookup on physical sequential disks or hardware registers backing streaming data.',
+    recommendedUse: 'Sorted arrays where backward memory navigation is costly.',
+    realWorldApp: 'Block lookup on physical sequential disks.',
     appDescription: 'Block sequential read controllers.'
   },
   'Exponential Search': {
@@ -257,8 +271,8 @@ const algoDatabase: Record<string, AlgoMeta> = {
     stability: 'N/A',
     speedRank: 'Fast',
     memoryRank: 'Minimal',
-    recommendedUse: 'Unbounded or infinite sorted arrays, or when searching for items close to the start of a large sorted list.',
-    realWorldApp: 'Streaming search logs, infinite list lookups, and bounded search range determination.',
+    recommendedUse: 'Unbounded arrays or items close to start.',
+    realWorldApp: 'Streaming search logs, infinite list lookups.',
     appDescription: 'Streaming search logs and unbounded array queries.'
   },
   'Interpolation Search': {
@@ -271,9 +285,9 @@ const algoDatabase: Record<string, AlgoMeta> = {
     stability: 'N/A',
     speedRank: 'Elite',
     memoryRank: 'Minimal',
-    recommendedUse: 'Uniformly distributed sorted data (e.g. phonebooks, numerical timestamps).',
-    realWorldApp: 'Phonebook directory lookups, uniformly distributed database keys, and index range estimations.',
-    appDescription: 'Uniformly distributed key lookups in disk indexes.'
+    recommendedUse: 'Uniformly distributed sorted data.',
+    realWorldApp: 'Phonebook directory lookups.',
+    appDescription: 'Uniformly distributed key lookups.'
   },
   // Pathfinding
   'BFS': {
@@ -286,8 +300,8 @@ const algoDatabase: Record<string, AlgoMeta> = {
     stability: 'N/A',
     speedRank: 'Moderate',
     memoryRank: 'High',
-    recommendedUse: 'Finding the shortest path on unweighted graphs, or searching layer-by-layer.',
-    realWorldApp: 'Social networks (Bacon number, peer connections), network packet broadcasting, and P2P trackers.',
+    recommendedUse: 'Shortest path on unweighted graphs.',
+    realWorldApp: 'Social networks, network broadcasting.',
     appDescription: 'Social networks connection paths.'
   },
   'DFS': {
@@ -298,85 +312,56 @@ const algoDatabase: Record<string, AlgoMeta> = {
     worst: 'O(V + E)',
     space: 'O(V)',
     stability: 'N/A',
-    speedRank: 'Moderate',
+    speedRank: 'Slow',
     memoryRank: 'Medium',
-    recommendedUse: 'Solving mazes, checking for cycles in graphs, topological sorting, or evaluating game trees.',
-    realWorldApp: 'Compiler optimization routines (flow parsing) and chess engines evaluating move branches.',
-    appDescription: 'Compiler flow parse and chess game AI.'
+    recommendedUse: 'Maze generation, topological sort, connectivity.',
+    realWorldApp: 'Cycle detection in dependency graphs.',
+    appDescription: 'Dependency graph cycle analysis.'
   },
   'Dijkstra': {
     name: 'Dijkstra',
     category: 'Pathfinding',
     best: 'O(V log V + E)',
-    average: 'O((V + E) log V)',
-    worst: 'O((V + E) log V)',
+    average: 'O(E log V)',
+    worst: 'O(E log V)',
     space: 'O(V)',
     stability: 'N/A',
     speedRank: 'Fast',
     memoryRank: 'High',
-    recommendedUse: 'Finding the absolute shortest path on weighted graphs with non-negative weights.',
-    realWorldApp: 'Network routing protocol OSPF (Open Shortest Path First) and flight ticket connection engines.',
-    appDescription: 'Router packet routing protocols.'
+    recommendedUse: 'Shortest path on non-negatively weighted graphs.',
+    realWorldApp: 'OSPF network routing protocol.',
+    appDescription: 'OSPF network routing protocol.'
   },
   'A* Search': {
     name: 'A* Search',
     category: 'Pathfinding',
-    best: 'O(1) / O(E)',
-    average: 'O(b^d)',
-    worst: 'O(V + E)',
+    best: 'O(1)',
+    average: 'O(E)',
+    worst: 'O(V)',
     space: 'O(V)',
     stability: 'N/A',
     speedRank: 'Elite',
     memoryRank: 'High',
-    recommendedUse: 'Coordinate-based map navigation and pathfinding in video games or mobile maps.',
-    realWorldApp: 'GPS systems calculating physical driving routes, video game AI character movement (e.g. StarCraft, RTS games).',
-    appDescription: 'GPS vehicle navigation and game map navigation.'
+    recommendedUse: 'Targeted pathfinding using distance heuristic.',
+    realWorldApp: 'Game AI pathfinding, GPS navigation.',
+    appDescription: 'Game AI pathfinding & GPS routing.'
   },
   'Bellman-Ford': {
     name: 'Bellman-Ford',
     category: 'Pathfinding',
-    best: 'O(V·E)',
+    best: 'O(E)',
     average: 'O(V·E)',
     worst: 'O(V·E)',
     space: 'O(V)',
     stability: 'N/A',
     speedRank: 'Slow',
     memoryRank: 'Medium',
-    recommendedUse: 'Graphs containing negative edge weights or requiring detection of negative weight cycles.',
-    realWorldApp: 'Distance Vector Routing protocols (RIP - Routing Information Protocol) and financial arbitrage detection.',
-    appDescription: 'Network RIP protocols and financial currency arbitrage engines.'
-  },
-  'Greedy Best-First': {
-    name: 'Greedy Best-First',
-    category: 'Pathfinding',
-    best: 'O(1) / O(b^m)',
-    average: 'O(b^m)',
-    worst: 'O(b^m)',
-    space: 'O(b^m)',
-    stability: 'N/A',
-    speedRank: 'Elite',
-    memoryRank: 'Medium',
-    recommendedUse: 'When speed is more important than finding the absolute shortest path, and an accurate heuristic to the target is available.',
-    realWorldApp: 'Video game AI movement toward targets when obstacles are sparse, initial route drafts in map systems.',
-    appDescription: 'Game AI pathing and rapid approximate route draft engines.'
-  },
-  'Bidirectional BFS': {
-    name: 'Bidirectional BFS',
-    category: 'Pathfinding',
-    best: 'O(b^(d/2))',
-    average: 'O(b^(d/2))',
-    worst: 'O(b^(d/2))',
-    space: 'O(b^(d/2))',
-    stability: 'N/A',
-    speedRank: 'Elite',
-    memoryRank: 'High',
-    recommendedUse: 'Finding shortest paths on unweighted graphs when both start and target nodes are known, reducing search space exponentially.',
-    realWorldApp: 'Six degrees of separation social network queries, friend-of-a-friend graphs, and bidirectional puzzle solvers (e.g. Rubik\'s cube).',
-    appDescription: 'Social graph connection paths and bidirectional puzzle solvers.'
+    recommendedUse: 'Graphs containing negative edge weights.',
+    realWorldApp: 'Distance-vector routing protocols (RIP).',
+    appDescription: 'RIP network distance-vector routing.'
   }
 };
 
-// Normalized name mapping because backend can return BFS, DFS, Dijkstra, A* Search
 const getNormalizedName = (name: string): string => {
   if (name === 'A*') return 'A* Search';
   return name;
@@ -388,19 +373,120 @@ export function HistoryPage({ catalog }: { catalog: CatalogResponse }) {
 
   const [historyEntries, setHistoryEntries] = useState<RaceHistoryEntry[]>([]);
   const [historyFilter, setHistoryFilter] = useState<'all' | ArenaType>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'datasetSize'>('newest');
+  
+  const [selectedEntryModal, setSelectedEntryModal] = useState<RaceHistoryEntry | null>(null);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const reloadHistory = () => {
+    setHistoryEntries(getHistory());
+  };
 
   useEffect(() => {
-    setHistoryEntries(getHistory().reverse());
+    reloadHistory();
   }, []);
 
   const handleClearHistory = () => {
     clearHistory();
     setHistoryEntries([]);
+    setShowClearConfirm(false);
   };
 
-  const filteredHistory = historyEntries.filter(entry =>
-    historyFilter === 'all' || entry.arenaType === historyFilter
-  );
+  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      if (text && importHistoryFromJSON(text)) {
+        reloadHistory();
+      } else {
+        alert('Failed to parse history JSON file.');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  // Analytics KPIs computed from historyEntries
+  const analyticsKPIs = useMemo(() => {
+    const totalRaces = historyEntries.length;
+
+    const winnerCounts: Record<string, number> = {};
+    const arenaCounts: Record<string, number> = {};
+    let totalDataset = 0;
+    let datasetCount = 0;
+
+    historyEntries.forEach(entry => {
+      if (entry.winner && entry.winner !== 'Tie') {
+        winnerCounts[entry.winner] = (winnerCounts[entry.winner] || 0) + 1;
+      }
+      arenaCounts[entry.arenaType] = (arenaCounts[entry.arenaType] || 0) + 1;
+      if (entry.datasetSize > 0) {
+        totalDataset += entry.datasetSize;
+        datasetCount++;
+      }
+    });
+
+    let topWinner = 'N/A';
+    let maxWins = 0;
+    Object.entries(winnerCounts).forEach(([name, count]) => {
+      if (count > maxWins) {
+        maxWins = count;
+        topWinner = name;
+      }
+    });
+
+    let topArena = 'Sorting';
+    let maxArenaCount = 0;
+    Object.entries(arenaCounts).forEach(([arena, count]) => {
+      if (count > maxArenaCount) {
+        maxArenaCount = count;
+        topArena = arena;
+      }
+    });
+
+    const avgDataset = datasetCount > 0 ? Math.round(totalDataset / datasetCount) : 0;
+
+    return {
+      totalRaces,
+      topWinner,
+      maxWins,
+      avgDataset,
+      topArena: topArena.charAt(0).toUpperCase() + topArena.slice(1)
+    };
+  }, [historyEntries]);
+
+  // Filtered & Sorted History
+  const processedHistory = useMemo(() => {
+    let result = historyEntries.filter(entry => {
+      const matchesArena = historyFilter === 'all' || entry.arenaType === historyFilter;
+      const query = searchQuery.toLowerCase().trim();
+      const matchesSearch = !query || 
+        entry.winner.toLowerCase().includes(query) ||
+        entry.arenaType.toLowerCase().includes(query) ||
+        (entry.datasetType && entry.datasetType.toLowerCase().includes(query)) ||
+        entry.lanes.some(l => l.name.toLowerCase().includes(query));
+      return matchesArena && matchesSearch;
+    });
+
+    result = [...result].sort((a, b) => {
+      if (sortOrder === 'newest') {
+        return new Date(b.date).getTime() - new Date(a.date).getTime();
+      }
+      if (sortOrder === 'oldest') {
+        return new Date(a.date).getTime() - new Date(b.date).getTime();
+      }
+      if (sortOrder === 'datasetSize') {
+        return b.datasetSize - a.datasetSize;
+      }
+      return 0;
+    });
+
+    return result;
+  }, [historyEntries, historyFilter, searchQuery, sortOrder]);
 
   const selectedData = algoDatabase[getNormalizedName(selectedAlgo)] || algoDatabase['Quick Sort'];
 
@@ -447,138 +533,295 @@ export function HistoryPage({ catalog }: { catalog: CatalogResponse }) {
     }
   };
 
+  const handleReplayRace = (entry: RaceHistoryEntry) => {
+    if (!entry.replayParams) {
+      window.location.hash = `#/${entry.arenaType}`;
+      return;
+    }
+    const params = new URLSearchParams(entry.replayParams);
+    window.location.href = `/?${params.toString()}#/${entry.arenaType}`;
+  };
+
   return (
     <main className="page">
       <header className="page-header">
         <div>
-          <h1>Algorithm Benchmarks</h1>
-          <p>Comprehensive pedagogical analysis, complexity indices, and real-world execution metrics.</p>
+          <h1 style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <BarChart2 className="text-primary" size={32} />
+            Benchmark & Performance Analytics Center
+          </h1>
+          <p>Real-time persistent session logs, comparative metric breakdowns, and theoretical algorithm performance matrices.</p>
         </div>
       </header>
 
-      <div className="benchmarks-container">
-        {/* Interactive Algorithm Explorer */}
-        <section className="panel" style={{ padding: '28px' }}>
-          <div className="section-title">Interactive Algorithm Explorer</div>
-          
-          <div className="benchmarks-explorer">
-            {/* Sidebar List */}
-            <div className="algo-sidebar-panel">
-              <div className="algo-sidebar-group">
-                <h5>Sorting</h5>
-                {(catalog?.sortingAlgorithms ?? []).map((name) => (
-                  <button
-                    key={name}
-                    className={`algo-selector-btn ${selectedAlgo === name ? 'active' : ''}`}
-                    onClick={() => setSelectedAlgo(name)}
-                  >
-                    <span>{name}</span>
-                    <ArrowRight size={14} className="icon-muted" style={{ opacity: selectedAlgo === name ? 1 : 0.4 }} />
-                  </button>
-                ))}
-              </div>
+      <div className="page-body">
+        {/* Session Analytics KPI Cards */}
+        <section className="analytics-kpi-grid">
+          <div className="analytics-kpi-card">
+            <div className="analytics-kpi-icon-box blue">
+              <Zap size={24} />
+            </div>
+            <div>
+              <div className="analytics-kpi-val">{analyticsKPIs.totalRaces}</div>
+              <div className="analytics-kpi-label">Total Races Recorded</div>
+            </div>
+          </div>
 
-              <div className="algo-sidebar-group">
-                <h5>Searching</h5>
-                {(catalog?.searchingAlgorithms ?? []).map((name) => (
-                  <button
-                    key={name}
-                    className={`algo-selector-btn ${selectedAlgo === name ? 'active' : ''}`}
-                    onClick={() => setSelectedAlgo(name)}
-                  >
-                    <span>{name}</span>
-                    <ArrowRight size={14} className="icon-muted" style={{ opacity: selectedAlgo === name ? 1 : 0.4 }} />
-                  </button>
-                ))}
-              </div>
-
-              <div className="algo-sidebar-group">
-                <h5>Pathfinding</h5>
-                {(catalog?.pathfindingAlgorithms ?? []).map((name) => (
-                  <button
-                    key={name}
-                    className={`algo-selector-btn ${selectedAlgo === name ? 'active' : ''}`}
-                    onClick={() => setSelectedAlgo(name)}
-                  >
-                    <span>{name === 'A*' ? 'A* Search' : name}</span>
-                    <ArrowRight size={14} className="icon-muted" style={{ opacity: selectedAlgo === name ? 1 : 0.4 }} />
-                  </button>
-                ))}
+          <div className="analytics-kpi-card">
+            <div className="analytics-kpi-icon-box gold">
+              <Trophy size={24} />
+            </div>
+            <div>
+              <div className="analytics-kpi-val">{analyticsKPIs.topWinner}</div>
+              <div className="analytics-kpi-label">
+                Most Dominant ({analyticsKPIs.maxWins} {analyticsKPIs.maxWins === 1 ? 'Win' : 'Wins'})
               </div>
             </div>
+          </div>
 
-            {/* Profile Card */}
-            <div className="panel algo-details-panel">
-              <div className="algo-details-header">
-                <div>
-                  <span className="algo-badge category">{selectedData.category}</span>
-                  <h2 style={{ marginTop: '8px' }}>{selectedData.name}</h2>
-                  <div className="algo-details-badges">
-                    <span className={getRankBadgeClass(selectedData.speedRank)}>Speed: {selectedData.speedRank}</span>
-                    <span className={getRankBadgeClass(selectedData.memoryRank)}>Memory: {selectedData.memoryRank}</span>
-                    <span className={getRankBadgeClass(selectedData.stability)}>Stability: {selectedData.stability}</span>
-                  </div>
-                </div>
+          <div className="analytics-kpi-card">
+            <div className="analytics-kpi-icon-box purple">
+              <Layers size={24} />
+            </div>
+            <div>
+              <div className="analytics-kpi-val">{analyticsKPIs.avgDataset}</div>
+              <div className="analytics-kpi-label">Avg Dataset Size</div>
+            </div>
+          </div>
 
-                <div className="algo-metric-meter-container">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--muted)', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase' }}>
-                    <Flame size={14} /> Complexity Profile
-                  </div>
-                  <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--accent-2)', fontFamily: 'ui-monospace, SFMono-Regular, monospace', marginTop: '4px' }}>
-                    {selectedData.average}
-                  </div>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>Average Case Time</span>
-                </div>
-              </div>
-
-              <div className="algo-details-body">
-                {/* Complexity Grid */}
-                <div className="algo-detail-section">
-                  <h4><Layers size={14} /> Complexity Matrix</h4>
-                  <div className="complexity-grid" style={{ margin: '8px 0 0 0' }}>
-                    <span>
-                      Best Case Time
-                      <strong>{selectedData.best}</strong>
-                    </span>
-                    <span>
-                      Average Case Time
-                      <strong>{selectedData.average}</strong>
-                    </span>
-                    <span>
-                      Worst Case Time
-                      <strong>{selectedData.worst}</strong>
-                    </span>
-                    <span>
-                      Space Complexity
-                      <strong>{selectedData.space}</strong>
-                    </span>
-                  </div>
-                </div>
-
-                {/* Recommended Use Case */}
-                <div className="algo-detail-section">
-                  <h4><Zap size={14} /> Recommended Use Cases</h4>
-                  <p>{selectedData.recommendedUse}</p>
-                </div>
-
-                {/* Real World Application */}
-                <div className="algo-detail-section" style={{ background: 'var(--panel-2)', padding: '16px 20px', borderRadius: '12px', border: '1px solid var(--line)' }}>
-                  <h4 style={{ color: 'var(--accent-2)' }}><Sparkles size={14} /> Practical Industry Application</h4>
-                  <strong style={{ fontSize: '0.98rem', display: 'block', margin: '6px 0 4px 0', color: 'var(--text)' }}>
-                    {selectedData.realWorldApp}
-                  </strong>
-                  <p style={{ fontSize: '0.88rem', color: 'var(--muted)' }}>{selectedData.recommendedUse}</p>
-                </div>
-              </div>
+          <div className="analytics-kpi-card">
+            <div className="analytics-kpi-icon-box green">
+              <Cpu size={24} />
+            </div>
+            <div>
+              <div className="analytics-kpi-val">{analyticsKPIs.topArena}</div>
+              <div className="analytics-kpi-label">Most Active Arena</div>
             </div>
           </div>
         </section>
 
-        {/* Algorithm Rankings */}
+        {/* Persistent Race Session History & Log Hub */}
+        <section className="panel" style={{ padding: '28px', marginBottom: '32px' }}>
+          <div className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <Clock size={20} className="text-primary" /> Persistent Race Session History
+            </span>
+
+            <div className="history-actions-group">
+              <button className="btn btn-secondary btn-sm" onClick={exportHistoryToCSV} title="Export History as CSV">
+                <Download size={14} /> CSV
+              </button>
+              <button className="btn btn-secondary btn-sm" onClick={exportHistoryToJSON} title="Export History as JSON">
+                <Download size={14} /> JSON
+              </button>
+              <button className="btn btn-secondary btn-sm" onClick={() => fileInputRef.current?.click()} title="Import JSON History">
+                <Upload size={14} /> Import
+              </button>
+              <input type="file" ref={fileInputRef} onChange={handleImportFile} accept=".json" style={{ display: 'none' }} />
+              
+              <button 
+                className="btn btn-secondary btn-sm" 
+                style={{ color: '#ef4444', borderColor: '#ef4444' }} 
+                onClick={() => setShowClearConfirm(true)}
+              >
+                <Trash2 size={14} /> Clear
+              </button>
+            </div>
+          </div>
+
+          {/* Filter & Search Bar */}
+          <div className="history-filters-bar">
+            <div className="history-pills-group">
+              {(['all', 'sorting', 'searching', 'pathfinding'] as const).map(type => (
+                <button
+                  key={type}
+                  className={`history-pill-btn ${historyFilter === type ? 'active' : ''}`}
+                  onClick={() => setHistoryFilter(type)}
+                >
+                  {type === 'all' ? 'All Arenas' : type.charAt(0).toUpperCase() + type.slice(1)}
+                </button>
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              <div style={{ position: 'relative' }}>
+                <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }} />
+                <input
+                  type="text"
+                  placeholder="Search history..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{
+                    padding: '6px 12px 6px 32px',
+                    fontSize: '0.85rem',
+                    borderRadius: '6px',
+                    background: 'var(--panel)',
+                    border: '1px solid var(--line)',
+                    color: 'var(--text)',
+                    width: '180px'
+                  }}
+                />
+              </div>
+
+              <select
+                className="select-dropdown"
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value as any)}
+                style={{ padding: '6px 12px', fontSize: '0.85rem' }}
+              >
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="datasetSize">Dataset Size</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Clear History Confirmation Modal */}
+          {showClearConfirm && (
+            <div className="history-modal-overlay">
+              <div className="history-modal-content" style={{ maxWidth: '400px', textAlign: 'center' }}>
+                <h3 style={{ marginBottom: '12px', color: '#ef4444' }}>Clear Session History?</h3>
+                <p style={{ color: 'var(--muted)', fontSize: '0.9rem', marginBottom: '24px' }}>
+                  This action will permanently remove all persistent benchmark session records from local storage.
+                </p>
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                  <button className="btn btn-secondary" onClick={() => setShowClearConfirm(false)}>Cancel</button>
+                  <button className="btn btn-primary" style={{ background: '#ef4444' }} onClick={handleClearHistory}>Confirm Clear</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {processedHistory.length === 0 ? (
+            <div style={{ padding: '40px', textAlign: 'center', color: 'var(--muted)' }}>
+              No race history matches the current filters. Run algorithms in the arenas to record session benchmarks!
+            </div>
+          ) : (
+            <div className="matrix-list">
+              <div className="matrix-row matrix-header" style={{ gridTemplateColumns: '1.2fr 1fr 1.2fr 1.5fr 1fr' }}>
+                <strong>Date & Time</strong>
+                <span>Arena Type</span>
+                <span>Dataset / Target</span>
+                <span>Winner</span>
+                <span>Actions</span>
+              </div>
+              {processedHistory.map((entry) => (
+                <div className="matrix-row" key={entry.id} style={{ gridTemplateColumns: '1.2fr 1fr 1.2fr 1.5fr 1fr' }}>
+                  <strong>{new Date(entry.date).toLocaleString()}</strong>
+                  <span style={{ textTransform: 'capitalize' }}>{entry.arenaType}</span>
+                  <span>
+                    {entry.arenaType === 'pathfinding' ? 'Grid (18x28)' : `${entry.datasetSize} items`}
+                    {entry.targetValue !== undefined && ` (Target: ${entry.targetValue})`}
+                  </span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Trophy size={14} color={entry.winner === 'Tie' ? 'gray' : 'gold'} />
+                    <strong>{entry.winner}</strong>
+                  </span>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => setSelectedEntryModal(entry)}
+                      title="Inspect Detailed Standings & Chart"
+                    >
+                      <Info size={14} /> Details
+                    </button>
+                    <button
+                      className="btn btn-primary btn-sm"
+                      onClick={() => handleReplayRace(entry)}
+                      title="Race again with the exact same dataset configuration"
+                    >
+                      <RotateCcw size={14} /> Rematch
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Detailed History Inspector Modal */}
+        {selectedEntryModal && (
+          <div className="history-modal-overlay" onClick={() => setSelectedEntryModal(null)}>
+            <div className="history-modal-content" onClick={(e) => e.stopPropagation()}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <Trophy size={20} className="text-amber-400" />
+                  Race Session Breakdown
+                </h3>
+                <button
+                  style={{ background: 'transparent', border: 0, color: 'var(--muted)', cursor: 'pointer' }}
+                  onClick={() => setSelectedEntryModal(null)}
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div style={{ background: 'var(--panel-2)', padding: '14px', borderRadius: '10px', marginBottom: '20px', fontSize: '0.9rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  <div><strong>Arena:</strong> <span style={{ textTransform: 'capitalize' }}>{selectedEntryModal.arenaType}</span></div>
+                  <div><strong>Date:</strong> {new Date(selectedEntryModal.date).toLocaleString()}</div>
+                  <div><strong>Dataset Type:</strong> {selectedEntryModal.datasetType || 'Standard'}</div>
+                  <div><strong>Dataset Size:</strong> {selectedEntryModal.datasetSize || '18x28 Grid'}</div>
+                  {selectedEntryModal.targetValue !== undefined && <div><strong>Search Target:</strong> {selectedEntryModal.targetValue}</div>}
+                  {selectedEntryModal.pathCost !== undefined && <div><strong>Path Cost:</strong> {selectedEntryModal.pathCost}</div>}
+                </div>
+              </div>
+
+              <h4>Ranked Standings Podium</h4>
+              <div className="history-podium-grid">
+                {selectedEntryModal.lanes.map((lane, idx) => (
+                  <div key={lane.name} className={`history-podium-card ${idx === 0 ? 'rank-1' : ''}`}>
+                    <div className="history-podium-badge">
+                      {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`}
+                    </div>
+                    <div className="history-podium-name">{lane.name}</div>
+                    <div className="history-podium-stats">
+                      {lane.comparisons > 0 && <div>Comparisons: {lane.comparisons.toLocaleString()}</div>}
+                      {lane.swaps !== undefined && <div>Swaps: {lane.swaps.toLocaleString()}</div>}
+                      {lane.steps !== undefined && <div>Steps: {lane.steps.toLocaleString()}</div>}
+                      <div style={{ color: 'var(--primary)', marginTop: '4px' }}>Time: {lane.timeMs}ms</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <h4 style={{ marginTop: '24px' }}>Execution Time Comparison (ms)</h4>
+              <div className="history-bar-chart">
+                {(() => {
+                  const maxTime = Math.max(...selectedEntryModal.lanes.map(l => l.timeMs), 1);
+                  return selectedEntryModal.lanes.map((lane, idx) => {
+                    const widthPct = Math.max(8, Math.min(100, (lane.timeMs / maxTime) * 100));
+                    return (
+                      <div className="history-bar-row" key={lane.name}>
+                        <div className="history-bar-label">{lane.name}</div>
+                        <div className="history-bar-track">
+                          <div
+                            className={`history-bar-fill ${idx === 0 ? 'rank-1' : ''}`}
+                            style={{ width: `${widthPct}%` }}
+                          />
+                        </div>
+                        <div className="history-bar-value">{lane.timeMs} ms</div>
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+
+              <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                <button className="btn btn-secondary" onClick={() => setSelectedEntryModal(null)}>Close</button>
+                <button className="btn btn-primary" onClick={() => handleReplayRace(selectedEntryModal)}>
+                  <RotateCcw size={16} /> Race Again (Rematch)
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Theoretical Rankings & Matrices */}
         <section className="rankings-grid">
           <article className="panel ranking-card">
             <div className="section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Flame size={16} /> Speed Performance
+              <Flame size={16} /> Speed & Efficiency Spectrum
             </div>
             <div className="ranking-ordered-list">
               {speedRankings.map((item, idx) => (
@@ -596,7 +839,7 @@ export function HistoryPage({ catalog }: { catalog: CatalogResponse }) {
 
           <article className="panel ranking-card">
             <div className="section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Cpu size={16} /> Memory Efficiency
+              <Cpu size={16} /> Auxiliary Memory Overhead
             </div>
             <div className="ranking-ordered-list">
               {memoryRankings.map((item, idx) => (
@@ -710,59 +953,6 @@ export function HistoryPage({ catalog }: { catalog: CatalogResponse }) {
           </div>
         </section>
 
-        {/* Persistent Race Session History */}
-        <section className="panel" style={{ padding: '28px' }}>
-          <div className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>Persistent Race Session History</span>
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-              <select
-                className="select-dropdown"
-                value={historyFilter}
-                onChange={(e) => setHistoryFilter(e.target.value as 'all' | ArenaType)}
-                style={{ padding: '4px 12px', fontSize: '0.9rem' }}
-              >
-                <option value="all">All Arenas</option>
-                <option value="sorting">Sorting</option>
-                <option value="searching">Searching</option>
-                <option value="pathfinding">Pathfinding</option>
-              </select>
-              <button
-                className="btn btn-secondary"
-                style={{ display: 'flex', gap: '6px', alignItems: 'center', padding: '6px 12px', color: '#ff4444', borderColor: '#ff4444' }}
-                onClick={handleClearHistory}
-              >
-                <Trash2 size={16} /> Clear History
-              </button>
-            </div>
-          </div>
-
-          {filteredHistory.length === 0 ? (
-            <div style={{ padding: '40px', textAlign: 'center', color: 'var(--muted)' }}>
-              No race history available. Run some algorithms in the arenas to generate history!
-            </div>
-          ) : (
-            <div className="matrix-list">
-              <div className="matrix-row matrix-header" style={{ gridTemplateColumns: '1fr 1fr 1fr 1.5fr' }}>
-                <strong>Date</strong>
-                <span>Arena Type</span>
-                <span>Dataset Size</span>
-                <span>Winner</span>
-              </div>
-              {filteredHistory.map((entry) => (
-                <div className="matrix-row" key={entry.id} style={{ gridTemplateColumns: '1fr 1fr 1fr 1.5fr' }}>
-                  <strong>{new Date(entry.date).toLocaleString()}</strong>
-                  <span style={{ textTransform: 'capitalize' }}>{entry.arenaType}</span>
-                  <span>{entry.arenaType === 'pathfinding' ? 'N/A' : entry.datasetSize}</span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Trophy size={14} color="gold" />
-                    {entry.winner}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-
         {/* Real World Applications */}
         <section className="panel" style={{ padding: '28px' }}>
           <div className="section-title">Real World Production Applications</div>
@@ -780,7 +970,7 @@ export function HistoryPage({ catalog }: { catalog: CatalogResponse }) {
                 <Map size={20} />
               </div>
               <h5>GPS Navigation</h5>
-              <p>Navigation software like Google Maps utilizes A* Search and Dijkstra\'s algorithms on massive highway graphs to compute the fastest driving routes while accounting for traffic costs.</p>
+              <p>Navigation software like Google Maps utilizes A* Search and Dijkstra's algorithms on massive highway graphs to compute the fastest driving routes while accounting for traffic costs.</p>
             </div>
 
             <div className="app-use-case-card">
@@ -796,7 +986,7 @@ export function HistoryPage({ catalog }: { catalog: CatalogResponse }) {
                 <Grid size={20} />
               </div>
               <h5>Network Routing</h5>
-              <p>Hardware routers deploy Dijkstra\'s algorithm within the OSPF (Open Shortest Path First) protocol to find the shortest routing paths for data packets across network topology.</p>
+              <p>Hardware routers deploy Dijkstra's algorithm within the OSPF (Open Shortest Path First) protocol to find the shortest routing paths for data packets across network topology.</p>
             </div>
 
             <div className="app-use-case-card">

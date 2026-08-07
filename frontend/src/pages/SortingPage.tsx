@@ -34,6 +34,7 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
 
   const { play } = useAudio();
   const winnerAnnouncedRef = useRef(false);
+  const hasStartedPlaybackRef = useRef(false);
   const requestIdRef = useRef(0);
   const initialized = useRef(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -193,6 +194,11 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
       const requestId = ++requestIdRef.current;
       setLoading(true);
       winnerAnnouncedRef.current = false;
+      if (autoplay) {
+        hasStartedPlaybackRef.current = true;
+      } else {
+        hasStartedPlaybackRef.current = false;
+      }
       const useAlgos = customParams?.algos ?? algorithms;
       const useType = customParams?.dType ?? (isCustomMode ? 'Custom' : datasetType);
       const useCArrayStr = customParams?.cArray ?? customArrayStr;
@@ -262,14 +268,16 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
            newSize = urlSize;
            setSize(urlSize);
         }
-        if (urlMode) {
+        if (params.cArray) {
+          newMode = 'Custom';
+          setIsCustomMode(true);
+          setCustomArrayStr(params.cArray);
+          const parsed = parseCustomArrayInput(params.cArray);
+          setDataset(parsed);
+          if (parsed.length > 0) newSize = parsed.length;
+        } else if (urlMode) {
            newMode = urlMode;
            setDatasetType(urlMode);
-           if (urlMode === 'Custom' && params.cArray) {
-             setIsCustomMode(true);
-             setCustomArrayStr(params.cArray);
-             setDataset(parseCustomArrayInput(params.cArray));
-           }
         }
 
         const url = new URL(window.location.href);
@@ -322,11 +330,13 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
 
     if (hasFreshDataset && activeResponse) {
       winnerAnnouncedRef.current = false;
+      hasStartedPlaybackRef.current = true;
       play('start');
       playback.reset();
       playback.setPlaying(true);
       setHasFreshDataset(false);
     } else {
+      hasStartedPlaybackRef.current = true;
       await fetchSimulation(true, true);
       setHasFreshDataset(false);
     }
@@ -428,8 +438,11 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
   const winnerLane = activeResponse?.lanes.find((l) => l.name === activeResponse.winner);
 
   useEffect(() => {
-    if (isCompleted && activeResponse && !winnerAnnouncedRef.current) {
+    if (isCompleted && activeResponse && hasStartedPlaybackRef.current && !winnerAnnouncedRef.current) {
       winnerAnnouncedRef.current = true;
+      hasStartedPlaybackRef.current = false;
+
+      const datasetArrayStr = activeResponse.dataset ? activeResponse.dataset.join(',') : undefined;
 
       appendHistory({
         id: Date.now().toString(),
@@ -437,6 +450,14 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
         arenaType: 'sorting',
         winner: activeResponse.winner || 'Tie',
         datasetSize: size,
+        datasetType: isCustomMode ? 'Custom' : datasetType,
+        replayParams: {
+          page: 'sorting',
+          algos: algorithms.join(','),
+          mode: 'Custom',
+          cArray: datasetArrayStr || '',
+          size: (activeResponse.dataset?.length || size).toString()
+        },
         lanes: activeResponse.lanes.map(l => ({
           name: l.name,
           comparisons: l.stats.comparisons,
@@ -451,7 +472,7 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
         setTimeout(() => play('raceComplete'), 120);
       }
     }
-  }, [isCompleted, activeResponse, play]);
+  }, [isCompleted, activeResponse, play, size, isCustomMode, datasetType, algorithms]);
 
   return (
     <main className="page">

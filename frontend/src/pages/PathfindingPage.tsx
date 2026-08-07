@@ -45,6 +45,7 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
 
   const { play } = useAudio();
   const winnerAnnouncedRef = useRef(false);
+  const hasStartedPlaybackRef = useRef(false);
   const initialized = useRef(false);
   const latestFetchIdRef = useRef(0);
   const currentWallsRef = useRef<boolean[][] | null>(null);
@@ -80,6 +81,11 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
       const fetchId = ++latestFetchIdRef.current;
       setLoading(true);
       winnerAnnouncedRef.current = false;
+      if (autoplay) {
+        hasStartedPlaybackRef.current = true;
+      } else {
+        hasStartedPlaybackRef.current = false;
+      }
       const useAlgos = customParams?.algos ?? algorithms;
       const useMazeType = customParams?.mType ?? mazeType;
       const useStart = customParams?.start ?? startNode;
@@ -256,11 +262,13 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
   async function startRace() {
     if (hasFreshDataset && response) {
       winnerAnnouncedRef.current = false;
+      hasStartedPlaybackRef.current = true;
       play('start');
       playback.reset();
       playback.setPlaying(true);
       setHasFreshDataset(false);
     } else {
+      hasStartedPlaybackRef.current = true;
       await fetchSimulation(true, true);
       setHasFreshDataset(false);
     }
@@ -354,15 +362,49 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
   }, [winnerLane, response]);
 
   useEffect(() => {
-    if (isCompleted && response && !winnerAnnouncedRef.current) {
+    if (isCompleted && response && hasStartedPlaybackRef.current && !winnerAnnouncedRef.current) {
       winnerAnnouncedRef.current = true;
+      hasStartedPlaybackRef.current = false;
+
+      let wallCoordsStr = '';
+      if (response.walls) {
+        const wallCoords: string[] = [];
+        response.walls.forEach((rowArr, r) => {
+          rowArr.forEach((isWall, c) => {
+            if (isWall) wallCoords.push(`${r}:${c}`);
+          });
+        });
+        wallCoordsStr = wallCoords.join(',');
+      }
+
+      let weightTokensStr = '';
+      if (response.weights) {
+        const weightTokens: string[] = [];
+        response.weights.forEach((rowArr, r) => {
+          rowArr.forEach((w, c) => {
+            if (w > 1) weightTokens.push(`${r}:${c}:${w}`);
+          });
+        });
+        weightTokensStr = weightTokens.join(',');
+      }
 
       appendHistory({
         id: Date.now().toString(),
         date: new Date().toISOString(),
         arenaType: 'pathfinding',
         winner: response.winner || 'Tie',
-        datasetSize: 0,
+        datasetSize: 18 * 28,
+        datasetType: mazeType,
+        pathCost: winnerPathCost,
+        replayParams: {
+          page: 'pathfinding',
+          algos: algorithms.join(','),
+          maze: mazeType,
+          start: `${startNode[0]},${startNode[1]}`,
+          end: `${endNode[0]},${endNode[1]}`,
+          walls: wallCoordsStr,
+          weights: weightTokensStr
+        },
         lanes: response.lanes.map(l => ({
           name: l.name,
           comparisons: l.stats.comparisons,
@@ -377,7 +419,7 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
         setTimeout(() => play('raceComplete'), 120);
       }
     }
-  }, [isCompleted, response, play]);
+  }, [isCompleted, response, play, mazeType, winnerPathCost, algorithms, startNode, endNode]);
 
   return (
     <main className="page">
