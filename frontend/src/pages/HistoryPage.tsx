@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { CatalogResponse } from '../models/types';
 import { 
   Trophy, 
@@ -14,8 +14,10 @@ import {
   Database,
   ArrowRight,
   Sparkles,
-  Info
+  Info,
+  Trash2
 } from 'lucide-react';
+import { getHistory, clearHistory, type RaceHistoryEntry, type ArenaType } from '../utils/historyStorage';
 
 interface AlgoMeta {
   name: string;
@@ -384,6 +386,22 @@ export function HistoryPage({ catalog }: { catalog: CatalogResponse }) {
   const [selectedAlgo, setSelectedAlgo] = useState('Quick Sort');
   const [activeTab, setActiveTab] = useState<'sorting' | 'searching' | 'pathfinding'>('sorting');
 
+  const [historyEntries, setHistoryEntries] = useState<RaceHistoryEntry[]>([]);
+  const [historyFilter, setHistoryFilter] = useState<'all' | ArenaType>('all');
+
+  useEffect(() => {
+    setHistoryEntries(getHistory().reverse());
+  }, []);
+
+  const handleClearHistory = () => {
+    clearHistory();
+    setHistoryEntries([]);
+  };
+
+  const filteredHistory = historyEntries.filter(entry =>
+    historyFilter === 'all' || entry.arenaType === historyFilter
+  );
+
   const selectedData = algoDatabase[getNormalizedName(selectedAlgo)] || algoDatabase['Quick Sort'];
 
   const speedRankings = [
@@ -690,6 +708,59 @@ export function HistoryPage({ catalog }: { catalog: CatalogResponse }) {
               );
             })}
           </div>
+        </section>
+
+        {/* Persistent Race Session History */}
+        <section className="panel" style={{ padding: '28px' }}>
+          <div className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>Persistent Race Session History</span>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              <select
+                className="select-dropdown"
+                value={historyFilter}
+                onChange={(e) => setHistoryFilter(e.target.value as 'all' | ArenaType)}
+                style={{ padding: '4px 12px', fontSize: '0.9rem' }}
+              >
+                <option value="all">All Arenas</option>
+                <option value="sorting">Sorting</option>
+                <option value="searching">Searching</option>
+                <option value="pathfinding">Pathfinding</option>
+              </select>
+              <button
+                className="btn btn-secondary"
+                style={{ display: 'flex', gap: '6px', alignItems: 'center', padding: '6px 12px', color: '#ff4444', borderColor: '#ff4444' }}
+                onClick={handleClearHistory}
+              >
+                <Trash2 size={16} /> Clear History
+              </button>
+            </div>
+          </div>
+
+          {filteredHistory.length === 0 ? (
+            <div style={{ padding: '40px', textAlign: 'center', color: 'var(--muted)' }}>
+              No race history available. Run some algorithms in the arenas to generate history!
+            </div>
+          ) : (
+            <div className="matrix-list">
+              <div className="matrix-row matrix-header" style={{ gridTemplateColumns: '1fr 1fr 1fr 1.5fr' }}>
+                <strong>Date</strong>
+                <span>Arena Type</span>
+                <span>Dataset Size</span>
+                <span>Winner</span>
+              </div>
+              {filteredHistory.map((entry) => (
+                <div className="matrix-row" key={entry.id} style={{ gridTemplateColumns: '1fr 1fr 1fr 1.5fr' }}>
+                  <strong>{new Date(entry.date).toLocaleString()}</strong>
+                  <span style={{ textTransform: 'capitalize' }}>{entry.arenaType}</span>
+                  <span>{entry.arenaType === 'pathfinding' ? 'N/A' : entry.datasetSize}</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Trophy size={14} color="gold" />
+                    {entry.winner}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* Real World Applications */}
