@@ -15,6 +15,7 @@ import { StepExplanationCard } from '../components/StepExplanationCard';
 import { Share2, RefreshCw, Sparkles, Palette } from 'lucide-react';
 import { getUrlParams } from '../utils/urlParams';
 import { generateClientMaze } from '../utils/clientMazeGenerator';
+import { appendHistory } from '../utils/historyStorage';
 
 const defaultMazeTypes = [
   'Recursive Backtracker',
@@ -355,6 +356,21 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
   useEffect(() => {
     if (isCompleted && response && !winnerAnnouncedRef.current) {
       winnerAnnouncedRef.current = true;
+
+      appendHistory({
+        id: Date.now().toString(),
+        date: new Date().toISOString(),
+        arenaType: 'pathfinding',
+        winner: response.winner || 'Tie',
+        datasetSize: 0,
+        lanes: response.lanes.map(l => ({
+          name: l.name,
+          comparisons: l.stats.comparisons,
+          steps: l.stats.steps,
+          timeMs: l.stats.timeMs
+        }))
+      });
+
       if (response.winner) {
         setTimeout(() => play('winner'), 120);
       } else {

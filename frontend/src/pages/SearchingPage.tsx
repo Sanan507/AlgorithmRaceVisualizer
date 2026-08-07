@@ -15,6 +15,7 @@ import { parseCustomArrayInput } from '../utils/arrayParser';
 import { StepExplanationCard } from '../components/StepExplanationCard';
 import { CustomDatasetModal } from '../components/CustomDatasetModal';
 import { CsvUploader } from '../components/CsvUploader';
+import { appendHistory } from '../utils/historyStorage';
 import { Share2 } from 'lucide-react';
 import { getUrlParams } from '../utils/urlParams';
 
@@ -450,6 +451,20 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
   useEffect(() => {
     if (isCompleted && activeResponse && !winnerAnnouncedRef.current) {
       winnerAnnouncedRef.current = true;
+
+      appendHistory({
+        id: Date.now().toString(),
+        date: new Date().toISOString(),
+        arenaType: 'searching',
+        winner: activeResponse.winner || 'Tie',
+        datasetSize: size,
+        lanes: activeResponse.lanes.map(l => ({
+          name: l.name,
+          comparisons: l.stats.comparisons,
+          timeMs: l.stats.timeMs
+        }))
+      });
+
       if (activeResponse.winner) {
         setTimeout(() => play('winner'), 120);
       } else {
