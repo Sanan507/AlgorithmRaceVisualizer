@@ -62,7 +62,8 @@ export const TreesPage: React.FC = () => {
       const res = await api.tree(req);
       if (res && res.frames && res.frames.length > 0) {
         setFrames(res.frames);
-        setCurrentFrameIdx(0);
+        const startIdx = req.operation === 'insert' ? Math.max(0, res.frames.length - 1) : 0;
+        setCurrentFrameIdx(startIdx);
         if (res.traversalOutput) setTraversalResult(res.traversalOutput);
         return;
       }
@@ -72,7 +73,8 @@ export const TreesPage: React.FC = () => {
 
     const fallbackRes = generateClientTreeSimulation(req);
     setFrames(fallbackRes.frames);
-    setCurrentFrameIdx(0);
+    const startIdx = req.operation === 'insert' ? Math.max(0, fallbackRes.frames.length - 1) : 0;
+    setCurrentFrameIdx(startIdx);
     if (fallbackRes.traversalOutput) setTraversalResult(fallbackRes.traversalOutput);
   };
 
@@ -94,7 +96,7 @@ export const TreesPage: React.FC = () => {
     executeSimulation({
       treeType,
       operation: 'insert',
-      values: treeValues,
+      values: newValues,
       target: val,
     });
   };

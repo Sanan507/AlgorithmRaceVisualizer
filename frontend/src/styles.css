@@ -7562,9 +7562,187 @@ input[type="range"] {
   border-color: rgba(245, 158, 11, 0.5);
 }
 
+/* ─── DP Matrix Table Grid & Formula Banner ──────────────────────────────── */
+.dp-canvas-container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
 
+.dp-formula-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(168, 85, 247, 0.1);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  padding: 8px 14px;
+  border-radius: 8px;
+  backdrop-filter: blur(4px);
+}
 
+.formula-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: #c084fc;
+  color: #0f172a;
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
 
+.formula-text {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.88rem;
+  color: #e9d5ff;
+  font-weight: 600;
+}
 
+.dp-grid-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid var(--line, rgba(255, 255, 255, 0.08));
+  background: var(--panel-2, #0b0b1e);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
 
+.dp-matrix-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 2px;
+  padding: 8px;
+  font-family: var(--font-mono, monospace);
+}
 
+.dp-corner-header {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--muted, #94a3b8);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 8px 12px;
+  border-radius: 6px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.dp-col-header,
+.dp-row-header {
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text, #e2e8f0);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 8px 10px;
+  border-radius: 6px;
+  text-align: center;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.dp-header-highlight {
+  background: rgba(192, 132, 252, 0.25) !important;
+  color: #f3e8ff !important;
+  border: 1px solid rgba(192, 132, 252, 0.5);
+}
+
+.dp-header-idx {
+  display: block;
+  font-size: 0.68rem;
+  color: var(--muted, #64748b);
+  font-weight: 400;
+}
+
+.dp-cell {
+  position: relative;
+  min-width: 52px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  text-align: center;
+  vertical-align: middle;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dp-cell-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  padding: 2px 4px;
+}
+
+.dp-cell-value {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text, #f8fafc);
+}
+
+.dp-cell-active {
+  background: rgba(245, 158, 11, 0.22) !important;
+  border: 2px solid #f59e0b !important;
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.35);
+  transform: scale(1.04);
+  z-index: 2;
+}
+
+.dp-cell-active .dp-cell-value {
+  color: #fbbf24;
+}
+
+.dp-cell-dependent {
+  background: rgba(59, 130, 246, 0.18) !important;
+  border: 1px solid rgba(59, 130, 246, 0.5) !important;
+}
+
+.dp-cell-dependent .dp-cell-value {
+  color: #93c5fd;
+}
+
+.dp-cell-backtrack {
+  background: rgba(16, 185, 129, 0.2) !important;
+  border: 1.5px solid #10b981 !important;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.25);
+}
+
+.dp-cell-backtrack .dp-cell-value {
+  color: #6ee7b7;
+}
+
+.dp-dep-tag {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #60a5fa;
+  background: rgba(37, 99, 235, 0.3);
+  padding: 1px 4px;
+  border-radius: 3px;
+  margin-top: 2px;
+  line-height: 1;
+}
+
+.dp-active-pulse {
+  position: absolute;
+  inset: -2px;
+  border-radius: 8px;
+  border: 2px solid #f59e0b;
+  animation: dpPulse 1.5s infinite;
+  pointer-events: none;
+}
+
+@keyframes dpPulse {
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.08); opacity: 0.2; }
+  100% { transform: scale(1); opacity: 0.8; }
+}
+
+.dp-backtrack-icon {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  color: #34d399;
+}

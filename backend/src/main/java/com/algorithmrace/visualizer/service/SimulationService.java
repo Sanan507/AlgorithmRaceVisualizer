@@ -50,10 +50,19 @@ public class SimulationService {
         request != null && request.operation() != null
             ? request.operation().toLowerCase()
             : "build";
-    List<Integer> initialValues =
+    List<Integer> rawValues =
         request != null && request.values() != null
             ? request.values()
             : List.of(50, 30, 70, 20, 40, 60, 80);
+
+    List<Integer> initialValues = rawValues;
+    if ("insert".equals(op)
+        && request != null
+        && request.target() != null
+        && !rawValues.isEmpty()
+        && request.target().equals(rawValues.get(rawValues.size() - 1))) {
+      initialValues = rawValues.subList(0, rawValues.size() - 1);
+    }
 
     List<TreeSimulationFrame> frames = new ArrayList<>();
     List<Integer> traversalOutput = new ArrayList<>();

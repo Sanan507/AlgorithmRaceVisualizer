@@ -216,7 +216,14 @@ function traverseTreeNodes<T extends { val: number; left?: T | null; right?: T |
 export function generateClientTreeSimulation(req: TreeSimulationRequest): TreeSimulationResponse {
   const treeType = req.treeType || 'bst';
   const op = req.operation || 'build';
-  const initialValues = req.values || [50, 30, 70, 20, 40, 60, 80];
+  const rawValues = req.values !== undefined ? req.values : [50, 30, 70, 20, 40, 60, 80];
+
+  // If operation is insert and rawValues ends with target, strip target for base tree build
+  let initialValues = rawValues;
+  if (op === 'insert' && req.target !== undefined && rawValues.length > 0 && rawValues[rawValues.length - 1] === req.target) {
+    initialValues = rawValues.slice(0, rawValues.length - 1);
+  }
+
   const frames: TreeSimulationFrame[] = [];
   const traversalOutput: number[] = [];
 

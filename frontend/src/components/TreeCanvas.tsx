@@ -49,26 +49,33 @@ export const TreeCanvas: React.FC<TreeCanvasProps> = ({ step, treeType }) => {
     if (!ctx) return;
 
     const parentWidth = canvas.parentElement?.clientWidth || 800;
-    canvas.width = parentWidth;
-    canvas.height = 460;
+    const parentHeight = 460;
+    const dpr = window.devicePixelRatio || 1;
+
+    canvas.width = parentWidth * dpr;
+    canvas.height = parentHeight * dpr;
+    ctx.scale(dpr, dpr);
+
+    const width = parentWidth;
+    const height = parentHeight;
 
     // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, width, height);
 
     // Draw subtle grid lines for intentional canvas structure
     ctx.strokeStyle = 'rgba(148, 163, 184, 0.06)';
     ctx.lineWidth = 1;
     const gridSize = 40;
-    for (let x = 0; x < canvas.width; x += gridSize) {
+    for (let x = 0; x < width; x += gridSize) {
       ctx.beginPath();
       ctx.moveTo(x, 0);
-      ctx.lineTo(x, canvas.height);
+      ctx.lineTo(x, height);
       ctx.stroke();
     }
-    for (let y = 0; y < canvas.height; y += gridSize) {
+    for (let y = 0; y < height; y += gridSize) {
       ctx.beginPath();
       ctx.moveTo(0, y);
-      ctx.lineTo(canvas.width, y);
+      ctx.lineTo(width, y);
       ctx.stroke();
     }
 
@@ -76,7 +83,7 @@ export const TreeCanvas: React.FC<TreeCanvasProps> = ({ step, treeType }) => {
       ctx.fillStyle = 'rgba(148, 163, 184, 0.6)';
       ctx.font = '500 14px sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('Tree canvas is empty. Enter a value above and click Insert or select a Preset.', canvas.width / 2, canvas.height / 2);
+      ctx.fillText('Tree canvas is empty. Enter a value above and click Insert or select a Preset.', width / 2, height / 2);
       return;
     }
 
@@ -91,6 +98,14 @@ export const TreeCanvas: React.FC<TreeCanvasProps> = ({ step, treeType }) => {
       return 0;
     };
 
+    // Calculate max depth for adaptive vertical spacing
+    const getTreeDepth = (node: TreeNode | TreeNodeDto | null | undefined): number => {
+      if (!node) return 0;
+      return 1 + Math.max(getTreeDepth(node.left), getTreeDepth(node.right));
+    };
+    const maxDepth = getTreeDepth(root);
+    const vGap = Math.max(48, Math.min(68, (height - 90) / Math.max(maxDepth, 3)));
+
     // Draw tree recursively
     const drawNode = (node: TreeNode | TreeNodeDto, x: number, y: number, offset: number, depth: number) => {
       const nodeVal = getNodeVal(node);
@@ -98,27 +113,27 @@ export const TreeCanvas: React.FC<TreeCanvasProps> = ({ step, treeType }) => {
       // Left edge
       if (node.left) {
         const nextX = x - offset;
-        const nextY = y + 68;
+        const nextY = y + vGap;
         ctx.beginPath();
         ctx.moveTo(x, y + 20);
         ctx.lineTo(nextX, nextY - 20);
         ctx.strokeStyle = 'rgba(148, 163, 184, 0.4)';
         ctx.lineWidth = 2;
         ctx.stroke();
-        drawNode(node.left, nextX, nextY, Math.max(offset / 1.8, 24), depth + 1);
+        drawNode(node.left, nextX, nextY, Math.max(offset / 1.9, 28), depth + 1);
       }
 
       // Right edge
       if (node.right) {
         const nextX = x + offset;
-        const nextY = y + 68;
+        const nextY = y + vGap;
         ctx.beginPath();
         ctx.moveTo(x, y + 20);
         ctx.lineTo(nextX, nextY - 20);
         ctx.strokeStyle = 'rgba(148, 163, 184, 0.4)';
         ctx.lineWidth = 2;
         ctx.stroke();
-        drawNode(node.right, nextX, nextY, Math.max(offset / 1.8, 24), depth + 1);
+        drawNode(node.right, nextX, nextY, Math.max(offset / 1.9, 28), depth + 1);
       }
 
       // Active / Highlight states
@@ -163,9 +178,9 @@ export const TreeCanvas: React.FC<TreeCanvasProps> = ({ step, treeType }) => {
 
     // Calculate initial Y position so single node is centered nicely
     const hasChildren = !!(root.left || root.right);
-    const startY = hasChildren ? 48 : canvas.height / 2;
+    const startY = hasChildren ? 48 : height / 2;
 
-    drawNode(root, canvas.width / 2, startY, canvas.width / 4, 1);
+    drawNode(root, width / 2, startY, width / 4.2, 1);
   }, [step, treeType]);
 
   const rotation = step?.rotationType;
