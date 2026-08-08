@@ -24,7 +24,7 @@ const HeroMiniCanvas = lazy(() => import('../components/HeroMiniCanvas').then(m 
 const AlgorithmMatrix = lazy(() => import('../components/AlgorithmMatrix').then(m => ({ default: m.AlgorithmMatrix })));
 
 interface Props {
-  onNavigate: (page: 'sorting' | 'searching' | 'pathfinding' | 'dp' | 'trees' | 'history' | 'settings') => void;
+  onNavigate: (page: 'sorting' | 'searching' | 'pathfinding' | 'dp' | 'trees' | 'history' | 'settings' | 'battle') => void;
   darkMode?: boolean;
   setDarkMode?: (val: boolean) => void;
 }

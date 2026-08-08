@@ -1,10 +1,11 @@
 import { BarChart3, Binary, GitBranch, History, Settings, ChevronLeft, ChevronRight, Zap, LayoutGrid, X, Sun, Moon, Layers, FolderTree } from 'lucide-react';
 import { useAudio } from '../context/AudioContext';
 
-type Page = 'landing' | 'sorting' | 'searching' | 'pathfinding' | 'dp' | 'trees' | 'history' | 'settings';
+type Page = 'landing' | 'sorting' | 'searching' | 'pathfinding' | 'dp' | 'trees' | 'history' | 'settings' | 'battle';
 
 const items = [
   { id: 'landing',     label: 'Overview',            icon: LayoutGrid },
+  { id: 'battle',      label: '1v1 Battle',          icon: Zap        },
   { id: 'sorting',     label: 'Sorting Arena',      icon: BarChart3  },
   { id: 'searching',   label: 'Search Arena',        icon: Binary     },
   { id: 'pathfinding', label: 'Pathfinding Arena',   icon: GitBranch  },
