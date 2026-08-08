@@ -11,7 +11,6 @@ import { SettingsPage } from './pages/SettingsPage';
 import { SortingPage } from './pages/SortingPage';
 import { DPPage } from './pages/DPPage';
 import { TreesPage } from './pages/TreesPage';
-import { BattlePage } from './pages/BattlePage';
 import type { CatalogResponse } from './models/types';
 import { api } from './services/api';
 import { AudioCtx } from './context/AudioContext';
@@ -20,7 +19,7 @@ import { useSound } from './hooks/useSound';
 
 import { fallbackCatalog } from './data/fallbackCatalog';
 
-type Page = 'landing' | 'sorting' | 'searching' | 'pathfinding' | 'dp' | 'trees' | 'history' | 'settings' | 'battle';
+type Page = 'landing' | 'sorting' | 'searching' | 'pathfinding' | 'dp' | 'trees' | 'history' | 'settings';
 
 const getPageFromHash = (): Page => {
   const searchParams = new URLSearchParams(window.location.search);
@@ -182,7 +181,6 @@ export default function App() {
             />
 
             <div className="content-shell">
-              {active === 'battle' && <BattlePage catalog={catalog} />}
               {active === 'sorting' && <SortingPage catalog={catalog} />}
               {active === 'searching' && <SearchingPage catalog={catalog} />}
               {active === 'pathfinding' && <PathfindingPage catalog={catalog} />}
