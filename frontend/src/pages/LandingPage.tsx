@@ -24,7 +24,7 @@ const HeroMiniCanvas = lazy(() => import('../components/HeroMiniCanvas').then(m 
 const AlgorithmMatrix = lazy(() => import('../components/AlgorithmMatrix').then(m => ({ default: m.AlgorithmMatrix })));
 
 interface Props {
-  onNavigate: (page: 'sorting' | 'searching' | 'pathfinding' | 'dp' | 'trees' | 'history' | 'settings') => void;
+  onNavigate: (page: 'sorting' | 'searching' | 'pathfinding' | 'dp' | 'trees' | 'history' | 'settings' | 'battle') => void;
   darkMode?: boolean;
   setDarkMode?: (val: boolean) => void;
 }
@@ -278,6 +278,23 @@ export function LandingPage({ onNavigate, darkMode, setDarkMode }: Props) {
             </p>
             <div className="bento-card-action">
               <span>Launch Search Arena</span>
+              <ArrowRight size={16} />
+            </div>
+          </div>
+
+          <div className="bento-card bento-card-large" onClick={() => onNavigate('battle')}>
+            <div className="bento-card-header">
+              <div className="bento-icon-wrapper icon-purple">
+                <Zap size={22} />
+              </div>
+              <span className="bento-arena-tag">1v1 BATTLE ARENA</span>
+            </div>
+            <h3 className="bento-title">Head-to-Head Algorithm Showdown</h3>
+            <p className="bento-text">
+              Directly compare exactly two sorting algorithms side-by-side with a real-time differential graph highlighting the exact operation lead and lag deltas.
+            </p>
+            <div className="bento-card-action">
+              <span>Launch Battle Arena</span>
               <ArrowRight size={16} />
             </div>
           </div>
