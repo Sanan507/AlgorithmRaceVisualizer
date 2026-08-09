@@ -19,7 +19,8 @@ export const fallbackCatalog: CatalogResponse = {
     'Binary Search',
     'Jump Search',
     'Exponential Search',
-    'Interpolation Search'
+    'Interpolation Search',
+    'Ternary Search'
   ],
   pathfindingAlgorithms: [
     'BFS',
@@ -176,6 +177,14 @@ export const fallbackCatalog: CatalogResponse = {
       space: 'O(1)',
       theory: 'Estimates target position based on key value distribution rather than splitting midpoints.',
       pseudocode: 'pos = low + ((target - a[low]) / (a[high] - a[low])) * (high - low)\nif a[pos] == target: found\nelse if a[pos] < target: low = pos + 1\nelse: high = pos - 1'
+    },
+    'Ternary Search': {
+      best: 'O(1)',
+      average: 'O(log3 n)',
+      worst: 'O(log3 n)',
+      space: 'O(1)',
+      theory: 'Divides a sorted array into three equal segments using two midpoints to find the target.',
+      pseudocode: 'mid1 = low + (high - low) / 3\nmid2 = high - (high - low) / 3\ncompare target with mid1 and mid2, update bounds'
     },
     'BFS': {
       best: 'O(V+E)',

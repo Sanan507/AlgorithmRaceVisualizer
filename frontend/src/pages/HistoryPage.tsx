@@ -289,6 +289,20 @@ const algoDatabase: Record<string, AlgoMeta> = {
     realWorldApp: 'Phonebook directory lookups.',
     appDescription: 'Uniformly distributed key lookups.'
   },
+  'Ternary Search': {
+    name: 'Ternary Search',
+    category: 'Searching',
+    best: 'O(1)',
+    average: 'O(log3 N)',
+    worst: 'O(log3 N)',
+    space: 'O(1)',
+    stability: 'N/A',
+    speedRank: 'Elite',
+    memoryRank: 'Minimal',
+    recommendedUse: 'Dividing search spaces into 3 parts on pre-sorted arrays or finding unimodal function extrema.',
+    realWorldApp: 'Optimization problems, ternary range splitting.',
+    appDescription: 'Unimodal function optimization and 3-way partition searches.'
+  },
   // Pathfinding
   'BFS': {
     name: 'BFS',

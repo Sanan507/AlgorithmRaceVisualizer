@@ -240,6 +240,19 @@ export const algorithmMetadata: Record<string, {
       'return dp[M][N]',
     ],
   },
+  'Ternary Search': {
+    name: 'Ternary Search',
+    description: 'Requires sorted data and divides the remaining search range into three equal parts using two midpoints.',
+    timeComplexity: 'O(log3 N)',
+    spaceComplexity: 'O(1)',
+    pseudocode: [
+      'low = 0, high = n - 1',
+      'while low <= high:',
+      '  mid1 = low + (high - low) / 3',
+      '  mid2 = high - (high - low) / 3',
+      '  compare with mid1 and mid2 and adjust bounds',
+    ],
+  },
   'Binary Search Tree': {
     name: 'Binary Search Tree (BST)',
     description: 'A binary tree structure where each node left child < parent and right child > parent.',

@@ -153,6 +153,16 @@ public final class ComplexityCatalog {
             + "if a[pos] == target: found\n"
             + "else if a[pos] < target: low = pos + 1\n"
             + "else: high = pos - 1");
+    add(
+        "Ternary Search",
+        "O(1)",
+        "O(log3 n)",
+        "O(log3 n)",
+        "O(1)",
+        "Divides a sorted array into three equal segments using two midpoints to find the target.",
+        "mid1 = low + (high - low) / 3\n"
+            + "mid2 = high - (high - low) / 3\n"
+            + "compare target with mid1 and mid2, update bounds");
 
     add(
         "BFS",

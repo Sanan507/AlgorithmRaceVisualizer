@@ -664,6 +664,80 @@ function merge(L: number[], R: number[]): number[] {
     },
   },
 
+  /* ────────────────── TERNARY SEARCH ────────────────── */
+  ternarysearch: {
+    algorithmId: 'ternarysearch',
+    algorithmName: 'Ternary Search',
+    languages: {
+      typescript: {
+        language: 'typescript', displayName: 'TypeScript',
+        code: `function ternarySearch(arr: number[], target: number): number {
+  let lo = 0, hi = arr.length - 1;
+  while (lo <= hi) {                          // loop
+    const mid1 = lo + Math.floor((hi - lo) / 3);
+    const mid2 = hi - Math.floor((hi - lo) / 3);
+    if (arr[mid1] === target) return mid1;     // found mid1
+    if (arr[mid2] === target) return mid2;     // found mid2
+    if (target < arr[mid1]) hi = mid1 - 1;     // narrow left
+    else if (target > arr[mid2]) lo = mid2 + 1;// narrow right
+    else { lo = mid1 + 1; hi = mid2 - 1; }     // narrow middle
+  }
+  return -1;                                  // not found
+}`,
+        getHighlight: searchHighlight({ init: 1, loopHead: 2, checkTarget: 5, narrow: 7, found: 5, notFound: 11 }),
+      },
+      java: {
+        language: 'java', displayName: 'Java',
+        code: `public static int ternarySearch(int[] arr, int target) {
+    int lo = 0, hi = arr.length - 1;
+    while (lo <= hi) {                        // loop
+        int mid1 = lo + (hi - lo) / 3;
+        int mid2 = hi - (hi - lo) / 3;
+        if (arr[mid1] == target) return mid1;  // found mid1
+        if (arr[mid2] == target) return mid2;  // found mid2
+        if (target < arr[mid1]) hi = mid1 - 1; // narrow left
+        else if (target > arr[mid2]) lo = mid2 + 1; // narrow right
+        else { lo = mid1 + 1; hi = mid2 - 1; } // narrow middle
+    }
+    return -1;                               // not found
+}`,
+        getHighlight: searchHighlight({ init: 1, loopHead: 2, checkTarget: 5, narrow: 7, found: 5, notFound: 11 }),
+      },
+      python: {
+        language: 'python', displayName: 'Python',
+        code: `def ternary_search(arr, target):
+    lo, hi = 0, len(arr) - 1
+    while lo <= hi:                           # loop
+        mid1 = lo + (hi - lo) // 3
+        mid2 = hi - (hi - lo) // 3
+        if arr[mid1] == target: return mid1   # found mid1
+        if arr[mid2] == target: return mid2   # found mid2
+        if target < arr[mid1]: hi = mid1 - 1  # narrow left
+        elif target > arr[mid2]: lo = mid2 + 1# narrow right
+        else: lo, hi = mid1 + 1, mid2 - 1    # narrow middle
+    return -1                                # not found`,
+        getHighlight: searchHighlight({ init: 1, loopHead: 2, checkTarget: 5, narrow: 7, found: 5, notFound: 10 }),
+      },
+      cpp: {
+        language: 'cpp', displayName: 'C++',
+        code: `int ternarySearch(const vector<int>& arr, int target) {
+    int lo = 0, hi = (int)arr.size() - 1;
+    while (lo <= hi) {                        // loop
+        int mid1 = lo + (hi - lo) / 3;
+        int mid2 = hi - (hi - lo) / 3;
+        if (arr[mid1] == target) return mid1;  // found mid1
+        if (arr[mid2] == target) return mid2;  // found mid2
+        if (target < arr[mid1]) hi = mid1 - 1; // narrow left
+        else if (target > arr[mid2]) lo = mid2 + 1; // narrow right
+        else { lo = mid1 + 1; hi = mid2 - 1; } // narrow middle
+    }
+    return -1;                               // not found
+}`,
+        getHighlight: searchHighlight({ init: 1, loopHead: 2, checkTarget: 5, narrow: 7, found: 5, notFound: 11 }),
+      },
+    },
+  },
+
   /* ────────────────── BFS ────────────────── */
   bfs: {
     algorithmId: 'bfs',

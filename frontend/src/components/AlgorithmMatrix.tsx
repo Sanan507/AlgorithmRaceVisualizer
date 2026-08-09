@@ -169,6 +169,17 @@ const ALGORITHM_DATA: AlgorithmItem[] = [
     space: 'O(1)',
     description: 'Estimates target position based on key value distribution rather than splitting midpoints.',
   },
+  {
+    id: 'ternarysearch',
+    name: 'Ternary Search',
+    category: 'searching',
+    categoryLabel: 'Search Arena',
+    bestTime: 'O(1)',
+    avgTime: 'O(log3 n)',
+    worstTime: 'O(log3 n)',
+    space: 'O(1)',
+    description: 'Divides search space into three equal parts using two midpoints to locate target.',
+  },
 
   // Pathfinding
   {

@@ -16,7 +16,14 @@ import org.junit.jupiter.api.Test;
 class SearchingAlgorithmsTest {
 
   private final SimulationService simulationService = new SimulationService();
-  private final List<String> algorithms = List.of("Linear Search", "Binary Search", "Jump Search");
+  private final List<String> algorithms =
+      List.of(
+          "Linear Search",
+          "Binary Search",
+          "Jump Search",
+          "Exponential Search",
+          "Interpolation Search",
+          "Ternary Search");
 
   @Test
   @DisplayName("Verify search models successfully locate existing targets")
