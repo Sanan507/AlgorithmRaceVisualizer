@@ -7977,3 +7977,303 @@ input[type="range"] {
   text-align: right;
 }
 
+/* Interactive Algorithm Explorer - Older Version Match */
+.algo-explorer-section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.algo-explorer-header-bar {
+  width: 4px;
+  height: 28px;
+  background: var(--primary, #0284c7);
+  border-radius: 2px;
+}
+
+.algo-explorer-section-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0;
+}
+
+.algo-explorer-container {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+@media (max-width: 900px) {
+  .algo-explorer-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+.algo-explorer-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  height: 520px;
+  max-height: 520px;
+  overflow-y: scroll;
+  padding-right: 10px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+/* Prominent Custom Cyan Scrollbar for Algorithm Names Sidebar */
+.algo-explorer-sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.algo-explorer-sidebar::-webkit-scrollbar-track {
+  background: rgba(2, 132, 199, 0.12);
+  border-radius: 4px;
+}
+
+.algo-explorer-sidebar::-webkit-scrollbar-thumb {
+  background: #0284c7;
+  border-radius: 4px;
+  box-shadow: 0 0 8px rgba(2, 132, 199, 0.6);
+}
+
+.algo-explorer-sidebar::-webkit-scrollbar-thumb:hover {
+  background: #0ea5e9;
+}
+
+.algo-explorer-group-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  padding-left: 4px;
+}
+
+.algo-explorer-group-items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.algo-explorer-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--text);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.algo-explorer-item:hover {
+  border-color: var(--primary, #0284c7);
+  background: var(--panel-2);
+}
+
+.algo-explorer-item.active {
+  background: var(--primary, #0284c7);
+  border-color: var(--primary, #0284c7);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+}
+
+.algo-explorer-item .arrow-icon {
+  color: var(--muted);
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.algo-explorer-item:hover .arrow-icon {
+  color: var(--primary, #0284c7);
+  transform: translateX(2px);
+}
+
+.algo-explorer-item.active .arrow-icon {
+  color: #ffffff;
+}
+
+.algo-explorer-main {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 28px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  height: 520px;
+  max-height: 520px;
+  overflow-y: auto;
+}
+
+/* Custom Scrollbar for Main Explorer Detail Box */
+.algo-explorer-main::-webkit-scrollbar {
+  width: 6px;
+}
+
+.algo-explorer-main::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 4px;
+}
+
+.algo-explorer-main::-webkit-scrollbar-thumb {
+  background: rgba(14, 165, 233, 0.4);
+  border-radius: 4px;
+}
+
+.algo-explorer-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.algo-category-pill {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #c084fc;
+  background: rgba(192, 132, 252, 0.15);
+  border: 1px solid rgba(192, 132, 252, 0.3);
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin-bottom: 10px;
+}
+
+.algo-explorer-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0 0 12px 0;
+  line-height: 1.1;
+}
+
+.algo-explorer-badges-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.algo-explorer-profile-box {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+.algo-explorer-profile-lbl {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  margin-bottom: 4px;
+}
+
+.algo-explorer-profile-val {
+  font-family: var(--font-mono);
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: var(--cyan, #0284c7);
+  line-height: 1.2;
+  white-space: nowrap;
+  letter-spacing: -0.02em;
+}
+
+.algo-explorer-profile-sub {
+  font-size: 0.75rem;
+  color: var(--muted);
+  white-space: nowrap;
+  margin-top: 4px;
+}
+
+.algo-explorer-matrix-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 600px) {
+  .algo-explorer-matrix-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.algo-explorer-matrix-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+
+.algo-explorer-card-lbl {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.algo-explorer-card-val {
+  font-family: var(--font-mono);
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.algo-explorer-usecase-box {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 18px 22px;
+  color: var(--text);
+  line-height: 1.6;
+  font-size: 0.94rem;
+}
+
+.algo-explorer-industry-box {
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  border-radius: 12px;
+  padding: 20px 24px;
+}
+
+.algo-explorer-industry-title {
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.algo-explorer-industry-desc {
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+
+

@@ -373,6 +373,34 @@ const algoDatabase: Record<string, AlgoMeta> = {
     recommendedUse: 'Graphs containing negative edge weights.',
     realWorldApp: 'Distance-vector routing protocols (RIP).',
     appDescription: 'RIP network distance-vector routing.'
+  },
+  'Greedy Best-First': {
+    name: 'Greedy Best-First',
+    category: 'Pathfinding',
+    best: 'O(1)',
+    average: 'O(V log V)',
+    worst: 'O(V²)',
+    space: 'O(V)',
+    stability: 'N/A',
+    speedRank: 'Elite',
+    memoryRank: 'Medium',
+    recommendedUse: 'Fast heuristic pathfinding when an approximate path to target is needed quickly.',
+    realWorldApp: 'Fast game map routing and real-time path estimation.',
+    appDescription: 'Heuristic-guided rapid graph navigation.'
+  },
+  'Bidirectional BFS': {
+    name: 'Bidirectional BFS',
+    category: 'Pathfinding',
+    best: 'O(1)',
+    average: 'O(b^(d/2))',
+    worst: 'O(b^(d/2))',
+    space: 'O(b^(d/2))',
+    stability: 'N/A',
+    speedRank: 'Elite',
+    memoryRank: 'High',
+    recommendedUse: 'Shortest path on unweighted graphs by searching simultaneously from start and goal nodes.',
+    realWorldApp: 'Peer-to-peer network graph traversal and social network degree-of-separation queries.',
+    appDescription: 'Bidirectional search space reduction engines.'
   }
 };
 
@@ -830,6 +858,147 @@ export function HistoryPage({ catalog }: { catalog: CatalogResponse }) {
             </div>
           </div>
         )}
+
+        {/* Interactive Algorithm Explorer */}
+        <section className="panel" style={{ padding: '28px', marginBottom: '32px' }}>
+          <div className="algo-explorer-section-header">
+            <div className="algo-explorer-header-bar" />
+            <h2 className="algo-explorer-section-title">Interactive Algorithm Explorer</h2>
+          </div>
+
+          <div className="algo-explorer-container">
+            {/* Sidebar list of algorithms */}
+            <div className="algo-explorer-sidebar">
+              <div className="algo-explorer-group">
+                <div className="algo-explorer-group-title">SORTING</div>
+                <div className="algo-explorer-group-items">
+                  {(catalog?.sortingAlgorithms ?? [
+                    'Bubble Sort', 'Selection Sort', 'Insertion Sort', 'Merge Sort', 
+                    'Quick Sort', 'Heap Sort', 'Comb Sort', 'Radix Sort', 'Counting Sort', 'Cocktail Sort', 'Shell Sort'
+                  ]).map((algo) => (
+                    <button
+                      key={algo}
+                      className={`algo-explorer-item ${selectedAlgo === algo ? 'active' : ''}`}
+                      onClick={() => setSelectedAlgo(algo)}
+                    >
+                      <span>{algo}</span>
+                      <ArrowRight size={16} className="arrow-icon" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="algo-explorer-group">
+                <div className="algo-explorer-group-title">SEARCHING</div>
+                <div className="algo-explorer-group-items">
+                  {(catalog?.searchingAlgorithms ?? [
+                    'Linear Search', 'Binary Search', 'Jump Search', 
+                    'Exponential Search', 'Interpolation Search', 'Ternary Search'
+                  ]).map((algo) => (
+                    <button
+                      key={algo}
+                      className={`algo-explorer-item ${selectedAlgo === algo ? 'active' : ''}`}
+                      onClick={() => setSelectedAlgo(algo)}
+                    >
+                      <span>{algo}</span>
+                      <ArrowRight size={16} className="arrow-icon" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="algo-explorer-group">
+                <div className="algo-explorer-group-title">PATHFINDING</div>
+                <div className="algo-explorer-group-items">
+                  {(catalog?.pathfindingAlgorithms ?? [
+                    'BFS', 'DFS', 'Dijkstra', 'A* Search', 'Bellman-Ford', 'Greedy Best-First', 'Bidirectional BFS'
+                  ]).map((algo) => (
+                    <button
+                      key={algo}
+                      className={`algo-explorer-item ${selectedAlgo === algo ? 'active' : ''}`}
+                      onClick={() => setSelectedAlgo(algo)}
+                    >
+                      <span>{algo}</span>
+                      <ArrowRight size={16} className="arrow-icon" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Main detail card for selected algorithm */}
+            <div className="algo-explorer-main">
+              <div className="algo-explorer-top-bar">
+                <div>
+                  <span className="algo-category-pill">{selectedData.category}</span>
+                  <h2 className="algo-explorer-title">{selectedData.name}</h2>
+                  <div className="algo-explorer-badges-row">
+                    <span className={getRankBadgeClass(selectedData.speedRank)}>
+                      SPEED: {selectedData.speedRank.toUpperCase()}
+                    </span>
+                    <span className={getRankBadgeClass(selectedData.memoryRank)}>
+                      MEMORY: {selectedData.memoryRank.toUpperCase()}
+                    </span>
+                    <span className={getRankBadgeClass(selectedData.stability)}>
+                      STABILITY: {selectedData.stability.toUpperCase()}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="algo-explorer-profile-box">
+                  <div className="algo-explorer-profile-lbl">
+                    <Clock size={14} /> COMPLEXITY PROFILE
+                  </div>
+                  <div className="algo-explorer-profile-val">{selectedData.average}</div>
+                  <div className="algo-explorer-profile-sub">Average Case Time</div>
+                </div>
+              </div>
+
+              <div>
+                <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px', fontSize: '0.82rem', color: 'var(--muted)', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 700 }}>
+                  <Layers size={16} /> COMPLEXITY MATRIX
+                </h4>
+                <div className="algo-explorer-matrix-grid">
+                  <div className="algo-explorer-matrix-card">
+                    <div className="algo-explorer-card-lbl">Best Case Time</div>
+                    <div className="algo-explorer-card-val">{selectedData.best}</div>
+                  </div>
+                  <div className="algo-explorer-matrix-card">
+                    <div className="algo-explorer-card-lbl">Average Case Time</div>
+                    <div className="algo-explorer-card-val">{selectedData.average}</div>
+                  </div>
+                  <div className="algo-explorer-matrix-card">
+                    <div className="algo-explorer-card-lbl">Worst Case Time</div>
+                    <div className="algo-explorer-card-val">{selectedData.worst}</div>
+                  </div>
+                  <div className="algo-explorer-matrix-card">
+                    <div className="algo-explorer-card-lbl">Space Complexity</div>
+                    <div className="algo-explorer-card-val">{selectedData.space}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', fontSize: '0.82rem', color: 'var(--muted)', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 700 }}>
+                  <Zap size={16} className="text-amber-400" /> RECOMMENDED USE CASES
+                </h4>
+                <div className="algo-explorer-usecase-box">
+                  {selectedData.recommendedUse}
+                </div>
+              </div>
+
+              <div>
+                <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', fontSize: '0.82rem', color: 'var(--cyan, #0284c7)', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 700 }}>
+                  <Sparkles size={16} className="text-cyan-400" /> PRACTICAL INDUSTRY APPLICATION
+                </h4>
+                <div className="algo-explorer-industry-box">
+                  <div className="algo-explorer-industry-title">{selectedData.realWorldApp}</div>
+                  <div className="algo-explorer-industry-desc">{selectedData.appDescription}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
 
         {/* Theoretical Rankings & Matrices */}
         <section className="rankings-grid">
