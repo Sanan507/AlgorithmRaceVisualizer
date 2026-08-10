@@ -195,6 +195,294 @@ export const algorithmMetadata: Record<string, {
   spaceComplexity: string;
   pseudocode: string[];
 }> = {
+  // ── Sorting ──────────────────────────────────────────────────────────────
+  'Bubble Sort': {
+    name: 'Bubble Sort',
+    description: 'Repeatedly compares adjacent values and swaps out-of-order pairs until array is sorted.',
+    timeComplexity: 'Best: O(n) | Avg: O(n²) | Worst: O(n²)',
+    spaceComplexity: 'O(1) auxiliary',
+    pseudocode: [
+      'for i = 0 to n - 1:',
+      '  for j = 0 to n - i - 2:',
+      '    if arr[j] > arr[j + 1]: swap(arr[j], arr[j + 1])',
+    ],
+  },
+  'Selection Sort': {
+    name: 'Selection Sort',
+    description: 'Repeatedly scans the unsorted subarray for the minimum element and moves it to the front.',
+    timeComplexity: 'Best: O(n²) | Avg: O(n²) | Worst: O(n²)',
+    spaceComplexity: 'O(1) auxiliary',
+    pseudocode: [
+      'for i = 0 to n - 1:',
+      '  minIdx = i',
+      '  for j = i + 1 to n - 1:',
+      '    if arr[j] < arr[minIdx]: minIdx = j',
+      '  swap(arr[i], arr[minIdx])',
+    ],
+  },
+  'Insertion Sort': {
+    name: 'Insertion Sort',
+    description: 'Builds a sorted subarray by shifting larger elements right and inserting each new element into place.',
+    timeComplexity: 'Best: O(n) | Avg: O(n²) | Worst: O(n²)',
+    spaceComplexity: 'O(1) auxiliary',
+    pseudocode: [
+      'for i = 1 to n - 1:',
+      '  key = arr[i], j = i - 1',
+      '  while j >= 0 and arr[j] > key:',
+      '    arr[j + 1] = arr[j], j--',
+      '  arr[j + 1] = key',
+    ],
+  },
+  'Merge Sort': {
+    name: 'Merge Sort',
+    description: 'Divide-and-conquer algorithm that recursively splits array into halves, sorts them, and merges them back.',
+    timeComplexity: 'Best: O(n log n) | Avg: O(n log n) | Worst: O(n log n)',
+    spaceComplexity: 'O(n) auxiliary',
+    pseudocode: [
+      'mergeSort(arr, l, r):',
+      '  if l < r:',
+      '    mid = (l + r) / 2',
+      '    mergeSort(arr, l, mid)',
+      '    mergeSort(arr, mid + 1, r)',
+      '    merge(arr, l, mid, r)',
+    ],
+  },
+  'Quick Sort': {
+    name: 'Quick Sort',
+    description: 'Selects a pivot element and partitions the array into values smaller and larger than the pivot.',
+    timeComplexity: 'Best: O(n log n) | Avg: O(n log n) | Worst: O(n²)',
+    spaceComplexity: 'O(log n) auxiliary',
+    pseudocode: [
+      'quickSort(arr, low, high):',
+      '  if low < high:',
+      '    p = partition(arr, low, high)',
+      '    quickSort(arr, low, p - 1)',
+      '    quickSort(arr, p + 1, high)',
+    ],
+  },
+  'Heap Sort': {
+    name: 'Heap Sort',
+    description: 'Converts array into a Max Heap structure and repeatedly extracts the root element to the end.',
+    timeComplexity: 'Best: O(n log n) | Avg: O(n log n) | Worst: O(n log n)',
+    spaceComplexity: 'O(1) auxiliary',
+    pseudocode: [
+      'buildMaxHeap(arr)',
+      'for i = n - 1 down to 1:',
+      '  swap(arr[0], arr[i])',
+      '  heapify(arr, 0, i)',
+    ],
+  },
+  'Shell Sort': {
+    name: 'Shell Sort',
+    description: 'Generalization of insertion sort that compares elements at shrinking gap intervals.',
+    timeComplexity: 'Best: O(n log n) | Avg: O(n^1.3) | Worst: O(n²)',
+    spaceComplexity: 'O(1) auxiliary',
+    pseudocode: [
+      'for gap = n / 2 down to 1:',
+      '  insertionSortWithGap(arr, gap)',
+    ],
+  },
+  'Comb Sort': {
+    name: 'Comb Sort',
+    description: 'Improves Bubble Sort by comparing elements with a shrinking gap (shrink factor 1.3).',
+    timeComplexity: 'Best: O(n log n) | Avg: O(n²/2ᵖ) | Worst: O(n²)',
+    spaceComplexity: 'O(1) auxiliary',
+    pseudocode: [
+      'gap = n',
+      'while gap > 1 or swapped:',
+      '  gap = max(1, floor(gap / 1.3))',
+      '  compare and swap with step gap',
+    ],
+  },
+  'Radix Sort': {
+    name: 'Radix Sort',
+    description: 'Non-comparison integer sort that distributes numbers into buckets according to individual digit places.',
+    timeComplexity: 'Best: O(nk) | Avg: O(nk) | Worst: O(nk)',
+    spaceComplexity: 'O(n + k) auxiliary',
+    pseudocode: [
+      'for digit = 1 to maxDigit:',
+      '  distribute into 10 buckets by digit',
+      '  collect back to array',
+    ],
+  },
+  'Counting Sort': {
+    name: 'Counting Sort',
+    description: 'Non-comparison integer sort that tallies key frequencies to calculate output index positions directly.',
+    timeComplexity: 'Best: O(n + k) | Avg: O(n + k) | Worst: O(n + k)',
+    spaceComplexity: 'O(k) auxiliary',
+    pseudocode: [
+      'count = array of zeros size k',
+      'for x in arr: count[x]++',
+      'reconstruct sorted array from count frequencies',
+    ],
+  },
+  'Cocktail Sort': {
+    name: 'Cocktail Sort',
+    description: 'Bidirectional variation of Bubble Sort that traverses forward and backward during each pass.',
+    timeComplexity: 'Best: O(n) | Avg: O(n²) | Worst: O(n²)',
+    spaceComplexity: 'O(1) auxiliary',
+    pseudocode: [
+      'repeat forward and backward passes swapping out-of-order adjacent elements',
+    ],
+  },
+
+  // ── Searching ─────────────────────────────────────────────────────────────
+  'Linear Search': {
+    name: 'Linear Search',
+    description: 'Sequentially checks each element in the dataset until a match is found or end is reached.',
+    timeComplexity: 'Best: O(1) | Avg: O(n) | Worst: O(n)',
+    spaceComplexity: 'O(1) auxiliary',
+    pseudocode: [
+      'for i = 0 to n - 1:',
+      '  if arr[i] == target: return i',
+      'return -1',
+    ],
+  },
+  'Binary Search': {
+    name: 'Binary Search',
+    description: 'Requires sorted data; repeatedly compares target with midpoint and eliminates half the search space.',
+    timeComplexity: 'Best: O(1) | Avg: O(log n) | Worst: O(log n)',
+    spaceComplexity: 'O(1) auxiliary',
+    pseudocode: [
+      'low = 0, high = n - 1',
+      'while low <= high:',
+      '  mid = (low + high) / 2',
+      '  if arr[mid] == target: return mid',
+      '  else if arr[mid] < target: low = mid + 1',
+      '  else: high = mid - 1',
+    ],
+  },
+  'Jump Search': {
+    name: 'Jump Search',
+    description: 'Jumps ahead by fixed steps (√n) on sorted data then performs linear search within matching block.',
+    timeComplexity: 'Best: O(1) | Avg: O(√n) | Worst: O(√n)',
+    spaceComplexity: 'O(1) auxiliary',
+    pseudocode: [
+      'step = floor(sqrt(n))',
+      'jump ahead by step while arr[min(step, n)-1] < target',
+      'linear search in current block',
+    ],
+  },
+  'Exponential Search': {
+    name: 'Exponential Search',
+    description: 'Finds range containing target by doubling index bounds (1, 2, 4, 8...), then runs binary search.',
+    timeComplexity: 'Best: O(1) | Avg: O(log n) | Worst: O(log n)',
+    spaceComplexity: 'O(1) auxiliary',
+    pseudocode: [
+      'if arr[0] == target: return 0',
+      'i = 1',
+      'while i < n and arr[i] <= target: i *= 2',
+      'return binarySearch(arr, i/2, min(i, n-1), target)',
+    ],
+  },
+  'Interpolation Search': {
+    name: 'Interpolation Search',
+    description: 'Estimates target position on uniformly distributed sorted data using value proportionality.',
+    timeComplexity: 'Best: O(1) | Avg: O(log log n) | Worst: O(n)',
+    spaceComplexity: 'O(1) auxiliary',
+    pseudocode: [
+      'pos = low + ((target - arr[low]) * (high - low)) / (arr[high] - arr[low])',
+      'compare target with arr[pos] and adjust bounds',
+    ],
+  },
+  'Ternary Search': {
+    name: 'Ternary Search',
+    description: 'Divides sorted search space into three equal parts using two midpoints.',
+    timeComplexity: 'Best: O(1) | Avg: O(log₃ n) | Worst: O(log₃ n)',
+    spaceComplexity: 'O(1) auxiliary',
+    pseudocode: [
+      'mid1 = low + (high - low) / 3',
+      'mid2 = high - (high - low) / 3',
+      'compare target with arr[mid1] and arr[mid2]',
+    ],
+  },
+
+  // ── Pathfinding ───────────────────────────────────────────────────────────
+  'BFS': {
+    name: 'Breadth-First Search (BFS)',
+    description: 'Explores graph nodes level-by-level using a FIFO queue; guarantees shortest path on unweighted graphs.',
+    timeComplexity: 'O(V + E)',
+    spaceComplexity: 'O(V) auxiliary',
+    pseudocode: [
+      'queue.enqueue(start), visited.add(start)',
+      'while queue not empty:',
+      '  curr = queue.dequeue()',
+      '  for neighbor of curr: if unvisited: enqueue and mark visited',
+    ],
+  },
+  'DFS': {
+    name: 'Depth-First Search (DFS)',
+    description: 'Explores graph deeply along each branch before backtracking using a LIFO stack or recursion.',
+    timeComplexity: 'O(V + E)',
+    spaceComplexity: 'O(V) auxiliary',
+    pseudocode: [
+      'stack.push(start)',
+      'while stack not empty:',
+      '  curr = stack.pop()',
+      '  visit unvisited neighbors',
+    ],
+  },
+  'Dijkstra': {
+    name: 'Dijkstra Algorithm',
+    description: 'Finds shortest paths from start node to all other nodes in weighted graphs with non-negative edge weights.',
+    timeComplexity: 'O((V + E) log V)',
+    spaceComplexity: 'O(V) auxiliary',
+    pseudocode: [
+      'dist[start] = 0, pq.insert(start, 0)',
+      'while pq not empty:',
+      '  u = pq.extractMin()',
+      '  for neighbor v of u: relax edge (u, v)',
+    ],
+  },
+  'A* Search': {
+    name: 'A* Search Algorithm',
+    description: 'Informed pathfinding algorithm combining actual distance g(n) and heuristic estimate h(n): f(n) = g(n) + h(n).',
+    timeComplexity: 'Best: O(E) | Worst: O(bᵈ)',
+    spaceComplexity: 'O(V) auxiliary',
+    pseudocode: [
+      'openSet.add(start)',
+      'while openSet not empty:',
+      '  curr = node with lowest fScore = gScore + hScore',
+      '  if curr == goal: return reconstructPath()',
+      '  evaluate neighbors and update fScores',
+    ],
+  },
+  'Bellman-Ford': {
+    name: 'Bellman-Ford Algorithm',
+    description: 'Computes shortest paths from single source and detects negative-weight cycles by relaxing all edges V-1 times.',
+    timeComplexity: 'O(V · E)',
+    spaceComplexity: 'O(V) auxiliary',
+    pseudocode: [
+      'dist[start] = 0',
+      'repeat V - 1 times:',
+      '  for each edge (u, v, weight): relax edge',
+    ],
+  },
+  'Greedy Best-First': {
+    name: 'Greedy Best-First Search',
+    description: 'Heuristic pathfinding algorithm that always expands the node closest to goal according to heuristic h(n).',
+    timeComplexity: 'Best: O(1) | Worst: O(bᵐ)',
+    spaceComplexity: 'O(bᵐ) auxiliary',
+    pseudocode: [
+      'pq.insert(start, h(start))',
+      'while pq not empty:',
+      '  curr = pq.extractMin()',
+      '  expand neighbors ordered by heuristic h(neighbor)',
+    ],
+  },
+  'Bidirectional BFS': {
+    name: 'Bidirectional BFS',
+    description: 'Runs two simultaneous BFS searches from start and goal until frontiers meet, halving search depth.',
+    timeComplexity: 'O(bᵈ/²)',
+    spaceComplexity: 'O(bᵈ/²) auxiliary',
+    pseudocode: [
+      'expand forward queue',
+      'expand backward queue',
+      'stop when search frontiers intersect',
+    ],
+  },
+
+  // ── Dynamic Programming ───────────────────────────────────────────────────
   '0/1 Knapsack': {
     name: '0/1 Knapsack Problem',
     description: 'Select items with given weights and values to maximize total value without exceeding knapsack capacity.',
@@ -240,24 +528,13 @@ export const algorithmMetadata: Record<string, {
       'return dp[M][N]',
     ],
   },
-  'Ternary Search': {
-    name: 'Ternary Search',
-    description: 'Requires sorted data and divides the remaining search range into three equal parts using two midpoints.',
-    timeComplexity: 'O(log3 N)',
-    spaceComplexity: 'O(1)',
-    pseudocode: [
-      'low = 0, high = n - 1',
-      'while low <= high:',
-      '  mid1 = low + (high - low) / 3',
-      '  mid2 = high - (high - low) / 3',
-      '  compare with mid1 and mid2 and adjust bounds',
-    ],
-  },
+
+  // ── Trees ─────────────────────────────────────────────────────────────────
   'Binary Search Tree': {
     name: 'Binary Search Tree (BST)',
     description: 'A binary tree structure where each node left child < parent and right child > parent.',
-    timeComplexity: 'O(log N) Avg / O(N) Worst',
-    spaceComplexity: 'O(N)',
+    timeComplexity: 'Best: O(log N) | Avg: O(log N) | Worst: O(N)',
+    spaceComplexity: 'O(N) auxiliary',
     pseudocode: [
       'insert(node, val):',
       '  if node is null: return new Node(val)',
@@ -269,8 +546,8 @@ export const algorithmMetadata: Record<string, {
   'AVL Tree': {
     name: 'AVL Tree (Self-Balancing)',
     description: 'Self-balancing BST maintaining balance factor |height(L) - height(R)| <= 1 via 4 rotation types (LL, RR, LR, RL).',
-    timeComplexity: 'O(log N) Guaranteed',
-    spaceComplexity: 'O(N)',
+    timeComplexity: 'Best: O(log N) | Avg: O(log N) | Worst: O(log N)',
+    spaceComplexity: 'O(N) auxiliary',
     pseudocode: [
       'insert(node, val):',
       '  node = standard_bst_insert(node, val)',
@@ -283,8 +560,8 @@ export const algorithmMetadata: Record<string, {
   'Red-Black Tree': {
     name: 'Red-Black Tree',
     description: 'Self-balancing BST using red/black node coloring and restructuring to ensure max path length <= 2 * min path length.',
-    timeComplexity: 'O(log N) Guaranteed',
-    spaceComplexity: 'O(N)',
+    timeComplexity: 'Best: O(log N) | Avg: O(log N) | Worst: O(log N)',
+    spaceComplexity: 'O(N) auxiliary',
     pseudocode: [
       'insert(val):',
       '  node = bst_insert(val, color=RED)',
@@ -294,6 +571,7 @@ export const algorithmMetadata: Record<string, {
     ],
   },
 };
+
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 

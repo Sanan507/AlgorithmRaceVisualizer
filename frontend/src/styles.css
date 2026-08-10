@@ -6567,28 +6567,25 @@ input[type="range"] {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   AlgoBot AI Step Tutor Card & Custom Dataset Modal
-   ═══════════════════════════════════════════════════════════════ */
-/* ═══════════════════════════════════════════════════════════════
-   AlgoBot AI Step Tutor Card & Multi-Lane Selector
+   AlgoBot — Live Step Tutor Card & Multi-Lane Selector
    ═══════════════════════════════════════════════════════════════ */
 .algobot-card {
   background: var(--panel);
   border: 1px solid var(--line);
-  border-left: 4px solid var(--accent);
+  border-left: 4px solid var(--accent, #6366f1);
   border-radius: 16px;
   padding: 18px 22px;
   display: flex;
   flex-direction: column;
   gap: 14px;
   box-shadow: var(--card-shadow);
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
 }
 
 :root[data-theme='light'] .algobot-card {
   background: #ffffff;
-  border-color: rgba(14, 165, 233, 0.25);
-  box-shadow: 0 4px 20px rgba(0, 101, 145, 0.08);
+  border-color: rgba(99, 102, 241, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 101, 145, 0.06);
 }
 
 .algobot-header {
@@ -6606,35 +6603,31 @@ input[type="range"] {
 }
 
 .algobot-avatar {
-  position: relative;
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
   background: rgba(99, 102, 241, 0.12);
-  border: 1px solid rgba(99, 102, 241, 0.3);
+  border: 1px solid rgba(99, 102, 241, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 :root[data-theme='light'] .algobot-avatar {
-  background: rgba(14, 165, 233, 0.12);
-  border-color: rgba(14, 165, 233, 0.3);
+  background: rgba(99, 102, 241, 0.08);
+  border-color: rgba(99, 102, 241, 0.2);
 }
 
 .algobot-icon {
-  color: var(--accent);
+  color: var(--accent, #6366f1);
 }
 
-.algobot-pulse {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #10b981;
-  box-shadow: 0 0 8px #10b981;
+.algobot-title {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+  letter-spacing: 0.1px;
 }
 
 .algobot-subtitle {
@@ -6646,7 +6639,7 @@ input[type="range"] {
 .algobot-right-meta {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
@@ -6654,17 +6647,22 @@ input[type="range"] {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 600;
   color: var(--muted);
   background: var(--panel-2);
   padding: 4px 8px;
-  border-radius: 10px;
+  border-radius: 8px;
   border: 1px solid var(--line);
 }
 
+:root[data-theme='light'] .algobot-lane-selector {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
 .algobot-lane-btn {
-  padding: 3px 10px;
+  padding: 3px 9px;
   border-radius: 6px;
   border: 1px solid var(--line);
   background: transparent;
@@ -6676,8 +6674,8 @@ input[type="range"] {
 }
 
 .algobot-lane-btn.active {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: var(--accent, #6366f1);
+  border-color: var(--accent, #6366f1);
   color: #ffffff;
 }
 
@@ -6685,13 +6683,19 @@ input[type="range"] {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 600;
-  color: var(--accent);
-  background: rgba(99, 102, 241, 0.1);
+  color: var(--accent, #6366f1);
+  background: rgba(99, 102, 241, 0.08);
   padding: 4px 12px;
-  border-radius: 20px;
-  border: 1px solid rgba(99, 102, 241, 0.25);
+  border-radius: 16px;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+:root[data-theme='light'] .algobot-badge {
+  color: #4f46e5;
+  background: rgba(79, 70, 229, 0.06);
+  border-color: rgba(79, 70, 229, 0.18);
 }
 
 .algobot-bubble {
@@ -6708,12 +6712,120 @@ input[type="range"] {
 }
 
 .algobot-text {
-  font-size: 0.93rem;
+  font-size: 0.92rem;
   color: var(--text);
   margin: 0;
   line-height: 1.55;
   font-weight: 500;
 }
+
+.algobot-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.algobot-action-btn {
+  background: rgba(99, 102, 241, 0.06);
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.algobot-action-btn:hover {
+  background: rgba(99, 102, 241, 0.14);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+:root[data-theme='light'] .algobot-action-btn {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #334155;
+}
+
+:root[data-theme='light'] .algobot-action-btn:hover {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+}
+
+.algobot-detail-box {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 18px;
+  font-size: 0.85rem;
+  color: var(--text);
+  line-height: 1.55;
+}
+
+:root[data-theme='light'] .algobot-detail-box {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  color: #1e293b;
+}
+
+.algobot-complexity-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.algobot-complexity-chip {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+:root[data-theme='light'] .algobot-complexity-chip {
+  background: #ffffff;
+  border-color: #cbd5e1;
+}
+
+.algobot-chip-label {
+  font-size: 0.73rem;
+  color: var(--muted);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.algobot-chip-val {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--accent, #6366f1);
+  font-family: 'JetBrains Mono', Consolas, monospace;
+}
+
+:root[data-theme='light'] .algobot-chip-val {
+  color: #4f46e5;
+}
+
+.algobot-theory-text {
+  font-size: 0.83rem;
+  color: var(--muted);
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+
+
 
 .step-explanation-body {
   font-size: 0.9rem;
