@@ -11,6 +11,7 @@ import { useAudio } from '../context/AudioContext';
 import { usePlayback } from '../hooks/usePlayback';
 import type { CatalogResponse, RaceResponse, SimulationFrame } from '../models/types';
 import { api } from '../services/api';
+import { createSimulationStream } from '../services/sseClient';
 import { StepExplanationCard } from '../components/StepExplanationCard';
 import { Share2, RefreshCw, Sparkles, Palette } from 'lucide-react';
 import { getUrlParams } from '../utils/urlParams';
@@ -105,10 +106,10 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
       if (sendWalls) setWalls(sendWalls);
       if (sendWeights) setWeights(sendWeights);
 
-      const wasCompletedOrAdvanced = playback.frameIndex > 0;
+
 
       try {
-        const data = await api.pathfinding({
+                const params = {
           algorithms: useAlgos,
           rows: 18,
           cols: 28,
@@ -119,32 +120,65 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
           startCol: useStart[1],
           endRow: useEnd[0],
           endCol: useEnd[1]
-        });
+        };
 
-        if (fetchId !== latestFetchIdRef.current) return;
-
-        setResponse(data);
-        const resolvedWalls = data.walls ?? sendWalls ?? Array.from({ length: 18 }, () => Array(28).fill(false));
-        const resolvedWeights = data.weights ?? sendWeights ?? Array.from({ length: 18 }, () => Array(28).fill(1));
-        setWalls(resolvedWalls);
-        setWeights(resolvedWeights);
-        currentWallsRef.current = resolvedWalls;
-        currentWeightsRef.current = resolvedWeights;
-
-        setHasFreshDataset(true);
-        playback.reset();
-        if (autoplay) {
-          play('start');
-          playback.setPlaying(true);
-          setHasFreshDataset(false);
-        } else if (wasCompletedOrAdvanced) {
-          setTimeout(() => {
-            if (data.lanes && data.lanes[0]?.frames) {
-              const maxF = Math.max(...data.lanes.map((l) => l.frames.length)) - 1;
-              playback.seek(Math.max(0, maxF));
+        const cancelStream = createSimulationStream('/api/simulations/stream/pathfinding', params,
+          (startData: any) => {
+            if (fetchId !== latestFetchIdRef.current) {
+              cancelStream();
+              return;
             }
-          }, 10);
-        }
+            setResponse(startData);
+            const resolvedWalls = startData.walls ?? sendWalls ?? Array.from({ length: 18 }, () => Array(28).fill(false));
+            const resolvedWeights = startData.weights ?? sendWeights ?? Array.from({ length: 18 }, () => Array(28).fill(1));
+            setWalls(resolvedWalls);
+            setWeights(resolvedWeights);
+            currentWallsRef.current = resolvedWalls;
+            currentWeightsRef.current = resolvedWeights;
+
+            setHasFreshDataset(true);
+            playback.reset();
+            if (autoplay) {
+              play('start');
+              playback.setPlaying(true);
+              setHasFreshDataset(false);
+            }
+          },
+          (frameEvent: any) => {
+             if (fetchId !== latestFetchIdRef.current) {
+               cancelStream();
+               return;
+             }
+             setResponse((prev) => {
+                if (!prev) return prev;
+                const newLanes = prev.lanes.map(lane => {
+                   if (lane.name === frameEvent.laneName) {
+                      return { ...lane, frames: [...lane.frames, frameEvent.frame] };
+                   }
+                   return lane;
+                });
+                if (!newLanes.find(l => l.name === frameEvent.laneName)) {
+                   newLanes.push({
+                      name: frameEvent.laneName,
+                      complexity: '',
+                      complexityInfo: {} as any,
+                      stats: { comparisons: 0, swaps: 0, steps: 0, timeMs: 0, found: false, foundIndex: null },
+                      frames: [frameEvent.frame]
+                   });
+                }
+                return { ...prev, lanes: newLanes };
+             });
+          },
+          (endData: any) => {
+            if (fetchId !== latestFetchIdRef.current) return;
+            setResponse(prev => prev ? { ...prev, winner: endData.winner } : endData);
+          },
+          (err: any) => {
+            console.error('SSE Error', err);
+          }
+        );
+
+
       } finally {
         if (fetchId === latestFetchIdRef.current) {
           setLoading(false);
