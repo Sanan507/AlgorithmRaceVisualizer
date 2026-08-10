@@ -71,8 +71,8 @@ export const TreesPage: React.FC = () => {
     const evt = currentFrame.eventType;
     if (!evt || evt === 'INIT') return;
 
-    let activeVal = currentFrame.activeNodeVal;
-    if (activeVal === undefined && treeValues.length > 0) {
+    let activeVal: number | null | undefined = currentFrame.activeNodeVal;
+    if ((activeVal === undefined || activeVal === null) && treeValues.length > 0) {
       activeVal = treeValues[currentFrameIdx % treeValues.length];
     }
     const minVal = treeValues.length > 0 ? Math.min(...treeValues) : 1;
@@ -83,7 +83,7 @@ export const TreesPage: React.FC = () => {
     } else if (evt === 'SEARCH_NOT_FOUND') {
       play('searchMiss');
     } else if (evt.startsWith('ROTATION_') || evt === 'RECOLOR') {
-      if (audioSettings.synthEnabled && playToneForValue && activeVal !== undefined) {
+      if (audioSettings.synthEnabled && playToneForValue && typeof activeVal === 'number') {
         playToneForValue(activeVal, minVal, maxVal, 'swap');
       } else {
         play('swap');
@@ -92,7 +92,7 @@ export const TreesPage: React.FC = () => {
       play('searchMiss');
     } else {
       // INSERT, INSERT_DONE, SEARCH_VISIT, TRAVERSAL_VISIT
-      if (audioSettings.synthEnabled && playToneForValue && activeVal !== undefined) {
+      if (audioSettings.synthEnabled && playToneForValue && typeof activeVal === 'number') {
         playToneForValue(activeVal, minVal, maxVal, 'compare');
       } else {
         play('compare');

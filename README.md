@@ -14,8 +14,6 @@
 
 [**🌐 Live Application**](https://algorithm-race-visualizer.vercel.app) • [**📖 API Documentation**](https://algorithm-race-visualizer.vercel.app/swagger-ui.html) • [**⚡ Quickstart Guide**](#-local-development--setup)
 
----
-
 </div>
 
 ## 📸 Visual Overview & Showcase
