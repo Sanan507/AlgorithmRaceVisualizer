@@ -14,7 +14,8 @@ export function Controls({
   onSeek,
   speed,
   onSpeedChange,
-  resetLabel = 'Reset'
+  resetLabel = 'Reset',
+  startLabel = 'Start Race',
 }: {
   playing: boolean;
   disabled?: boolean;
@@ -29,6 +30,7 @@ export function Controls({
   speed: number;
   onSpeedChange: (speed: number) => void;
   resetLabel?: string;
+  startLabel?: string;
 }) {
   const { play } = useAudio();
 
@@ -63,8 +65,8 @@ export function Controls({
   return (
     <div className="control-strip flex-wrap">
       <div className="control-group">
-        <button className="btn primary" onClick={handleStart} disabled={disabled} aria-label="Start Race">
-          <Play size={17} /> Start Race
+        <button className="btn primary" onClick={handleStart} disabled={disabled} aria-label={startLabel}>
+          <Play size={17} /> {startLabel}
         </button>
         <button className="btn ghost" onClick={handleToggle} disabled={disabled} aria-label={playing ? 'Pause' : 'Resume'}>
           {playing ? <Pause size={17} /> : <Play size={17} />} {playing ? 'Pause' : 'Resume'}

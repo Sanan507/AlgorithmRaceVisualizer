@@ -212,6 +212,41 @@ function traverseTreeNodes<T extends { val: number; left?: T | null; right?: T |
   }
 }
 
+// Helper to trace insertion path and generate concise explanation
+function findInsertionPath(root: { val: number; left?: any; right?: any } | null, val: number): { path: number[]; parentVal: number | null; isLeft: boolean } {
+  const path: number[] = [];
+  let curr = root;
+  let parentVal: number | null = null;
+  let isLeft = false;
+
+  while (curr) {
+    path.push(curr.val);
+    parentVal = curr.val;
+    if (val < curr.val) {
+      isLeft = true;
+      if (!curr.left) break;
+      curr = curr.left;
+    } else if (val > curr.val) {
+      isLeft = false;
+      if (!curr.right) break;
+      curr = curr.right;
+    } else {
+      break;
+    }
+  }
+
+  return { path, parentVal, isLeft };
+}
+
+function formatInsertionExplanation(path: number[], val: number, parentVal: number | null, isLeft: boolean): string {
+  if (parentVal === null) {
+    return `Inserted ${val} as the root node.`;
+  }
+  const pathStr = path.length > 0 ? `${path.join(' → ')}, then ` : '';
+  const side = isLeft ? 'left' : 'right';
+  return `${val} follows ${pathStr}becomes the ${side} child of ${parentVal}.`;
+}
+
 // Main fallback simulator supporting ALL operations across ALL 3 tree types
 export function generateClientTreeSimulation(req: TreeSimulationRequest): TreeSimulationResponse {
   const treeType = req.treeType || 'bst';
@@ -310,23 +345,27 @@ export function generateClientTreeSimulation(req: TreeSimulationRequest): TreeSi
     };
 
     initialValues.forEach((v) => {
+      const { path, parentVal, isLeft } = findInsertionPath(root, v);
       root = insertAVL(root, v);
       frames.push({
         frameIndex: frames.length,
         root: avlToDto(root),
         activeNodeVal: v,
-        explanation: `Inserted ${v} into AVL Tree.`,
+        highlightNodes: [...path, v],
+        explanation: formatInsertionExplanation(path, v, parentVal, isLeft),
         eventType: 'INSERT',
       });
     });
 
     if (op === 'insert' && req.target !== undefined) {
+      const { path, parentVal, isLeft } = findInsertionPath(root, req.target);
       root = insertAVL(root, req.target);
       frames.push({
         frameIndex: frames.length,
         root: avlToDto(root),
         activeNodeVal: req.target,
-        explanation: `Inserted node ${req.target} into AVL Tree.`,
+        highlightNodes: [...path, req.target],
+        explanation: formatInsertionExplanation(path, req.target, parentVal, isLeft),
         eventType: 'INSERT_DONE',
       });
     } else if (op === 'search' && req.target !== undefined) {
@@ -377,25 +416,29 @@ export function generateClientTreeSimulation(req: TreeSimulationRequest): TreeSi
     };
 
     initialValues.forEach((v) => {
+      const { path, parentVal, isLeft } = findInsertionPath(root, v);
       root = insertRB(root, v);
       if (root) root.color = 'BLACK';
       frames.push({
         frameIndex: frames.length,
         root: rbToDto(root),
         activeNodeVal: v,
-        explanation: `Inserted ${v} into Red-Black Tree. Enforced root-black.`,
+        highlightNodes: [...path, v],
+        explanation: formatInsertionExplanation(path, v, parentVal, isLeft),
         eventType: 'INSERT',
       });
     });
 
     if (op === 'insert' && req.target !== undefined) {
+      const { path, parentVal, isLeft } = findInsertionPath(root, req.target);
       root = insertRB(root, req.target);
       if (root) root.color = 'BLACK';
       frames.push({
         frameIndex: frames.length,
         root: rbToDto(root),
         activeNodeVal: req.target,
-        explanation: `Inserted ${req.target} into Red-Black Tree. Enforced root-black.`,
+        highlightNodes: [...path, req.target],
+        explanation: formatInsertionExplanation(path, req.target, parentVal, isLeft),
         eventType: 'INSERT_DONE',
       });
     } else if (op === 'search' && req.target !== undefined) {
@@ -414,23 +457,27 @@ export function generateClientTreeSimulation(req: TreeSimulationRequest): TreeSi
     };
 
     initialValues.forEach((v) => {
+      const { path, parentVal, isLeft } = findInsertionPath(root, v);
       root = insertBST(root, v);
       frames.push({
         frameIndex: frames.length,
         root: bstToDto(root),
         activeNodeVal: v,
-        explanation: `Inserted ${v} into Binary Search Tree.`,
+        highlightNodes: [...path, v],
+        explanation: formatInsertionExplanation(path, v, parentVal, isLeft),
         eventType: 'INSERT',
       });
     });
 
     if (op === 'insert' && req.target !== undefined) {
+      const { path, parentVal, isLeft } = findInsertionPath(root, req.target);
       root = insertBST(root, req.target);
       frames.push({
         frameIndex: frames.length,
         root: bstToDto(root),
         activeNodeVal: req.target,
-        explanation: `Inserted ${req.target} into Binary Search Tree.`,
+        highlightNodes: [...path, req.target],
+        explanation: formatInsertionExplanation(path, req.target, parentVal, isLeft),
         eventType: 'INSERT_DONE',
       });
     } else if (op === 'search' && req.target !== undefined) {

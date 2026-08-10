@@ -129,7 +129,8 @@ cd AlgorithmRaceVisualizer
 cd backend
 mvn spring-boot:run
 ```
-*Backend server runs on `http://localhost:8080`.*
+*Backend server runs on `http://localhost:8080`.*  
+*Swagger API Documentation is served at `http://localhost:8080/swagger-ui.html`.*
 
 ### 3. Run Frontend (React 18 + Vite)
 ```bash

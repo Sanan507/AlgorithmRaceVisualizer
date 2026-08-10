@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import type { RaceLaneResponse, SimulationFrame } from '../models/types';
 import { Bot, BrainCircuit, Layers, HelpCircle, Zap, Code } from 'lucide-react';
-import { algorithmMetadata } from '../data/algorithmMetadata';
+import { algorithmMetadata, SORTING_META } from '../data/algorithmMetadata';
 import { fallbackCatalog } from '../data/fallbackCatalog';
 
 export interface StepExplanationCardProps {
@@ -67,6 +67,13 @@ export function StepExplanationCard({
 
   const currentAlgoName = activeLaneObj?.name || algorithmName || 'Algorithm';
 
+  // Check if current algorithm belongs to sorting arena
+  const isSortingArena = Boolean(
+    SORTING_META[currentAlgoName] ||
+      fallbackCatalog.sortingAlgorithms?.includes(currentAlgoName) ||
+      /sort/i.test(currentAlgoName)
+  );
+
   // Retrieve exact detailed complexity metrics
   const compInfo = getComplexityDetails(currentAlgoName);
 
@@ -77,14 +84,19 @@ export function StepExplanationCard({
 
     // 1. Completion frame
     if (activeFrameObj.done) {
-      if (activeFrameObj.comparisons !== undefined || activeFrameObj.swaps !== undefined) {
-        return `🎉 ${currentAlgoName} has completed sorting all elements! Total workload: ${activeFrameObj.comparisons ?? 0} comparisons and ${activeFrameObj.swaps ?? 0} swaps.`;
+      const hasOps = activeFrameObj.comparisons !== undefined || activeFrameObj.swaps !== undefined;
+      const opsText = hasOps
+        ? ` Total workload: ${activeFrameObj.comparisons ?? 0} comparisons${activeFrameObj.swaps !== undefined ? ` and ${activeFrameObj.swaps} swaps` : ''}.`
+        : '';
+
+      if (isSortingArena) {
+        return `🎉 ${currentAlgoName} has completed sorting all elements!${opsText}`;
       }
-      return `🎉 ${currentAlgoName} has completed execution successfully.`;
+      return `🎉 ${currentAlgoName} has completed execution successfully!${opsText}`;
     }
 
     // 2. Sorting array highlights (comparison / swap)
-    if (activeFrameObj.highlight && activeFrameObj.highlight.length === 2 && activeFrameObj.array) {
+    if (activeFrameObj.highlight && activeFrameObj.highlight.length === 2 && activeFrameObj.array && isSortingArena) {
       const idx1 = activeFrameObj.highlight[0];
       const idx2 = activeFrameObj.highlight[1];
       const val1 = activeFrameObj.array[idx1];

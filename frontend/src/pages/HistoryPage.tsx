@@ -35,7 +35,7 @@ import {
 
 interface AlgoMeta {
   name: string;
-  category: 'Sorting' | 'Searching' | 'Pathfinding';
+  category: 'Sorting' | 'Searching' | 'Pathfinding' | 'Dynamic Programming' | 'Tree Operations';
   best: string;
   average: string;
   worst: string;
@@ -401,6 +401,92 @@ const algoDatabase: Record<string, AlgoMeta> = {
     recommendedUse: 'Shortest path on unweighted graphs by searching simultaneously from start and goal nodes.',
     realWorldApp: 'Peer-to-peer network graph traversal and social network degree-of-separation queries.',
     appDescription: 'Bidirectional search space reduction engines.'
+  },
+  // Dynamic Programming
+  '0/1 Knapsack': {
+    name: '0/1 Knapsack',
+    category: 'Dynamic Programming',
+    best: 'O(N·W)',
+    average: 'O(N·W)',
+    worst: 'O(N·W)',
+    space: 'O(N·W)',
+    stability: 'N/A',
+    speedRank: 'Fast',
+    memoryRank: 'Medium',
+    recommendedUse: 'Resource allocation problems with item weights and capacity limits.',
+    realWorldApp: 'Capital budgeting, cargo loading, & cloud instance selection.',
+    appDescription: 'Resource optimization & capital allocation engines.'
+  },
+  'Longest Common Subsequence': {
+    name: 'Longest Common Subsequence',
+    category: 'Dynamic Programming',
+    best: 'O(M·N)',
+    average: 'O(M·N)',
+    worst: 'O(M·N)',
+    space: 'O(M·N)',
+    stability: 'N/A',
+    speedRank: 'Fast',
+    memoryRank: 'Medium',
+    recommendedUse: 'Comparing sequences, diffing text files, and biological sequence analysis.',
+    realWorldApp: 'Git diff engines, BLAST genomic alignment, and plagiarism checkers.',
+    appDescription: 'Text diffing & genomic sequence alignment.'
+  },
+  'Edit Distance': {
+    name: 'Edit Distance',
+    category: 'Dynamic Programming',
+    best: 'O(M·N)',
+    average: 'O(M·N)',
+    worst: 'O(M·N)',
+    space: 'O(M·N)',
+    stability: 'N/A',
+    speedRank: 'Fast',
+    memoryRank: 'Medium',
+    recommendedUse: 'Measuring string edit similarity (insertions, deletions, substitutions).',
+    realWorldApp: 'Autocorrect engines, spell checking, and fuzzy search queries.',
+    appDescription: 'Fuzzy search matching & spell check engines.'
+  },
+  // Tree Operations
+  'Binary Search Tree': {
+    name: 'Binary Search Tree',
+    category: 'Tree Operations',
+    best: 'O(log N)',
+    average: 'O(log N)',
+    worst: 'O(N)',
+    space: 'O(N)',
+    stability: 'N/A',
+    speedRank: 'Fast',
+    memoryRank: 'Low',
+    recommendedUse: 'Maintaining dynamic sorted datasets with fast lookups and insertions.',
+    realWorldApp: 'File system directory structures and database primary key index trees.',
+    appDescription: 'Dynamic index trees & directory structures.'
+  },
+  'AVL Tree': {
+    name: 'AVL Tree',
+    category: 'Tree Operations',
+    best: 'O(log N)',
+    average: 'O(log N)',
+    worst: 'O(log N)',
+    space: 'O(N)',
+    stability: 'N/A',
+    speedRank: 'Elite',
+    memoryRank: 'Low',
+    recommendedUse: 'Lookup-intensive applications requiring strict O(log N) depth balance.',
+    realWorldApp: 'High-frequency lookup database indices and memory allocators.',
+    appDescription: 'Self-balancing strict lookup indices.'
+  },
+  'Red-Black Tree': {
+    name: 'Red-Black Tree',
+    category: 'Tree Operations',
+    best: 'O(log N)',
+    average: 'O(log N)',
+    worst: 'O(log N)',
+    space: 'O(N)',
+    stability: 'N/A',
+    speedRank: 'Elite',
+    memoryRank: 'Low',
+    recommendedUse: 'Frequent insertions and deletions with lower rebalancing rotation overhead.',
+    realWorldApp: 'C++ std::map, Java TreeMap, Linux epoll kernel scheduler.',
+    appDescription: 'Kernel priority structures & standard library maps.'
   }
 };
 
@@ -411,7 +497,7 @@ const getNormalizedName = (name: string): string => {
 
 export function HistoryPage({ catalog }: { catalog: CatalogResponse }) {
   const [selectedAlgo, setSelectedAlgo] = useState('Quick Sort');
-  const [activeTab, setActiveTab] = useState<'sorting' | 'searching' | 'pathfinding'>('sorting');
+  const [activeTab, setActiveTab] = useState<'sorting' | 'searching' | 'pathfinding' | 'dp' | 'trees'>('sorting');
 
   const [historyEntries, setHistoryEntries] = useState<RaceHistoryEntry[]>([]);
   const [historyFilter, setHistoryFilter] = useState<'all' | ArenaType>('all');
@@ -533,9 +619,9 @@ export function HistoryPage({ catalog }: { catalog: CatalogResponse }) {
   const selectedData = algoDatabase[getNormalizedName(selectedAlgo)] || algoDatabase['Quick Sort'];
 
   const speedRankings = [
-    { name: 'Binary / Interpolation Search / Radix / Counting Sort / A* Search', type: 'All Arenas', rating: 'Elite', desc: 'O(1), O(log log N), O(N·K) or heuristic optimal' },
-    { name: 'Quick Sort / Exponential Search', type: 'Sorting / Searching', rating: 'Elite', desc: 'Ultra-low constant factors, O(N log N) / O(log N)' },
-    { name: 'Merge Sort / Heap Sort / Dijkstra', type: 'Sorting / Pathfinding', rating: 'Fast', desc: 'Guaranteed O(N log N) / O(V log V)' },
+    { name: 'Binary / Interpolation Search / Radix / Counting Sort / A* Search / AVL Tree / Red-Black Tree', type: 'All Arenas', rating: 'Elite', desc: 'O(1), O(log log N), O(N·K) or heuristic/balanced search' },
+    { name: 'Quick Sort / Exponential Search / 0/1 Knapsack / LCS / Edit Distance', type: 'Sorting / Searching / DP', rating: 'Elite', desc: 'Ultra-low constant factors, O(N log N) / O(log N) / O(N·W)' },
+    { name: 'Merge Sort / Heap Sort / Dijkstra / BST', type: 'Sorting / Pathfinding / Trees', rating: 'Fast', desc: 'Guaranteed O(N log N) / O(V log V) / O(log N)' },
     { name: 'Jump Search / BFS / DFS / Comb Sort / Shell Sort', type: 'All Arenas', rating: 'Moderate', desc: 'O(√N) / Linear graph traversals / gap sorting' },
     { name: 'Bubble / Selection / Insertion / Cocktail Sort / Linear Search / Bellman-Ford', type: 'All Arenas', rating: 'Slow', desc: 'Quadratic O(N²) sorting, O(N) search, O(V·E) pathfinding' }
   ];
@@ -543,15 +629,15 @@ export function HistoryPage({ catalog }: { catalog: CatalogResponse }) {
   const memoryRankings = [
     { name: 'Bubble / Selection / Insertion / Heap / Comb Sort / Shell Sort / Cocktail Sort', type: 'Sorting', rating: 'Minimal', desc: 'O(1) auxiliary space, in-place' },
     { name: 'Linear / Binary / Jump / Exponential / Interpolation Search', type: 'Searching', rating: 'Minimal', desc: 'O(1) auxiliary space, index checks' },
-    { name: 'Quick Sort / Counting Sort', type: 'Sorting', rating: 'Low', desc: 'O(log N) stack / O(K) frequency count array' },
-    { name: 'DFS / Radix Sort / Bellman-Ford', type: 'All Arenas', rating: 'Medium', desc: 'O(Depth) stack / O(N+K) bucket buffers / distance table' },
+    { name: 'Quick Sort / Counting Sort / BST / AVL Tree / Red-Black Tree', type: 'Sorting / Trees', rating: 'Low', desc: 'O(log N) stack / O(K) frequency count array / O(N) tree nodes' },
+    { name: 'DFS / Radix Sort / Bellman-Ford / 0/1 Knapsack / LCS / Edit Distance', type: 'All Arenas', rating: 'Medium', desc: 'O(Depth) stack / O(N+K) bucket buffers / DP table matrix' },
     { name: 'Merge Sort / BFS / Dijkstra / A*', type: 'Sorting / Pathfinding', rating: 'High', desc: 'O(N) / O(V) auxiliary grid queues/arrays' }
   ];
 
   const stabilityRankings = [
     { name: 'Merge Sort / Insertion Sort / Bubble Sort / Cocktail Sort / Radix Sort / Counting Sort', type: 'Sorting', rating: 'Stable', desc: 'Preserves duplicate keys ordering' },
     { name: 'Quick Sort / Heap Sort / Selection Sort / Comb Sort / Shell Sort', type: 'Sorting', rating: 'Unstable', desc: 'Does not guarantee duplicate ordering' },
-    { name: 'Searching & Pathfinding Algorithms', type: 'Other', rating: 'N/A', desc: 'Stability metric is not applicable' }
+    { name: 'Searching, Pathfinding, DP & Tree Algorithms', type: 'Other', rating: 'N/A', desc: 'Stability metric is not applicable' }
   ];
 
   const getRankBadgeClass = (rating: string) => {
@@ -578,6 +664,14 @@ export function HistoryPage({ catalog }: { catalog: CatalogResponse }) {
   const handleReplayRace = (entry: RaceHistoryEntry) => {
     if (!entry.replayParams) {
       window.location.hash = `#/${entry.arenaType}`;
+      return;
+    }
+    if (entry.arenaType === 'dp') {
+      window.location.hash = '#/dp';
+      return;
+    }
+    if (entry.arenaType === 'trees') {
+      window.location.hash = '#/trees';
       return;
     }
     const params = new URLSearchParams(entry.replayParams);
@@ -674,13 +768,19 @@ export function HistoryPage({ catalog }: { catalog: CatalogResponse }) {
           {/* Filter & Search Bar */}
           <div className="history-filters-bar">
             <div className="history-pills-group">
-              {(['all', 'sorting', 'searching', 'pathfinding'] as const).map(type => (
+              {(['all', 'sorting', 'searching', 'pathfinding', 'dp', 'trees'] as const).map(type => (
                 <button
                   key={type}
                   className={`history-pill-btn ${historyFilter === type ? 'active' : ''}`}
                   onClick={() => setHistoryFilter(type)}
                 >
-                  {type === 'all' ? 'All Arenas' : type.charAt(0).toUpperCase() + type.slice(1)}
+                  {type === 'all' 
+                    ? 'All Arenas' 
+                    : type === 'dp' 
+                    ? 'DP Arena' 
+                    : type === 'trees' 
+                    ? 'Tree Arena' 
+                    : type.charAt(0).toUpperCase() + type.slice(1)}
                 </button>
               ))}
             </div>
@@ -752,7 +852,13 @@ export function HistoryPage({ catalog }: { catalog: CatalogResponse }) {
                   <strong>{new Date(entry.date).toLocaleString()}</strong>
                   <span style={{ textTransform: 'capitalize' }}>{entry.arenaType}</span>
                   <span>
-                    {entry.arenaType === 'pathfinding' ? 'Grid (18x28)' : `${entry.datasetSize} items`}
+                    {entry.arenaType === 'pathfinding'
+                      ? 'Grid (18x28)'
+                      : entry.arenaType === 'dp'
+                      ? (entry.datasetType || 'Matrix Grid')
+                      : entry.arenaType === 'trees'
+                      ? (entry.datasetType || `${entry.datasetSize} nodes`)
+                      : `${entry.datasetSize} items`}
                     {entry.targetValue !== undefined && ` (Target: ${entry.targetValue})`}
                   </span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -924,6 +1030,38 @@ export function HistoryPage({ catalog }: { catalog: CatalogResponse }) {
                   ))}
                 </div>
               </div>
+
+              <div className="algo-explorer-group">
+                <div className="algo-explorer-group-title">DYNAMIC PROGRAMMING</div>
+                <div className="algo-explorer-group-items">
+                  {['0/1 Knapsack', 'Longest Common Subsequence', 'Edit Distance'].map((algo) => (
+                    <button
+                      key={algo}
+                      className={`algo-explorer-item ${selectedAlgo === algo ? 'active' : ''}`}
+                      onClick={() => setSelectedAlgo(algo)}
+                    >
+                      <span>{algo}</span>
+                      <ArrowRight size={16} className="arrow-icon" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="algo-explorer-group">
+                <div className="algo-explorer-group-title">TREE ARENA</div>
+                <div className="algo-explorer-group-items">
+                  {['Binary Search Tree', 'AVL Tree', 'Red-Black Tree'].map((algo) => (
+                    <button
+                      key={algo}
+                      className={`algo-explorer-item ${selectedAlgo === algo ? 'active' : ''}`}
+                      onClick={() => setSelectedAlgo(algo)}
+                    >
+                      <span>{algo}</span>
+                      <ArrowRight size={16} className="arrow-icon" />
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
 
             {/* Main detail card for selected algorithm */}
@@ -1080,6 +1218,18 @@ export function HistoryPage({ catalog }: { catalog: CatalogResponse }) {
             >
               Pathfinding
             </button>
+            <button 
+              className={`tab-selector-btn ${activeTab === 'dp' ? 'active' : ''}`}
+              onClick={() => setActiveTab('dp')}
+            >
+              Dynamic Programming
+            </button>
+            <button 
+              className={`tab-selector-btn ${activeTab === 'trees' ? 'active' : ''}`}
+              onClick={() => setActiveTab('trees')}
+            >
+              Tree Arena
+            </button>
           </div>
 
           <div className="matrix-list">
@@ -1126,6 +1276,34 @@ export function HistoryPage({ catalog }: { catalog: CatalogResponse }) {
               return (
                 <div className="matrix-row" key={name} style={{ gridTemplateColumns: '1.5fr 1fr 1fr 1fr 1.2fr' }}>
                   <strong>{normalizedName}</strong>
+                  <span>{data.best}</span>
+                  <span>{data.average}</span>
+                  <span>{data.worst}</span>
+                  <span>{data.space}</span>
+                </div>
+              );
+            })}
+
+            {activeTab === 'dp' && ['0/1 Knapsack', 'Longest Common Subsequence', 'Edit Distance'].map((name) => {
+              const data = algoDatabase[name];
+              if (!data) return null;
+              return (
+                <div className="matrix-row" key={name} style={{ gridTemplateColumns: '1.5fr 1fr 1fr 1fr 1.2fr' }}>
+                  <strong>{name}</strong>
+                  <span>{data.best}</span>
+                  <span>{data.average}</span>
+                  <span>{data.worst}</span>
+                  <span>{data.space}</span>
+                </div>
+              );
+            })}
+
+            {activeTab === 'trees' && ['Binary Search Tree', 'AVL Tree', 'Red-Black Tree'].map((name) => {
+              const data = algoDatabase[name];
+              if (!data) return null;
+              return (
+                <div className="matrix-row" key={name} style={{ gridTemplateColumns: '1.5fr 1fr 1fr 1fr 1.2fr' }}>
+                  <strong>{name}</strong>
                   <span>{data.best}</span>
                   <span>{data.average}</span>
                   <span>{data.worst}</span>

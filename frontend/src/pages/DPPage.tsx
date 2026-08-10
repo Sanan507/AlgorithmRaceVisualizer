@@ -6,6 +6,8 @@ import { Controls } from '../components/Controls';
 import { StepExplanationCard } from '../components/StepExplanationCard';
 import { VisualizationLegend } from '../components/VisualizationLegend';
 import { algorithmMetadata } from '../data/algorithmMetadata';
+import { appendHistory } from '../utils/historyStorage';
+import { useAudio } from '../context/AudioContext';
 import {
   KnapsackItem,
   KNAPSACK_PRESETS,
@@ -21,6 +23,7 @@ import {
 type DPAlgo = 'knapsack' | 'lcs' | 'edit_distance';
 
 export const DPPage: React.FC = () => {
+  const { play, playToneForValue, audioSettings } = useAudio();
   const [selectedAlgo, setSelectedAlgo] = useState<DPAlgo>('knapsack');
 
   const [knapsackCapacity, setKnapsackCapacity] = useState<number>(KNAPSACK_PRESETS.classic.capacity);
@@ -36,6 +39,8 @@ export const DPPage: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [speed, setSpeed] = useState<number>(6);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const winnerAnnouncedRef = useRef<boolean>(false);
+  const userInteractedRef = useRef<boolean>(false);
 
   const [rowLabels, setRowLabels] = useState<string[]>([]);
   const [colLabels, setColLabels] = useState<string[]>([]);
@@ -45,11 +50,15 @@ export const DPPage: React.FC = () => {
   const [editOps, setEditOps] = useState<EditDistanceOperation[]>([]);
 
   useEffect(() => {
+    winnerAnnouncedRef.current = false;
+    userInteractedRef.current = false;
     generateDPSteps();
   }, [selectedAlgo, knapsackCapacity, items, str1, str2]);
 
+  // Handle Playback Timer
   useEffect(() => {
     if (isPlaying) {
+      userInteractedRef.current = true;
       const delay = Math.max(100, 1400 - speed * 130);
       timerRef.current = setInterval(() => {
         setCurrentStepIdx((prev) => {
@@ -67,6 +76,90 @@ export const DPPage: React.FC = () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [isPlaying, speed, steps.length]);
+
+  // Audio effect on step frame changes — mirrors Sorting/Searching/Pathfinding sound engine
+  useEffect(() => {
+    if (!isPlaying && currentStepIdx === 0) return;
+    const step = steps[currentStepIdx];
+    if (!step) return;
+
+    // Base-case initialization frame
+    if (currentStepIdx === 0 || (step.activeRow === 0 && step.activeCol === 0)) {
+      if (audioSettings.synthEnabled && playToneForValue) {
+        playToneForValue(10, 0, 100, 'compare');
+      } else {
+        play('compare');
+      }
+      return;
+    }
+
+    // Backtracking / optimal path frames
+    if (step.backtrackPath && step.backtrackPath.length > 0) {
+      play('pathFound');
+      return;
+    }
+
+    const exp = step.explanation || '';
+    const cellVal = step.matrix[step.activeRow]?.[step.activeCol] ?? 0;
+    const maxVal = 50;
+
+    if (selectedAlgo === 'lcs' && (exp.includes('Match') || exp.includes('matches'))) {
+      play('searchHit');
+    } else if (selectedAlgo === 'lcs' && (exp.includes('mismatch') || exp.includes('No match'))) {
+      play('searchMiss');
+    } else if (step.dependentCells && step.dependentCells.length >= 2) {
+      if (audioSettings.synthEnabled && playToneForValue) {
+        playToneForValue(cellVal, 0, maxVal, 'swap');
+      } else {
+        play('swap');
+      }
+    } else {
+      if (audioSettings.synthEnabled && playToneForValue) {
+        playToneForValue(cellVal, 0, maxVal, 'compare');
+      } else {
+        play('compare');
+      }
+    }
+  }, [currentStepIdx, isPlaying, steps, selectedAlgo, play, playToneForValue, audioSettings.synthEnabled]);
+
+  const isFinalStep = steps.length > 0 && currentStepIdx === steps.length - 1;
+
+  useEffect(() => {
+    if (isFinalStep && steps.length > 0 && userInteractedRef.current && !winnerAnnouncedRef.current) {
+      winnerAnnouncedRef.current = true;
+      userInteractedRef.current = false;
+      play('dpComplete');
+
+      const algoName =
+        selectedAlgo === 'knapsack'
+          ? '0/1 Knapsack'
+          : selectedAlgo === 'lcs'
+          ? 'Longest Common Subsequence'
+          : 'Edit Distance';
+
+      appendHistory({
+        id: Date.now().toString(),
+        date: new Date().toISOString(),
+        arenaType: 'dp',
+        winner: algoName,
+        datasetSize: rowLabels.length * colLabels.length,
+        datasetType: `Matrix (${rowLabels.length}x${colLabels.length})`,
+        replayParams: {
+          page: 'dp',
+          algo: selectedAlgo,
+        },
+        lanes: [
+          {
+            name: algoName,
+            comparisons: steps.length,
+            steps: steps.length,
+            timeMs: Math.round(steps.length * 15),
+            rank: 1,
+          },
+        ],
+      });
+    }
+  }, [isFinalStep, steps.length, selectedAlgo, rowLabels.length, colLabels.length, play]);
 
   const generateDPSteps = () => {
     setIsPlaying(false);
@@ -384,7 +477,6 @@ export const DPPage: React.FC = () => {
   };
 
   const currentStep = steps[currentStepIdx] || null;
-  const isFinalStep = steps.length > 0 && currentStepIdx === steps.length - 1;
 
   return (
     <main className="page dp-page">
@@ -492,8 +584,20 @@ export const DPPage: React.FC = () => {
       <Controls
         playing={isPlaying}
         disabled={steps.length === 0}
-        onStart={() => setIsPlaying(true)}
-        onToggle={() => setIsPlaying(!isPlaying)}
+        onStart={() => {
+          userInteractedRef.current = true;
+          if (currentStepIdx >= steps.length - 1) {
+            setCurrentStepIdx(0);
+          }
+          setIsPlaying(true);
+        }}
+        onToggle={() => {
+          userInteractedRef.current = true;
+          if (!isPlaying && currentStepIdx >= steps.length - 1) {
+            setCurrentStepIdx(0);
+          }
+          setIsPlaying(!isPlaying);
+        }}
         onReset={() => {
           setIsPlaying(false);
           setCurrentStepIdx(0);

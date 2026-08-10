@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AlgoRace — REST API Documentation</title>
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" />
+  <link rel="icon" type="image/png" href="https://unpkg.com/swagger-ui-dist@5/favicon-32x32.png" sizes="32x32" />
+  <style>
+    html { box-sizing: border-box; overflow: -moz-scrollbars-vertical; overflow-y: scroll; }
+    *, *:before, *:after { box-sizing: inherit; }
+    body { margin: 0; background: #0b0f19; color: #f8fafc; font-family: sans-serif; }
+    .swagger-ui { filter: invert(88%) hue-rotate(180deg); }
+    .swagger-ui .topbar { display: none; }
+  </style>
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js" charset="UTF-8"></script>
+  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-standalone-preset.js" charset="UTF-8"></script>
+  <script>
+    window.onload = function() {
+      const spec = {
+        "openapi": "3.0.1",
+        "info": {
+          "title": "AlgoRace API",
+          "description": "High-performance REST API for benchmark, simulation, and execution data across sorting, searching, pathfinding, DP, and tree algorithms.",
+          "version": "1.0.0"
+        },
+        "servers": [
+          {
+            "url": "http://localhost:8080",
+            "description": "Local Spring Boot Server"
+          },
+          {
+            "url": "https://algorithm-race-visualizer.vercel.app",
+            "description": "Vercel Production Deployment"
+          }
+        ],
+        "tags": [
+          { "name": "Catalog", "description": "Endpoints for retrieving supported algorithms and metadata" },
+          { "name": "Simulations", "description": "Endpoints for running algorithm race simulations" }
+        ],
+        "paths": {
+          "/api/catalog": {
+            "get": {
+              "tags": ["Catalog"],
+              "summary": "Get algorithm catalog",
+              "description": "Retrieves the full catalog of available sorting, searching, and pathfinding algorithms along with their metadata.",
+              "responses": {
+                "200": {
+                  "description": "Successfully retrieved catalog",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "sorting": { "type": "array", "items": { "type": "string" } },
+                          "searching": { "type": "array", "items": { "type": "string" } },
+                          "pathfinding": { "type": "array", "items": { "type": "string" } }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/api/simulations/sorting": {
+            "post": {
+              "tags": ["Simulations"],
+              "summary": "Run sorting simulation",
+              "description": "Executes sorting algorithm simulations and returns step-by-step race performance data.",
+              "requestBody": {
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "algorithms": { "type": "array", "items": { "type": "string" }, "example": ["quick_sort", "merge_sort"] },
+                        "dataset": { "type": "array", "items": { "type": "integer" }, "example": [50, 20, 80, 10, 40] }
+                      }
+                    }
+                  }
+                }
+              },
+              "responses": {
+                "200": { "description": "Sorting simulation executed successfully" }
+              }
+            }
+          },
+          "/api/simulations/searching": {
+            "post": {
+              "tags": ["Simulations"],
+              "summary": "Run searching simulation",
+              "description": "Executes searching algorithm simulations and returns step-by-step performance data.",
+              "requestBody": {
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "algorithms": { "type": "array", "items": { "type": "string" }, "example": ["binary_search", "linear_search"] },
+                        "dataset": { "type": "array", "items": { "type": "integer" }, "example": [10, 20, 30, 40, 50] },
+                        "target": { "type": "integer", "example": 40 }
+                      }
+                    }
+                  }
+                }
+              },
+              "responses": {
+                "200": { "description": "Searching simulation executed successfully" }
+              }
+            }
+          },
+          "/api/simulations/pathfinding": {
+            "post": {
+              "tags": ["Simulations"],
+              "summary": "Run pathfinding simulation",
+              "description": "Executes pathfinding algorithm simulations on 2D grid maps.",
+              "requestBody": {
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "algorithms": { "type": "array", "items": { "type": "string" }, "example": ["dijkstra", "astar"] },
+                        "rows": { "type": "integer", "example": 15 },
+                        "cols": { "type": "integer", "example": 25 }
+                      }
+                    }
+                  }
+                }
+              },
+              "responses": {
+                "200": { "description": "Pathfinding simulation executed successfully" }
+              }
+            }
+          },
+          "/api/simulations/tree": {
+            "post": {
+              "tags": ["Simulations"],
+              "summary": "Run tree simulation",
+              "description": "Executes tree operations (BST, AVL, Red-Black) and returns step-by-step visualization frames.",
+              "requestBody": {
+                "required": true,
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "treeType": { "type": "string", "example": "avl" },
+                        "operation": { "type": "string", "example": "insert" },
+                        "values": { "type": "array", "items": { "type": "integer" }, "example": [50, 30, 70, 42] },
+                        "target": { "type": "integer", "example": 42 }
+                      }
+                    }
+                  }
+                }
+              },
+              "responses": {
+                "200": { "description": "Tree simulation executed successfully" }
+              }
+            }
+          }
+        }
+      };
+
+      window.ui = SwaggerUIBundle({
+        spec: spec,
+        dom_id: '#swagger-ui',
+        deepLinking: true,
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIStandalonePreset
+        ],
+        layout: "StandaloneLayout"
+      });
+    };
+  </script>
+</body>
+</html>

@@ -31,7 +31,28 @@ export type SoundName =
   | 'winner'
   | 'searchHit'
   | 'searchMiss'
-  | 'pathFound';
+  | 'pathFound'
+  // Tree sound effects
+  | 'treeInsert'
+  | 'treeSearchVisit'
+  | 'treeSearchFound'
+  | 'treeSearchNotFound'
+  | 'treeTraversalVisit'
+  | 'treeRotation'
+  | 'treeRecolor'
+  | 'treeDuplicate'
+  // DP sound effects
+  | 'dpInit'
+  | 'dpCellTick'
+  | 'dpDecision'
+  | 'dpCarryOver'
+  | 'dpMatch'
+  | 'dpMismatch'
+  | 'dpEditInsert'
+  | 'dpEditDelete'
+  | 'dpEditReplace'
+  | 'dpBacktrack'
+  | 'dpComplete';
 
 interface ChordDef {
   notes: number[];   // MIDI note numbers
@@ -81,6 +102,39 @@ const SOUNDS: Record<SoundName, ChordDef | ChordDef[]> = {
   pathFound: [
     { notes: [64, 67, 72], duration: 160, type: 'sine', velocity: 0.5 },
     { notes: [67, 72, 76], duration: 200, type: 'sine', velocity: 0.55 },
+  ],
+
+  // Tree sound effects
+  treeInsert: { notes: [60, 64], duration: 110, type: 'sine', velocity: 0.45, throttleMs: 80 },
+  treeSearchVisit: { notes: [67], duration: 40, type: 'sine', velocity: 0.2, throttleMs: 60 },
+  treeSearchFound: { notes: [72, 76], duration: 120, type: 'sine', velocity: 0.5 },
+  treeSearchNotFound: { notes: [60, 56], duration: 100, type: 'triangle', velocity: 0.3 },
+  treeTraversalVisit: { notes: [72], duration: 50, type: 'sine', velocity: 0.25, throttleMs: 70 },
+  treeRotation: [
+    { notes: [55, 62], duration: 80, type: 'triangle', velocity: 0.4 },
+    { notes: [62, 67], duration: 100, type: 'sine', velocity: 0.45 },
+  ],
+  treeRecolor: { notes: [76, 80], duration: 90, type: 'sine', velocity: 0.35, throttleMs: 80 },
+  treeDuplicate: { notes: [58, 61], duration: 60, type: 'triangle', velocity: 0.25, throttleMs: 100 },
+
+  // DP sound effects
+  dpInit: [
+    { notes: [60, 67], duration: 140, type: 'sine', velocity: 0.35 }
+  ],
+  dpCellTick: { notes: [64], duration: 40, type: 'sine', velocity: 0.2, throttleMs: 50 },
+  dpDecision: { notes: [64, 69], duration: 80, type: 'sine', velocity: 0.3, throttleMs: 70 },
+  dpCarryOver: { notes: [52], duration: 60, type: 'triangle', velocity: 0.2, throttleMs: 60 },
+  dpMatch: { notes: [72, 76], duration: 100, type: 'sine', velocity: 0.45, throttleMs: 80 },
+  dpMismatch: { notes: [57], duration: 50, type: 'triangle', velocity: 0.2, throttleMs: 60 },
+  dpEditInsert: { notes: [65, 72], duration: 70, type: 'sine', velocity: 0.3, throttleMs: 60 },
+  dpEditDelete: { notes: [58, 53], duration: 70, type: 'triangle', velocity: 0.25, throttleMs: 60 },
+  dpEditReplace: { notes: [62, 67], duration: 70, type: 'sine', velocity: 0.3, throttleMs: 60 },
+  dpBacktrack: [
+    { notes: [67, 71, 74], duration: 120, type: 'sine', velocity: 0.35, throttleMs: 90 }
+  ],
+  dpComplete: [
+    { notes: [60, 64, 67], duration: 150, type: 'sine', velocity: 0.5 },
+    { notes: [67, 72, 76], duration: 150, type: 'sine', velocity: 0.55 }
   ],
 };
 

@@ -9,10 +9,13 @@ import { algorithmMetadata } from '../data/algorithmMetadata';
 import { api } from '../services/api';
 import { generateClientTreeSimulation } from '../utils/treeSimulator';
 import { TreeSimulationFrame, TreeSimulationRequest } from '../models/types';
+import { appendHistory } from '../utils/historyStorage';
+import { useAudio } from '../context/AudioContext';
 
 type TreeType = 'bst' | 'avl' | 'red_black';
 
 export const TreesPage: React.FC = () => {
+  const { play, playToneForValue, audioSettings } = useAudio();
   const [treeType, setTreeType] = useState<TreeType>('bst');
   const [insertInput, setInsertInput] = useState<string>('42');
   const [searchInput, setSearchInput] = useState<string>('42');
@@ -28,9 +31,13 @@ export const TreesPage: React.FC = () => {
   const [traversalResult, setTraversalResult] = useState<number[]>([]);
   
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const winnerAnnouncedRef = useRef<boolean>(false);
+  const userInteractedRef = useRef<boolean>(false);
 
   // Initialize or re-run simulation when treeType or treeValues change
   useEffect(() => {
+    winnerAnnouncedRef.current = false;
+    userInteractedRef.current = false;
     runBuildSimulation(treeValues);
   }, [treeType]);
 
@@ -55,16 +62,96 @@ export const TreesPage: React.FC = () => {
     };
   }, [isPlaying, speed, frames.length]);
 
+  // Audio effect on step frame changes — mirrors Sorting/Searching/Pathfinding sound engine
+  useEffect(() => {
+    if (!isPlaying && currentFrameIdx === 0) return;
+    const currentFrame = frames[currentFrameIdx];
+    if (!currentFrame) return;
+
+    const evt = currentFrame.eventType;
+    if (!evt || evt === 'INIT') return;
+
+    let activeVal = currentFrame.activeNodeVal;
+    if (activeVal === undefined && treeValues.length > 0) {
+      activeVal = treeValues[currentFrameIdx % treeValues.length];
+    }
+    const minVal = treeValues.length > 0 ? Math.min(...treeValues) : 1;
+    const maxVal = treeValues.length > 0 ? Math.max(...treeValues) : 100;
+
+    if (evt === 'SEARCH_FOUND' || evt === 'FOUND' || evt === 'SEARCH_HIT') {
+      play('searchHit');
+    } else if (evt === 'SEARCH_NOT_FOUND') {
+      play('searchMiss');
+    } else if (evt.startsWith('ROTATION_') || evt === 'RECOLOR') {
+      if (audioSettings.synthEnabled && playToneForValue && activeVal !== undefined) {
+        playToneForValue(activeVal, minVal, maxVal, 'swap');
+      } else {
+        play('swap');
+      }
+    } else if (evt === 'DUPLICATE_SKIPPED') {
+      play('searchMiss');
+    } else {
+      // INSERT, INSERT_DONE, SEARCH_VISIT, TRAVERSAL_VISIT
+      if (audioSettings.synthEnabled && playToneForValue && activeVal !== undefined) {
+        playToneForValue(activeVal, minVal, maxVal, 'compare');
+      } else {
+        play('compare');
+      }
+    }
+  }, [currentFrameIdx, isPlaying, frames, treeValues, play, playToneForValue, audioSettings.synthEnabled]);
+
+  const isCompleted = frames.length > 0 && currentFrameIdx === frames.length - 1;
+
+  useEffect(() => {
+    if (isCompleted && frames.length > 0 && userInteractedRef.current && !winnerAnnouncedRef.current) {
+      winnerAnnouncedRef.current = true;
+      userInteractedRef.current = false;
+      play('raceComplete');
+
+      const algoName =
+        treeType === 'bst'
+          ? 'Binary Search Tree'
+          : treeType === 'avl'
+          ? 'AVL Tree'
+          : 'Red-Black Tree';
+
+      appendHistory({
+        id: Date.now().toString(),
+        date: new Date().toISOString(),
+        arenaType: 'trees',
+        winner: algoName,
+        datasetSize: treeValues.length,
+        datasetType: `${treeType.toUpperCase()} (${treeValues.length} nodes)`,
+        replayParams: {
+          page: 'trees',
+          treeType,
+        },
+        lanes: [
+          {
+            name: algoName,
+            comparisons: frames.length,
+            steps: frames.length,
+            timeMs: Math.round(frames.length * 12),
+            rank: 1,
+          },
+        ],
+      });
+    }
+  }, [isCompleted, frames.length, treeType, treeValues.length, play]);
+
   // Execute Tree Simulation API with fallback
   const executeSimulation = async (req: TreeSimulationRequest) => {
+    winnerAnnouncedRef.current = false;
     setIsPlaying(false);
+    const isAutoPlayOp = req.operation === 'search' || req.operation === 'traversal';
     try {
       const res = await api.tree(req);
       if (res && res.frames && res.frames.length > 0) {
         setFrames(res.frames);
-        const startIdx = req.operation === 'insert' ? Math.max(0, res.frames.length - 1) : 0;
+        const startIdx = isAutoPlayOp ? 0 : Math.max(0, res.frames.length - 1);
         setCurrentFrameIdx(startIdx);
         if (res.traversalOutput) setTraversalResult(res.traversalOutput);
+        if (isAutoPlayOp) setIsPlaying(true);
         return;
       }
     } catch {
@@ -73,9 +160,10 @@ export const TreesPage: React.FC = () => {
 
     const fallbackRes = generateClientTreeSimulation(req);
     setFrames(fallbackRes.frames);
-    const startIdx = req.operation === 'insert' ? Math.max(0, fallbackRes.frames.length - 1) : 0;
+    const startIdx = isAutoPlayOp ? 0 : Math.max(0, fallbackRes.frames.length - 1);
     setCurrentFrameIdx(startIdx);
     if (fallbackRes.traversalOutput) setTraversalResult(fallbackRes.traversalOutput);
+    if (isAutoPlayOp) setIsPlaying(true);
   };
 
   const runBuildSimulation = (vals: number[]) => {
@@ -90,6 +178,7 @@ export const TreesPage: React.FC = () => {
     const val = parseInt(insertInput, 10);
     if (isNaN(val)) return;
 
+    userInteractedRef.current = true;
     const newValues = [...treeValues, val];
     setTreeValues(newValues);
 
@@ -105,23 +194,23 @@ export const TreesPage: React.FC = () => {
     const val = parseInt(searchInput, 10);
     if (isNaN(val)) return;
 
+    userInteractedRef.current = true;
     executeSimulation({
       treeType,
       operation: 'search',
       values: treeValues,
       target: val,
     });
-    setIsPlaying(true);
   };
 
   const runTraversal = (type: 'in' | 'pre' | 'post' | 'level') => {
+    userInteractedRef.current = true;
     executeSimulation({
       treeType,
       operation: 'traversal',
       values: treeValues,
       traversalType: type,
     });
-    setIsPlaying(true);
   };
 
   const handlePreset = (presetType: 'standard' | 'rotation' | 'random') => {
@@ -138,12 +227,14 @@ export const TreesPage: React.FC = () => {
       }
       vals = Array.from(set);
     }
+    userInteractedRef.current = false;
     setTreeValues(vals);
     setTraversalResult([]);
     runBuildSimulation(vals);
   };
 
   const handleClear = () => {
+    userInteractedRef.current = false;
     setTreeValues([]);
     setTraversalResult([]);
     setFrames([{
@@ -170,7 +261,6 @@ export const TreesPage: React.FC = () => {
   };
 
   const currentFrame = frames[currentFrameIdx] || null;
-  const isCompleted = frames.length > 0 && currentFrameIdx === frames.length - 1;
 
   return (
     <main className="page trees-page">
@@ -214,35 +304,40 @@ export const TreesPage: React.FC = () => {
       <section className="panel config-panel">
         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-            {/* Input Actions */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <input
-                  type="number"
-                  className="tree-num-input"
-                  value={insertInput}
-                  onChange={(e) => setInsertInput(e.target.value)}
-                  placeholder="Value..."
-                  style={{ width: '90px', height: '36px' }}
-                />
-                <button type="button" className="btn btn-primary" onClick={handleInsert} style={{ padding: '0 12px', height: '36px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <Plus size={14} /> Insert
-                </button>
-              </div>
+            {/* Input Actions with BST Rule Hint */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <input
+                    type="number"
+                    className="tree-num-input"
+                    value={insertInput}
+                    onChange={(e) => setInsertInput(e.target.value)}
+                    placeholder="Value..."
+                    style={{ width: '90px', height: '36px' }}
+                  />
+                  <button type="button" className="btn btn-primary" onClick={handleInsert} style={{ padding: '0 12px', height: '36px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Plus size={14} /> Insert
+                  </button>
+                </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <input
-                  type="number"
-                  className="tree-num-input"
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  placeholder="Value..."
-                  style={{ width: '90px', height: '36px' }}
-                />
-                <button type="button" className="btn btn-secondary" onClick={handleSearch} style={{ padding: '0 12px', height: '36px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <Search size={14} /> Search
-                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <input
+                    type="number"
+                    className="tree-num-input"
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    placeholder="Value..."
+                    style={{ width: '90px', height: '36px' }}
+                  />
+                  <button type="button" className="btn btn-secondary" onClick={handleSearch} style={{ padding: '0 12px', height: '36px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Search size={14} /> Search
+                  </button>
+                </div>
               </div>
+              <span style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 500 }}>
+                💡 BST rule: smaller values go left; larger values go right.
+              </span>
             </div>
 
             {/* Presets & Clear */}
@@ -278,8 +373,21 @@ export const TreesPage: React.FC = () => {
       <Controls
         playing={isPlaying}
         disabled={frames.length === 0}
-        onStart={() => setIsPlaying(true)}
-        onToggle={() => setIsPlaying(!isPlaying)}
+        startLabel="Play Build"
+        onStart={() => {
+          userInteractedRef.current = true;
+          if (currentFrameIdx >= frames.length - 1) {
+            setCurrentFrameIdx(0);
+          }
+          setIsPlaying(true);
+        }}
+        onToggle={() => {
+          userInteractedRef.current = true;
+          if (!isPlaying && currentFrameIdx >= frames.length - 1) {
+            setCurrentFrameIdx(0);
+          }
+          setIsPlaying(!isPlaying);
+        }}
         onReset={() => {
           setIsPlaying(false);
           setCurrentFrameIdx(0);
