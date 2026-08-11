@@ -121,7 +121,7 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
       };
     }
 
-    if (response) return response;
+    if (response && response.dataset?.length === size) return response;
 
     // Guaranteed Non-Null Fallback so screen never goes blank during API fetch
     const fallbackArr = Array.from({ length: size }, (_, i) => Math.floor(Math.abs(Math.sin(i + 1)) * 80) + 10);

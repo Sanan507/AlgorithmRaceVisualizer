@@ -115,7 +115,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
       };
     }
 
-    if (response) return response;
+    if (response && response.dataset?.length === size) return response;
 
     const fallbackArr = Array.from({ length: size }, (_, i) => i * 2 + 5);
     const fallbackLanes: RaceLaneResponse[] = algorithms.map((name) => ({
@@ -198,7 +198,16 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
       }
       const useTarget = customTarget ?? target;
       const useAlgos = customAlgos ?? algorithms;
-      const useDataset = overrideDataset ?? dataset;
+
+      let useDataset: number[] | undefined;
+      if (isCustomMode) {
+        useDataset = overrideDataset ?? (parsedCustomArray.length > 0 ? parsedCustomArray : dataset ?? undefined);
+      } else if (!newDataset && dataset) {
+        useDataset = overrideDataset ?? dataset;
+      } else {
+        useDataset = overrideDataset ?? undefined;
+      }
+
       const useSize = customSize ?? (isCustomMode && useDataset ? Math.max(1, useDataset.length) : size);
 
       try {

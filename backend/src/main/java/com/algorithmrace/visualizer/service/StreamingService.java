@@ -34,7 +34,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 @Service
 public class StreamingService {
   private static final int MAX_FRAMES = 5000;
-  private static final int MAX_ARRAY_SIZE = 100;
+  private static final int MAX_ARRAY_SIZE = 200;
   private static final int MAX_LANES = 6;
   private static final int MAX_GRID_ROWS = 40;
   private static final int MAX_GRID_COLS = 60;

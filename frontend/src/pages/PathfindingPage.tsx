@@ -9,7 +9,7 @@ import { PerformanceComparison } from '../components/PerformanceComparison';
 import { VisualizationLegend } from '../components/VisualizationLegend';
 import { useAudio } from '../context/AudioContext';
 import { usePlayback } from '../hooks/usePlayback';
-import type { CatalogResponse, RaceResponse, SimulationFrame } from '../models/types';
+import type { CatalogResponse, RaceLaneResponse, RaceResponse, SimulationFrame } from '../models/types';
 import { api } from '../services/api';
 import { createSimulationStream } from '../services/sseClient';
 import { StepExplanationCard } from '../components/StepExplanationCard';
@@ -60,11 +60,80 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
     return defaultMazeTypes;
   }, [catalog]);
 
+  const activeResponse: RaceResponse = useMemo(() => {
+    if (response) return response;
+
+    const useWalls = walls ?? currentWallsRef.current ?? Array.from({ length: 18 }, () => Array(28).fill(false));
+    const useWeights = weights ?? currentWeightsRef.current ?? Array.from({ length: 18 }, () => Array(28).fill(1));
+
+    const gridState = useWalls.map((row, r) =>
+      row.map((isWall, c) => {
+        if (r === startNode[0] && c === startNode[1]) return 'START';
+        if (r === endNode[0] && c === endNode[1]) return 'END';
+        return isWall ? 'WALL' : 'EMPTY';
+      })
+    );
+
+    const fallbackLanes: RaceLaneResponse[] = algorithms.map((name) => ({
+      name,
+      complexity: catalog?.complexity?.[name]?.worst || 'O(V + E)',
+      complexityInfo: catalog?.complexity?.[name] || {
+        best: 'O(V + E)',
+        average: 'O(V + E)',
+        worst: 'O(V + E)',
+        space: 'O(V)',
+        theory: '',
+        pseudocode: '',
+      },
+      frames: [
+        {
+          frame: 0,
+          array: [],
+          highlight: [],
+          sortedBoundary: -1,
+          pivotIndex: -1,
+          mergeRegionStart: -1,
+          mergeRegionEnd: -1,
+          heapBoundary: -1,
+          comparisons: 0,
+          swaps: 0,
+          timeMs: 0,
+          done: false,
+          status: 'Ready',
+          foundIndex: null,
+          searchPath: [],
+          grid: gridState,
+          path: [],
+          steps: 0,
+          pathFound: false,
+        },
+      ],
+      stats: {
+        comparisons: 0,
+        swaps: 0,
+        steps: 0,
+        timeMs: 0,
+        found: false,
+        foundIndex: null,
+      },
+    }));
+
+    return {
+      type: 'pathfinding',
+      dataset: null,
+      target: null,
+      walls: useWalls,
+      weights: useWeights,
+      lanes: fallbackLanes,
+      winner: null,
+    };
+  }, [response, algorithms, catalog, walls, weights, startNode, endNode]);
+
   const onFrame = useCallback((event: 'compare' | 'swap' | 'hit' | 'miss' | 'step') => {
     // Audio is now handled centrally in usePlayback hook
   }, []);
 
-  const playback = usePlayback(response, speed, onFrame);
+  const playback = usePlayback(activeResponse, speed, onFrame);
 
   const fetchSimulation = useCallback(
     async (
@@ -367,22 +436,22 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
   );
 
   const activeFramesMap = useMemo(() => {
-    if (!response?.lanes || !activeFrames) return {};
+    if (!activeResponse?.lanes || !activeFrames) return {};
     const map: Record<string, SimulationFrame | null> = {};
-    response.lanes.forEach((lane, i) => {
+    activeResponse.lanes.forEach((lane, i) => {
       map[lane.name] = activeFrames[i] ?? null;
     });
     return map;
-  }, [response, activeFrames]);
+  }, [activeResponse, activeFrames]);
 
   const prevFramesMap = useMemo(() => {
-    if (!response?.lanes || playback.frameIndex <= 0) return {};
+    if (!activeResponse?.lanes || playback.frameIndex <= 0) return {};
     const map: Record<string, SimulationFrame | null> = {};
-    response.lanes.forEach((lane) => {
+    activeResponse.lanes.forEach((lane) => {
       map[lane.name] = lane.frames[playback.frameIndex - 1] ?? null;
     });
     return map;
-  }, [response, playback.frameIndex]);
+  }, [activeResponse, playback.frameIndex]);
 
   const isCompleted = !!(response && playback.frameIndex === playback.maxFrames - 1 && playback.maxFrames > 0);
   const winnerLane = response?.lanes.find((l) => l.name === response.winner);
@@ -628,7 +697,7 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
       />
 
       <section className="lane-grid">
-        {response?.lanes.map((lane, index) => {
+        {activeResponse.lanes.map((lane, index) => {
           const frame = activeFrames?.[index] ?? lane.frames[0];
           let laneState: LaneState;
           if (!response) laneState = 'ready';
@@ -637,10 +706,10 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
           else if (playback.playing) laneState = 'running';
           else laneState = 'ready';
           return (
-            <LaneCard key={lane.name} lane={lane} frame={frame} laneState={laneState} arenaType="pathfinding" weights={response?.weights ?? weights}>
+            <LaneCard key={lane.name} lane={lane} frame={frame} laneState={laneState} arenaType="pathfinding" weights={activeResponse.weights ?? weights}>
               <PathCanvas
                 frame={frame}
-                weights={response?.weights ?? weights}
+                weights={activeResponse.weights ?? weights}
                 editable={!playback.playing}
                 onGridClick={handleGridClick}
               />
@@ -650,16 +719,16 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
       </section>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginTop: '24px' }}>
-        {response?.lanes && response.lanes.length > 0 && (
+        {activeResponse.lanes && activeResponse.lanes.length > 0 && (
           <StepExplanationCard
-            lanes={response.lanes}
+            lanes={activeResponse.lanes}
             activeFrames={activeFrames}
             frameIndex={playback.frameIndex}
             totalFrames={playback.maxFrames}
           />
         )}
         <PerformanceComparison
-          response={response}
+          response={activeResponse}
           activeFrames={activeFrames}
           type="pathfinding"
           isCompleted={isCompleted}

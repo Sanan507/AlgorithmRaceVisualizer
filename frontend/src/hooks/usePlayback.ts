@@ -22,12 +22,21 @@ export function usePlayback(
   const responseSignature = useMemo(() => {
     if (!response) return '';
     const laneNames = response.lanes.map((l) => l.name).join(',');
-    const totalFrames = response.lanes.map((l) => l.frames.length).join(',');
+    const initialFrameHashes = response.lanes
+      .map((l) => {
+        const f0 = l.frames[0];
+        if (!f0) return '';
+        const arrStr = f0.array ? f0.array.slice(0, 5).join(':') : '';
+        const targetStr = f0.foundIndex ?? '';
+        return `${arrStr}-${targetStr}`;
+      })
+      .join('|');
     const dsLen = response.dataset?.length ?? 0;
-    return `${response.type}-${laneNames}-${totalFrames}-${dsLen}`;
+    const wallsLen = response.walls?.length ?? 0;
+    return `${response.type}-${laneNames}-${dsLen}-${wallsLen}-${initialFrameHashes}`;
   }, [response]);
 
-  // Only reset frameIndex when actual simulation data changes, NOT on reference re-renders
+  // Only reset frameIndex when actual simulation dataset/run changes, NOT on stream frame updates
   useEffect(() => {
     setFrameIndex(0);
   }, [responseSignature]);
@@ -38,7 +47,12 @@ export function usePlayback(
     const id = window.setInterval(() => {
       setFrameIndex((current) => {
         if (current >= maxFrames - 1) {
-          setPlaying(false);
+          const allLanesDone = response?.lanes.every(
+            (lane) => lane.frames[lane.frames.length - 1]?.done === true
+          );
+          if (allLanesDone) {
+            setPlaying(false);
+          }
           return current;
         }
         const next = current + 1;
