@@ -11,6 +11,7 @@ import { useAudio } from '../context/AudioContext';
 import { usePlayback } from '../hooks/usePlayback';
 import type { CatalogResponse, RaceLaneResponse, RaceResponse, SimulationFrame } from '../models/types';
 import { api } from '../services/api';
+import { createSimulationStream } from '../services/sseClient';
 import { parseCustomArrayInput } from '../utils/arrayParser';
 import { StepExplanationCard } from '../components/StepExplanationCard';
 import { CustomDatasetModal } from '../components/CustomDatasetModal';
@@ -213,27 +214,64 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
       const useSize = customParams?.sz ?? (useType === 'Custom' && sendCustomArray ? Math.max(1, sendCustomArray.length) : size);
 
       try {
-        const body = {
+        const params = {
           algorithms: useAlgos,
           datasetType: useType,
           size: useSize,
           customArray: sendCustomArray,
         };
-        const data = await api.sorting(body);
 
-        if (requestId !== requestIdRef.current) return;
-
-        setResponse(data);
-        if (data.dataset) {
-          setDataset(data.dataset);
-        }
-        setHasFreshDataset(true);
-        playback.reset();
-        if (autoplay) {
-          play('start');
-          playback.setPlaying(true);
-          setHasFreshDataset(false);
-        }
+        const cancelStream = createSimulationStream('/api/simulations/stream/sorting', params,
+          (startData: any) => {
+            if (requestId !== requestIdRef.current) {
+              cancelStream();
+              return;
+            }
+            setResponse(startData);
+            if (startData.dataset) {
+              setDataset(startData.dataset);
+            }
+            setHasFreshDataset(true);
+            playback.reset();
+            if (autoplay) {
+              play('start');
+              playback.setPlaying(true);
+              setHasFreshDataset(false);
+            }
+          },
+          (frameEvent: any) => {
+             if (requestId !== requestIdRef.current) {
+                cancelStream();
+                return;
+             }
+             setResponse((prev) => {
+                if (!prev) return prev;
+                const newLanes = prev.lanes.map(lane => {
+                   if (lane.name === frameEvent.laneName) {
+                      return { ...lane, frames: [...lane.frames, frameEvent.frame] };
+                   }
+                   return lane;
+                });
+                if (!newLanes.find(l => l.name === frameEvent.laneName)) {
+                   newLanes.push({
+                      name: frameEvent.laneName,
+                      complexity: '',
+                      complexityInfo: {} as any,
+                      stats: { comparisons: 0, swaps: 0, steps: 0, timeMs: 0, found: false, foundIndex: null },
+                      frames: [frameEvent.frame]
+                   });
+                }
+                return { ...prev, lanes: newLanes };
+             });
+          },
+          (endData: any) => {
+            if (requestId !== requestIdRef.current) return;
+            setResponse(prev => prev ? { ...prev, winner: endData.winner } : endData);
+          },
+          (err: any) => {
+            console.error('SSE Error', err);
+          }
+        );
       } finally {
         if (requestId === requestIdRef.current) {
           setLoading(false);
