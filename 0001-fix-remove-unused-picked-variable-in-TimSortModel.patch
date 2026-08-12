@@ -1,0 +1,24 @@
+From 5ce716d5fb3877f0e246a6625d2410221ff54304 Mon Sep 17 00:00:00 2001
+From: "google-labs-jules[bot]"
+ <161369871+google-labs-jules[bot]@users.noreply.github.com>
+Date: Wed, 12 Aug 2026 02:12:08 +0000
+Subject: [PATCH] fix: remove unused picked variable in TimSortModel
+
+---
+ .../visualizer/algorithms/sorting/TimSortModel.java              | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/backend/src/main/java/com/algorithmrace/visualizer/algorithms/sorting/TimSortModel.java b/backend/src/main/java/com/algorithmrace/visualizer/algorithms/sorting/TimSortModel.java
+index 041958c..71829d7 100644
+--- a/backend/src/main/java/com/algorithmrace/visualizer/algorithms/sorting/TimSortModel.java
++++ b/backend/src/main/java/com/algorithmrace/visualizer/algorithms/sorting/TimSortModel.java
+@@ -57,7 +57,6 @@ public class TimSortModel extends AlgorithmModel {
+     for (int i = left + 1; i <= right; i++) {
+       int temp = arr[i];
+       int j = i - 1;
+-      boolean picked = true;
+       recordFrame(arr, new int[] {i});
+
+       while (j >= left) {
+--
+2.53.0

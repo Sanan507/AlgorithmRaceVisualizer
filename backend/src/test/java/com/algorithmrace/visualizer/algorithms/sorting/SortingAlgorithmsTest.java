@@ -27,7 +27,8 @@ class SortingAlgorithmsTest {
           "Heap Sort",
           "Comb Sort",
           "Cocktail Sort",
-          "Shell Sort");
+          "Shell Sort",
+          "Tim Sort");
 
   @Test
   @DisplayName("Verify all sorting algorithm models sort arrays correctly step-by-step")
