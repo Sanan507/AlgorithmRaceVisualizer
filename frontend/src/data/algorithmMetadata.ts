@@ -325,6 +325,17 @@ export const algorithmMetadata: Record<string, {
       'repeat forward and backward passes swapping out-of-order adjacent elements',
     ],
   },
+  'Tim Sort': {
+    name: 'Tim Sort',
+    description: 'A hybrid sorting algorithm derived from merge sort and insertion sort, designed to perform well on many kinds of real-world data.',
+    timeComplexity: 'Best: O(n) | Avg: O(n log n) | Worst: O(n log n)',
+    spaceComplexity: 'O(n) auxiliary',
+    pseudocode: [
+      'divide array into blocks (runs)',
+      'sort runs with insertion sort',
+      'merge runs with merge sort',
+    ],
+  },
 
   // ── Searching ─────────────────────────────────────────────────────────────
   'Linear Search': {

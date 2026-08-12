@@ -109,6 +109,14 @@ public final class ComplexityCatalog {
             + " finishing with gap one.",
         "gap = n / 2\nwhile gap > 0:\n  insertion sort with step size gap\n  gap = gap / 2");
     add(
+        "Tim Sort",
+        "O(n)",
+        "O(n log n)",
+        "O(n log n)",
+        "O(n)",
+        "A hybrid sorting algorithm derived from merge sort and insertion sort, designed to perform well on many kinds of real-world data.",
+        "divide array into blocks (runs)\nsort runs with insertion sort\nmerge runs with merge sort");
+    add(
         "Linear Search",
         "O(1)",
         "O(n)",
