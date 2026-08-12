@@ -18,6 +18,7 @@ public final class SortingAlgorithmFactory {
       case "Counting Sort" -> new CountingSortModel();
       case "Cocktail Sort" -> new CocktailSortModel();
       case "Shell Sort" -> new ShellSortModel();
+      case "Tim Sort" -> new TimSortModel();
 
       default -> throw new IllegalArgumentException("Unrecognized sorting algorithm requested.");
     };
@@ -35,6 +36,7 @@ public final class SortingAlgorithmFactory {
         "Radix Sort",
         "Counting Sort",
         "Cocktail Sort",
-        "Shell Sort");
+        "Shell Sort",
+        "Tim Sort");
   }
 }
