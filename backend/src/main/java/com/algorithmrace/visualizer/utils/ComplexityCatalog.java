@@ -224,6 +224,14 @@ public final class ComplexityCatalog {
         "Explores from both start and end, halving the search depth.",
         "expand forward\nexpand backward\nstop when frontiers intersect");
     add(
+        "Jump Point Search",
+        "O(E)",
+        "O(E)",
+        "O(b^d)",
+        "O(V)",
+        "Optimization of A* on uniform-cost grids that skips symmetric paths by jumping across straight lines.",
+        "identify successors by jumping\nevaluate jump points and update fScores\nreconstruct path");
+    add(
         "Bellman-Ford",
         "O(V*E)",
         "O(V*E)",
