@@ -51,7 +51,9 @@ export interface WorkerLaneResult {
 
 export interface WorkerSimulationResponse {
   id?: string;
+  type: 'sorting' | 'searching';
   dataset: number[];
+  target?: number | null;
   lanes: WorkerLaneResult[];
   winner: string | null;
   totalTimeMs: number;
@@ -112,7 +114,9 @@ function runSortingWorkerSimulation(
 
   return {
     id: requestId,
+    type: 'sorting',
     dataset: initialArray,
+    target: null,
     lanes,
     winner,
     totalTimeMs,
@@ -483,7 +487,9 @@ function runSearchingWorkerSimulation(
 
   return {
     id: requestId,
+    type: 'searching',
     dataset: initialArray,
+    target: target,
     lanes,
     winner,
     totalTimeMs,

@@ -52,7 +52,11 @@ class WorkerSimulationService {
             
             // Map worker response to RaceResponse format
             const raceResponse: RaceResponse = {
+              type: response.type || 'sorting',
               dataset: response.dataset,
+              target: response.target ?? null,
+              walls: null,
+              weights: null,
               lanes: response.lanes.map((l) => ({
                 name: l.name,
                 complexity: l.complexity,
