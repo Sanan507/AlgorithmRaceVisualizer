@@ -4,14 +4,14 @@ import { useAudio } from '../context/AudioContext';
 type Page = 'landing' | 'sorting' | 'searching' | 'pathfinding' | 'dp' | 'trees' | 'history' | 'settings';
 
 const items = [
-  { id: 'landing',     label: 'Overview',            icon: LayoutGrid },
-  { id: 'sorting',     label: 'Sorting Arena',      icon: BarChart3  },
-  { id: 'searching',   label: 'Search Arena',        icon: Binary     },
-  { id: 'pathfinding', label: 'Pathfinding Arena',   icon: GitBranch  },
-  { id: 'dp',          label: 'DP Arena',            icon: Layers     },
-  { id: 'trees',       label: 'Tree Arena',          icon: FolderTree },
-  { id: 'history',     label: 'Benchmarks',          icon: History    },
-  { id: 'settings',    label: 'Settings',            icon: Settings   },
+  { id: 'landing',     label: 'Overview',            icon: LayoutGrid, hotkey: '0' },
+  { id: 'sorting',     label: 'Sorting Arena',       icon: BarChart3,  hotkey: '1' },
+  { id: 'searching',   label: 'Search Arena',        icon: Binary,     hotkey: '2' },
+  { id: 'pathfinding', label: 'Pathfinding Arena',   icon: GitBranch,  hotkey: '3' },
+  { id: 'dp',          label: 'DP Arena',            icon: Layers,     hotkey: '4' },
+  { id: 'trees',       label: 'Tree Arena',          icon: FolderTree, hotkey: '5' },
+  { id: 'history',     label: 'Benchmarks',          icon: History,    hotkey: 'H' },
+  { id: 'settings',    label: 'Settings',            icon: Settings,   hotkey: 'S' },
 ] as const;
 
 export function Sidebar({
@@ -69,8 +69,11 @@ export function Sidebar({
                 <Zap size={22} className="brand-icon-zap" />
               </div>
               <div className="brand-text">
-                <strong className="brand-title">AlgoRace</strong>
-                <span className="brand-tagline">Algorithm Benchmark Engine</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <strong className="brand-title">AlgoRace</strong>
+                  <span className="brand-badge" style={{ fontSize: '0.65rem', padding: '1px 5px' }}>v2.0</span>
+                </div>
+                <span className="brand-tagline">Benchmark Engine</span>
               </div>
             </div>
             {mobileOpen && onMobileClose && (
@@ -81,17 +84,20 @@ export function Sidebar({
           </div>
 
           <nav className="nav-list" role="navigation" aria-label="Main Navigation">
-            {items.map(({ id, label, icon: Icon }) => (
+            {items.map(({ id, label, icon: Icon, hotkey }) => (
               <button
                 key={id}
                 className={`nav-item ${active === id ? 'active' : ''}`}
                 onClick={() => handleNav(id)}
-                title={collapsed ? label : undefined}
+                title={collapsed ? `${label} (${hotkey})` : undefined}
                 aria-label={label}
               >
                 <div className="nav-item-glow" />
-                <Icon size={19} className="nav-icon" />
+                <Icon size={18} className="nav-icon" />
                 <span className="nav-label">{label}</span>
+                {!collapsed && hotkey && (
+                  <kbd className="sidebar-hotkey-badge">{hotkey}</kbd>
+                )}
               </button>
             ))}
           </nav>
@@ -105,16 +111,12 @@ export function Sidebar({
                 play('click');
                 setDarkMode(!darkMode);
               }}
-              title={collapsed ? (darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode') : undefined}
+              title={collapsed ? (darkMode ? 'Switch to Light Mode (T)' : 'Switch to Dark Mode (T)') : undefined}
               aria-label={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-              style={{
-                border: '1px solid var(--line)',
-                background: 'rgba(255,255,255,0.03)',
-                marginBottom: '6px'
-              }}
             >
               {darkMode ? <Sun size={18} className="nav-icon text-amber-400" /> : <Moon size={18} className="nav-icon" />}
               <span className="nav-label">{darkMode ? 'Light Mode' : 'Dark Mode'}</span>
+              {!collapsed && <kbd className="sidebar-hotkey-badge">T</kbd>}
             </button>
           )}
 
@@ -123,19 +125,14 @@ export function Sidebar({
             onClick={handleToggle} 
             title={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
             aria-label={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-            style={{ 
-              border: '1px dashed var(--line)', 
-              background: 'rgba(255,255,255,0.02)',
-              marginTop: '4px'
-            }}
           >
             {collapsed ? <ChevronRight size={18} className="nav-icon" /> : <ChevronLeft size={18} className="nav-icon" />}
             <span className="nav-label">Collapse Sidebar</span>
           </button>
 
           <div className="sidebar-footer">
-            <span className="footer-brand">AlgoRace</span>
-            <span>React · Spring Boot · Web Audio</span>
+            <span className="footer-brand">AlgoRace v2.0</span>
+            <span>React · Spring Boot · 60 FPS</span>
           </div>
         </div>
       </aside>

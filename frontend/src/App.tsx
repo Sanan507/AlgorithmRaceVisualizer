@@ -118,6 +118,40 @@ export default function App() {
     }
   }, [darkMode]);
 
+  // Global Keyboard Shortcuts (0-5, H, S, T)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeTag = document.activeElement?.tagName.toLowerCase();
+      if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') {
+        return;
+      }
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+      if (e.key === 'Escape' || e.key === '0') {
+        setActive('landing');
+      } else if (e.key === '1') {
+        setActive('sorting');
+      } else if (e.key === '2') {
+        setActive('searching');
+      } else if (e.key === '3') {
+        setActive('pathfinding');
+      } else if (e.key === '4') {
+        setActive('dp');
+      } else if (e.key === '5') {
+        setActive('trees');
+      } else if (e.key === 'h' || e.key === 'H') {
+        setActive('history');
+      } else if (e.key === 's' || e.key === 'S') {
+        setActive('settings');
+      } else if (e.key === 't' || e.key === 'T') {
+        setDarkMode((prev: boolean) => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   if (error) {
     return (
       <div className="boot-state">

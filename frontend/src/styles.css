@@ -574,6 +574,46 @@ button, input, select {
   box-shadow: 0 0 8px #818cf8;
 }
 
+.sidebar-hotkey-badge {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  opacity: 0.8;
+  transition: all 0.2s ease;
+}
+
+.nav-item:hover .sidebar-hotkey-badge {
+  background: rgba(129, 140, 248, 0.15);
+  border-color: rgba(129, 140, 248, 0.3);
+  color: #c7d2fe;
+  opacity: 1;
+}
+
+.nav-item.active .sidebar-hotkey-badge {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+  opacity: 1;
+}
+
+:root[data-theme='light'] .sidebar-hotkey-badge {
+  background: rgba(14, 165, 233, 0.08);
+  border-color: rgba(14, 165, 233, 0.2);
+  color: #475569;
+}
+
+:root[data-theme='light'] .nav-item.active .sidebar-hotkey-badge {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #ffffff;
+}
+
 :root[data-theme='light'] .nav-item.active {
   color: #ffffff;
 }
