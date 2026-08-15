@@ -1,5 +1,6 @@
-import { BarChart3, Binary, GitBranch, History, Settings, ChevronLeft, ChevronRight, Zap, LayoutGrid, X, Sun, Moon, Layers, FolderTree } from 'lucide-react';
+import { BarChart3, Binary, GitBranch, History, Settings, ChevronLeft, ChevronRight, LayoutGrid, X, Sun, Moon, Layers, FolderTree } from 'lucide-react';
 import { useAudio } from '../context/AudioContext';
+import { AlgoRaceLogo } from './AlgoRaceLogo';
 
 type Page = 'landing' | 'sorting' | 'searching' | 'pathfinding' | 'dp' | 'trees' | 'history' | 'settings';
 
@@ -55,26 +56,22 @@ export function Sidebar({
 
       <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
         <div className="sidebar-top">
-          <div className="brand-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+          <div className="brand-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '0 4px 24px', borderBottom: '1px solid var(--color-border-line)', marginBottom: '24px' }}>
             <div
-              className="brand"
+              className="brand-link-wrapper"
               role="button"
               tabIndex={0}
               aria-label="Go to Overview"
               onClick={() => handleNav('landing')}
               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleNav('landing'); } }}
-              style={{ cursor: 'pointer' }}
+              style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
             >
-              <div className="brand-mark">
-                <Zap size={22} className="brand-icon-zap" />
-              </div>
-              <div className="brand-text">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <strong className="brand-title">AlgoRace</strong>
-                  <span className="brand-badge" style={{ fontSize: '0.65rem', padding: '1px 5px' }}>v2.0</span>
-                </div>
-                <span className="brand-tagline">Benchmark Engine</span>
-              </div>
+              <AlgoRaceLogo
+                size={collapsed ? 36 : 38}
+                showText={!collapsed}
+                tagline="Benchmark Engine"
+                badge="v2.0"
+              />
             </div>
             {mobileOpen && onMobileClose && (
               <button type="button" className="mobile-close-btn" onClick={onMobileClose} aria-label="Close sidebar">

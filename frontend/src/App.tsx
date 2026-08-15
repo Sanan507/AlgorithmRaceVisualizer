@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
-import { Sun, Moon, Menu, Zap } from 'lucide-react';
+import { Sun, Moon, Menu } from 'lucide-react';
 import { Sidebar } from './components/Sidebar';
+import { AlgoRaceLogo } from './components/AlgoRaceLogo';
 import { LandingPage } from './pages/LandingPage';
 import { HistoryPage } from './pages/HistoryPage';
 import { PathfindingPage } from './pages/PathfindingPage';
@@ -178,9 +179,8 @@ export default function App() {
           <div className={`app-shell ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
             {/* Mobile Header Bar */}
             <div className="mobile-header-bar">
-              <div className="mobile-brand" onClick={() => setActive('landing')}>
-                <Zap size={18} className="brand-icon-zap" />
-                <strong>AlgoRace</strong>
+              <div className="mobile-brand" onClick={() => setActive('landing')} style={{ cursor: 'pointer' }}>
+                <AlgoRaceLogo size={26} showText={true} badge="v2.0" />
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <button

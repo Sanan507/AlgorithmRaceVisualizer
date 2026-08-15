@@ -32,6 +32,7 @@ import {
   BarChart2,
 } from 'lucide-react';
 import { useAudio } from '../context/AudioContext';
+import { AlgoRaceLogo } from '../components/AlgoRaceLogo';
 
 const HeroMiniCanvas = lazy(() => import('../components/HeroMiniCanvas').then(m => ({ default: m.HeroMiniCanvas })));
 const AlgorithmMatrix = lazy(() => import('../components/AlgorithmMatrix').then(m => ({ default: m.AlgorithmMatrix })));
@@ -257,14 +258,8 @@ export function LandingPage({ onNavigate, darkMode, setDarkMode }: Props) {
 
       {/* Top Header / Sticky Nav */}
       <header className="landing-navbar">
-        <div className="landing-nav-brand">
-          <div className="brand-logo-icon">
-            <Zap size={20} className="text-emerald-400" />
-          </div>
-          <div className="brand-title-group">
-            <span className="brand-name">AlgoRace</span>
-            <span className="brand-badge">v2.0</span>
-          </div>
+        <div className="landing-nav-brand" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} style={{ cursor: 'pointer' }}>
+          <AlgoRaceLogo size={32} showText={true} badge="v2.0" />
         </div>
 
         <button
@@ -1261,53 +1256,240 @@ export function LandingPage({ onNavigate, darkMode, setDarkMode }: Props) {
         </Suspense>
       </section>
 
-      {/* Bottom CTA Banner */}
-      <section className="landing-cta-banner">
-        <div className="cta-banner-content">
-          <h2 className="cta-banner-title">Ready to Benchmark Computer Science Algorithms?</h2>
-          <p className="cta-banner-desc">
-            Jump into the race arenas now and experience live multi-lane algorithm visualization.
-          </p>
-          <button
-            className="landing-cta-btn btn-primary btn-large"
-            onClick={() => onNavigate('sorting')}
-            aria-label="Launch Sorting Arena"
-          >
-            <Zap size={20} />
-            <span>Launch Sorting Arena</span>
-            <ArrowRight size={18} />
-          </button>
+      {/* Upgraded Bottom CTA Launchpad */}
+      <section className="landing-cta-section">
+        <div className="landing-cta-card">
+          <div className="cta-ambient-glow" />
+          <div className="cta-content-wrapper">
+            <div className="cta-badge">
+              <span className="cta-status-dot" />
+              <span>HIGH-THROUGHPUT ENGINE READY</span>
+            </div>
+
+            <h2 className="cta-headline">
+              Ready to Benchmark <span className="hero-gradient-text">Algorithms Live?</span>
+            </h2>
+
+            <p className="cta-subheadline">
+              Compare sorting mechanics, 2D weighted pathfinding, DP matrix memoization, and self-balancing tree rotations in real time with 60 FPS hardware acceleration.
+            </p>
+
+            {/* Quick-Launch Arena Grid */}
+            <div className="cta-arena-chips-grid">
+              <button className="cta-chip" onClick={() => onNavigate('sorting')} aria-label="Launch Sorting Arena">
+                <span className="cta-chip-icon">📊</span>
+                <span className="cta-chip-title">Sorting Arena</span>
+                <kbd className="cta-chip-kbd">1</kbd>
+              </button>
+
+              <button className="cta-chip" onClick={() => onNavigate('searching')} aria-label="Launch Search Arena">
+                <span className="cta-chip-icon">🔍</span>
+                <span className="cta-chip-title">Search Arena</span>
+                <kbd className="cta-chip-kbd">2</kbd>
+              </button>
+
+              <button className="cta-chip" onClick={() => onNavigate('pathfinding')} aria-label="Launch Pathfinding Arena">
+                <span className="cta-chip-icon">🗺️</span>
+                <span className="cta-chip-title">Pathfinding Arena</span>
+                <kbd className="cta-chip-kbd">3</kbd>
+              </button>
+
+              <button className="cta-chip" onClick={() => onNavigate('dp')} aria-label="Launch DP Arena">
+                <span className="cta-chip-icon">🧩</span>
+                <span className="cta-chip-title">DP Arena</span>
+                <kbd className="cta-chip-kbd">4</kbd>
+              </button>
+
+              <button className="cta-chip" onClick={() => onNavigate('trees')} aria-label="Launch Tree Arena">
+                <span className="cta-chip-icon">🌳</span>
+                <span className="cta-chip-title">Tree Arena</span>
+                <kbd className="cta-chip-kbd">5</kbd>
+              </button>
+            </div>
+
+            {/* Action Cluster */}
+            <div className="cta-action-cluster">
+              <button
+                className="hero-btn-primary hero-btn-glow"
+                onClick={() => onNavigate('sorting')}
+                aria-label="Launch Sorting Arena"
+              >
+                <Zap size={18} />
+                <span>Launch Interactive Arenas</span>
+                <ArrowRight size={17} />
+              </button>
+
+              <button
+                className="hero-btn-secondary"
+                onClick={() => scrollToSection('matrix')}
+                aria-label="Explore 20+ Algorithms"
+              >
+                <Compass size={18} className="text-cyan-400" />
+                <span>Explore 20+ Algorithm Specs</span>
+              </button>
+            </div>
+
+            {/* Feature Spec Strip */}
+            <div className="cta-specs-strip">
+              <div className="cta-spec-item">
+                <Sparkles size={14} className="text-amber-400" />
+                <span>Zero UI Thread Blocking</span>
+              </div>
+              <div className="cta-spec-divider" />
+              <div className="cta-spec-item">
+                <Volume2 size={14} className="text-purple-400" />
+                <span>Pentatonic Web Audio Synthesis</span>
+              </div>
+              <div className="cta-spec-divider" />
+              <div className="cta-spec-item">
+                <Shield size={14} className="text-emerald-400" />
+                <span>Colorblind Accessible (Okabe-Ito)</span>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* Footer */}
+      {/* Upgraded 4-Column SaaS Footer */}
       <footer className="landing-footer">
-        <div className="footer-top">
-          <div className="footer-brand">
-            <div className="brand-logo-icon">
-              <Zap size={18} className="text-emerald-400" />
+        <div className="footer-grid-container">
+          {/* Column 1: Brand & Status */}
+          <div className="footer-col footer-col-brand">
+            <div className="footer-logo-row" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} style={{ cursor: 'pointer' }}>
+              <AlgoRaceLogo size={36} showText={true} badge="v2.0" tagline="Benchmark Engine" />
             </div>
-            <span className="footer-brand-title">AlgoRace</span>
+            <p className="footer-mission-text">
+              High-performance interactive algorithm visualizer and benchmarking suite built for computer scientists, software engineers, and students.
+            </p>
+            <div className="footer-status-pill">
+              <span className="status-dot-pulse" />
+              <span>All Systems Operational · 60 FPS</span>
+            </div>
           </div>
 
-          <div className="footer-links">
-            <button onClick={() => onNavigate('sorting')}>Sorting Arena</button>
-            <button onClick={() => onNavigate('searching')}>Search Arena</button>
-            <button onClick={() => onNavigate('pathfinding')}>Pathfinding Arena</button>
-            <button onClick={() => onNavigate('dp')}>DP Arena</button>
-            <button onClick={() => onNavigate('trees')}>Tree Arena</button>
-            <button onClick={() => onNavigate('history')}>Benchmarks</button>
-            <button onClick={() => onNavigate('settings')}>Settings</button>
+          {/* Column 2: Interactive Arenas */}
+          <div className="footer-col">
+            <h4 className="footer-col-heading">Interactive Arenas</h4>
+            <ul className="footer-links-list">
+              <li>
+                <button onClick={() => onNavigate('sorting')}>
+                  <span>Sorting Arena</span>
+                  <kbd>1</kbd>
+                </button>
+              </li>
+              <li>
+                <button onClick={() => onNavigate('searching')}>
+                  <span>Search Arena</span>
+                  <kbd>2</kbd>
+                </button>
+              </li>
+              <li>
+                <button onClick={() => onNavigate('pathfinding')}>
+                  <span>Pathfinding Arena</span>
+                  <kbd>3</kbd>
+                </button>
+              </li>
+              <li>
+                <button onClick={() => onNavigate('dp')}>
+                  <span>DP Arena (Knapsack / LCS)</span>
+                  <kbd>4</kbd>
+                </button>
+              </li>
+              <li>
+                <button onClick={() => onNavigate('trees')}>
+                  <span>Tree Arena (AVL / BST)</span>
+                  <kbd>5</kbd>
+                </button>
+              </li>
+            </ul>
+          </div>
+
+          {/* Column 3: Platform Tools & Telemetry */}
+          <div className="footer-col">
+            <h4 className="footer-col-heading">Platform & Tools</h4>
+            <ul className="footer-links-list">
+              <li>
+                <button onClick={() => scrollToSection('matrix')}>
+                  <span>Big-O Complexity Curves</span>
+                </button>
+              </li>
+              <li>
+                <button onClick={() => scrollToSection('matrix')}>
+                  <span>Algorithm Catalog & Matrix</span>
+                </button>
+              </li>
+              <li>
+                <button onClick={() => scrollToSection('code-playground')}>
+                  <span>Synchronized Code Playground</span>
+                </button>
+              </li>
+              <li>
+                <button onClick={() => onNavigate('history')}>
+                  <span>Benchmark History & KPIs</span>
+                  <kbd>H</kbd>
+                </button>
+              </li>
+              <li>
+                <button onClick={() => onNavigate('history')}>
+                  <span>CSV & JSON Telemetry Export</span>
+                </button>
+              </li>
+            </ul>
+          </div>
+
+          {/* Column 4: System & Theme */}
+          <div className="footer-col">
+            <h4 className="footer-col-heading">System & Theme</h4>
+            <ul className="footer-links-list">
+              <li>
+                <button onClick={() => onNavigate('settings')}>
+                  <span>Web Audio Synthesizer</span>
+                </button>
+              </li>
+              <li>
+                <button onClick={() => setDarkMode && setDarkMode(!darkMode)}>
+                  <span>{darkMode ? 'Light Theme Mode' : 'Dark Theme Mode'}</span>
+                  <kbd>T</kbd>
+                </button>
+              </li>
+              <li>
+                <button onClick={() => onNavigate('settings')}>
+                  <span>Colorblind Presets</span>
+                </button>
+              </li>
+              <li>
+                <button onClick={() => onNavigate('settings')}>
+                  <span>Developer Profile & Settings</span>
+                  <kbd>S</kbd>
+                </button>
+              </li>
+              <li>
+                <a
+                  href="https://github.com/Sanan507/AlgorithmRaceVisualizer"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="footer-external-link"
+                >
+                  <Github size={14} />
+                  <span>Star on GitHub</span>
+                </a>
+              </li>
+            </ul>
           </div>
         </div>
 
-        <div className="footer-bottom">
-          <p>© 2026 AlgoRace. Built by <strong>Sanan</strong>.</p>
-          <div className="footer-tech-tags">
-            <span>React 18</span>
-            <span>TypeScript</span>
-            <span>Spring Boot</span>
-            <span>Web Audio API</span>
+        {/* Footer Bottom Bar */}
+        <div className="footer-bottom-bar">
+          <div className="footer-copyright">
+            <span>© 2026 AlgoRace. Built with precision by <strong>Sanan</strong>.</span>
+          </div>
+
+          <div className="footer-tech-stack">
+            <span className="tech-chip">React 18</span>
+            <span className="tech-chip">TypeScript</span>
+            <span className="tech-chip">Spring Boot 3.4</span>
+            <span className="tech-chip">Web Audio API</span>
+            <span className="tech-chip">HTML5 Canvas</span>
           </div>
         </div>
       </footer>
