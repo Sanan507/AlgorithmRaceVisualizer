@@ -20,7 +20,10 @@ export const AlgoRaceLogo: React.FC<LogoProps> = ({
   const gradientId = React.useId().replace(/:/g, '-');
 
   return (
-    <div className={`algorace-brand-logo ${className}`} style={{ display: 'inline-flex', alignItems: 'center', gap: size * 0.38 }}>
+    <div
+      className={`algorace-brand-logo ${className}`}
+      style={{ display: 'inline-flex', alignItems: 'center', gap: size * 0.35 }}
+    >
       <div
         className={`logo-symbol-wrapper ${animated ? 'logo-animated' : ''}`}
         style={{
@@ -42,88 +45,139 @@ export const AlgoRaceLogo: React.FC<LogoProps> = ({
           style={{ overflow: 'visible' }}
         >
           <defs>
-            {/* Ambient Backing Glow */}
-            <filter id={`${gradientId}-glow`} x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
+            {/* Ambient High-Precision Glow */}
+            <filter id={`${gradientId}-glow`} x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="2.5" result="blur" />
               <feComposite in="SourceGraphic" in2="blur" operator="over" />
             </filter>
 
-            {/* Linear Brand Gradient: Cyan to Indigo to Emerald */}
-            <linearGradient id={`${gradientId}-primary`} x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#00f2fe" />
-              <stop offset="50%" stopColor="#6366f1" />
-              <stop offset="100%" stopColor="#a855f7" />
+            {/* Perimeter Bevel & Border Gradient */}
+            <linearGradient id={`${gradientId}-border`} x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#6366f1" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#c084fc" stopOpacity="0.8" />
             </linearGradient>
 
-            {/* Accent Spark / Energy Path Gradient */}
-            <linearGradient id={`${gradientId}-spark`} x1="0%" y1="100%" x2="100%" y2="0%">
+            {/* Stream Alpha (Left: Cyan -> Sapphire -> Indigo) */}
+            <linearGradient id={`${gradientId}-stream-a`} x1="0%" y1="100%" x2="50%" y2="0%">
+              <stop offset="0%" stopColor="#00f2fe" />
+              <stop offset="60%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#6366f1" />
+            </linearGradient>
+
+            {/* Stream Beta (Right: Indigo -> Violet -> Fuchsia) */}
+            <linearGradient id={`${gradientId}-stream-b`} x1="100%" y1="100%" x2="50%" y2="0%">
+              <stop offset="0%" stopColor="#ec4899" />
+              <stop offset="50%" stopColor="#a855f7" />
+              <stop offset="100%" stopColor="#6366f1" />
+            </linearGradient>
+
+            {/* Pivot Bar Gradient (Horizontal Convergence) */}
+            <linearGradient id={`${gradientId}-pivot`} x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#38bdf8" />
               <stop offset="50%" stopColor="#818cf8" />
-              <stop offset="100%" stopColor="#34d399" />
+              <stop offset="100%" stopColor="#c084fc" />
             </linearGradient>
 
-            {/* Bevel Shadow & Surface Shimmer */}
-            <linearGradient id={`${gradientId}-surface`} x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#1e1e38" stopOpacity="0.9" />
-              <stop offset="100%" stopColor="#0b0b1e" stopOpacity="0.95" />
+            {/* Glass Container Background Gradient */}
+            <linearGradient id={`${gradientId}-bg`} x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#13172e" stopOpacity="0.95" />
+              <stop offset="100%" stopColor="#080a14" stopOpacity="0.98" />
             </linearGradient>
           </defs>
 
-          {/* Geometric Diamond Squircle Container */}
+          {/* Precision Glass Plate Container */}
           <rect
-            x="4"
-            y="4"
-            width="40"
-            height="40"
-            rx="12"
-            fill={`url(#${gradientId}-surface)`}
-            stroke={`url(#${gradientId}-primary)`}
-            strokeWidth="1.75"
-            className="logo-squircle"
+            x="3.5"
+            y="3.5"
+            width="41"
+            height="41"
+            rx="11"
+            fill={`url(#${gradientId}-bg)`}
+            stroke={`url(#${gradientId}-border)`}
+            strokeWidth="1.25"
+            className="logo-plate"
           />
 
-          {/* Inner Circuit / Algorithm Track Lines */}
+          {/* Sub-grid Fine Reference Lines (Micro Precision Detailing) */}
+          <line x1="10" y1="24" x2="38" y2="24" stroke="#ffffff" strokeOpacity="0.04" strokeDasharray="2 2" />
+          <line x1="24" y1="10" x2="24" y2="38" stroke="#ffffff" strokeOpacity="0.04" strokeDasharray="2 2" />
+
+          {/* Stream Alpha (Left Algorithmic Track) */}
           <path
-            d="M12 28L19 15L27 31L36 17"
-            stroke={`url(#${gradientId}-spark)`}
-            strokeWidth="3.2"
+            d="M 13 36 C 13 36 17 21 24 10 C 27.5 15.5 30 20 33 25"
+            stroke={`url(#${gradientId}-stream-a)`}
+            strokeWidth="2.75"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="logo-track-line"
+            className="logo-track-alpha"
           />
 
-          {/* Node 1: Start Seed (Cyan) */}
-          <circle cx="12" cy="28" r="3.2" fill="#00f2fe" />
-          <circle cx="12" cy="28" r="1.4" fill="#ffffff" />
-
-          {/* Node 2: Pivot / Decision Node (Indigo) */}
-          <circle cx="19" cy="15" r="3" fill="#818cf8" />
-
-          {/* Node 3: Swapping Vertex (Purple) */}
-          <circle cx="27" cy="31" r="3.2" fill="#c084fc" />
-
-          {/* Node 4: Optimal Finish Vertex (Emerald Glow) */}
-          <circle cx="36" cy="17" r="3.8" fill="#10b981" filter={`url(#${gradientId}-glow)`} />
-          <circle cx="36" cy="17" r="1.6" fill="#ffffff" />
-
-          {/* Lightning / Velocity Accent Streak */}
+          {/* Stream Beta (Right Algorithmic Track) */}
           <path
-            d="M24 10L20 22H27L23 38"
+            d="M 35 36 C 35 36 31 21 24 10 C 20.5 15.5 18 20 15 25"
+            stroke={`url(#${gradientId}-stream-b)`}
+            strokeWidth="2.75"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="logo-track-beta"
+          />
+
+          {/* Synchronized Partition / Pivot Bridge */}
+          <path
+            d="M 15 28 L 24 22 L 33 28"
+            stroke={`url(#${gradientId}-pivot)`}
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="logo-pivot-bridge"
+          />
+
+          {/* Left Origin Node */}
+          <circle cx="13" cy="36" r="2.5" fill="#00f2fe" stroke="#ffffff" strokeWidth="0.8" />
+
+          {/* Right Origin Node */}
+          <circle cx="35" cy="36" r="2.5" fill="#ec4899" stroke="#ffffff" strokeWidth="0.8" />
+
+          {/* Central Pivot Node */}
+          <circle cx="24" cy="22" r="2.2" fill="#818cf8" stroke="#ffffff" strokeWidth="0.8" />
+
+          {/* Apex Convergence Node (Glow Finish) */}
+          <circle
+            cx="24"
+            cy="10"
+            r="3.2"
+            fill="#10b981"
             stroke="#ffffff"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeOpacity="0.4"
-            className="logo-spark-bolt"
+            strokeWidth="1.2"
+            filter={`url(#${gradientId}-glow)`}
+            className="logo-apex-node"
           />
         </svg>
       </div>
 
       {showText && (
-        <div className="logo-brand-text" style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
+        <div className="logo-brand-text" style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span className="logo-brand-title" style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: size * 0.58, letterSpacing: '-0.025em' }}>
-              Algo<span style={{ background: 'linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Race</span>
+            <span
+              className="logo-brand-title"
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontWeight: 800,
+                fontSize: size * 0.56,
+                letterSpacing: '-0.025em',
+              }}
+            >
+              Algo
+              <span
+                style={{
+                  background: 'linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                }}
+              >
+                Race
+              </span>
             </span>
             {badge && (
               <span
@@ -132,11 +186,12 @@ export const AlgoRaceLogo: React.FC<LogoProps> = ({
                   fontFamily: 'var(--font-mono)',
                   fontSize: '0.65rem',
                   fontWeight: 700,
-                  padding: '1px 6px',
-                  borderRadius: '12px',
-                  background: 'rgba(99, 102, 241, 0.15)',
-                  border: '1px solid rgba(99, 102, 241, 0.3)',
+                  padding: '1.5px 6px',
+                  borderRadius: '6px',
+                  background: 'rgba(99, 102, 241, 0.12)',
+                  border: '1px solid rgba(99, 102, 241, 0.28)',
                   color: '#818cf8',
+                  letterSpacing: '0.02em',
                 }}
               >
                 {badge}
@@ -148,12 +203,12 @@ export const AlgoRaceLogo: React.FC<LogoProps> = ({
               className="logo-tagline"
               style={{
                 fontFamily: 'var(--font-mono)',
-                fontSize: '0.68rem',
+                fontSize: '0.66rem',
                 fontWeight: 600,
                 color: 'var(--color-text-muted)',
-                letterSpacing: '0.04em',
+                letterSpacing: '0.06em',
                 textTransform: 'uppercase',
-                marginTop: '3px',
+                marginTop: '2px',
               }}
             >
               {tagline}

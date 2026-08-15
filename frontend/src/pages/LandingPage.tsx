@@ -30,6 +30,7 @@ import {
   FileCode2,
   Workflow,
   BarChart2,
+  Star,
 } from 'lucide-react';
 import { useAudio } from '../context/AudioContext';
 import { AlgoRaceLogo } from '../components/AlgoRaceLogo';
@@ -308,10 +309,14 @@ export function LandingPage({ onNavigate, darkMode, setDarkMode }: Props) {
             rel="noreferrer"
             className="landing-github-badge-btn"
             title="Star on GitHub"
-            aria-label="View source code on GitHub"
+            aria-label="Star on GitHub"
           >
-            <Github size={16} />
+            <Github size={15} />
             <span>GitHub</span>
+            <span className="nav-github-star-pill">
+              <Star size={11} className="text-amber-400 fill-amber-400" />
+              <span>Star</span>
+            </span>
           </a>
 
           {setDarkMode && (
@@ -1470,8 +1475,11 @@ export function LandingPage({ onNavigate, darkMode, setDarkMode }: Props) {
                   rel="noreferrer"
                   className="footer-external-link"
                 >
-                  <Github size={14} />
-                  <span>Star on GitHub</span>
+                  <span className="footer-link-content">
+                    <Github size={14} />
+                    <span>Star on GitHub</span>
+                  </span>
+                  <kbd className="footer-star-kbd">★</kbd>
                 </a>
               </li>
             </ul>
