@@ -18,11 +18,12 @@ import { CustomDatasetModal } from '../components/CustomDatasetModal';
 import { ShareBenchmarkModal } from '../components/ShareBenchmarkModal';
 import { CsvUploader } from '../components/CsvUploader';
 import { appendHistory } from '../utils/historyStorage';
-import { Share2, Cpu, Zap, Sparkles } from 'lucide-react';
+import { Share2, Cpu, Zap, Sparkles, Video } from 'lucide-react';
 import { getUrlParams } from '../utils/urlParams';
 import { parseCurrentShareableConfig } from '../utils/shareableBenchmark';
 import { workerSimulationService } from '../services/workerSimulationService';
 import { generateDataset } from '../utils/datasetGenerator';
+import { useCanvasRecorder } from '../hooks/useCanvasRecorder';
 
 export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
   const [algorithms, setAlgorithms] = useState(['Bubble Sort', 'Quick Sort', 'Merge Sort']);
@@ -39,14 +40,16 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isWorkerActive, setIsWorkerActive] = useState(false);
   const [workerProgress, setWorkerProgress] = useState(0);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const { isRecording, formattedTime, toggleRecording } = useCanvasRecorder('sorting');
 
   const { play } = useAudio();
   const winnerAnnouncedRef = useRef(false);
   const hasStartedPlaybackRef = useRef(false);
   const requestIdRef = useRef(0);
   const initialized = useRef(false);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Filter out "Custom" from Dataset selection dropdown options
   const predefinedOptions = useMemo(
@@ -602,6 +605,25 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
               <span>Worker Computing: {workerProgress}%</span>
             </div>
           )}
+          <button
+            type="button"
+            className={`btn ${isRecording ? 'btn-danger rec-active-btn' : 'btn-secondary'}`}
+            onClick={() => toggleRecording('canvas')}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+            title={isRecording ? 'Stop and download video recording' : 'Record canvas visualizer as WebM video'}
+          >
+            {isRecording ? (
+              <>
+                <span className="rec-pulse-dot" />
+                <span>REC {formattedTime}</span>
+              </>
+            ) : (
+              <>
+                <Video size={16} className="text-rose-400" />
+                <span>Record Video</span>
+              </>
+            )}
+          </button>
           <button className="btn btn-secondary" onClick={handleShareRun} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Share2 size={16} className="text-cyan-400" /> Share Benchmark
           </button>

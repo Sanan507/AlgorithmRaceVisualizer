@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Share2, Check, Copy, ExternalLink, X, Sparkles, Layers, Sliders } from 'lucide-react';
+import { Share2, Check, Copy, ExternalLink, X, Sparkles, Layers, Code2, Link } from 'lucide-react';
 import { ShareableBenchmarkConfig, generateShareableUrl } from '../utils/shareableBenchmark';
 import { useAudio } from '../context/AudioContext';
 
@@ -14,12 +14,23 @@ export const ShareBenchmarkModal: React.FC<ShareBenchmarkModalProps> = ({
   onClose,
   config,
 }) => {
-  const [copied, setCopied] = useState(false);
+  const [activeTab, setActiveTab] = useState<'link' | 'embed'>('link');
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedEmbed, setCopiedEmbed] = useState(false);
+  const [embedHeight, setEmbedHeight] = useState(520);
   const { play } = useAudio();
 
   const shareUrl = React.useMemo(() => {
     return generateShareableUrl(config);
   }, [config]);
+
+  const embedUrl = React.useMemo(() => {
+    const url = new URL(shareUrl);
+    url.searchParams.set('embed', 'true');
+    return url.href;
+  }, [shareUrl]);
+
+  const embedSnippet = `<iframe src="${embedUrl}" width="100%" height="${embedHeight}" frameborder="0" loading="lazy" style="border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 12px 32px rgba(0,0,0,0.5);"></iframe>`;
 
   useEffect(() => {
     if (!isOpen) return;
@@ -35,11 +46,19 @@ export const ShareBenchmarkModal: React.FC<ShareBenchmarkModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleCopy = () => {
+  const handleCopyLink = () => {
     navigator.clipboard.writeText(shareUrl).then(() => {
-      setCopied(true);
+      setCopiedLink(true);
       play('click');
-      setTimeout(() => setCopied(false), 2500);
+      setTimeout(() => setCopiedLink(false), 2500);
+    });
+  };
+
+  const handleCopyEmbed = () => {
+    navigator.clipboard.writeText(embedSnippet).then(() => {
+      setCopiedEmbed(true);
+      play('click');
+      setTimeout(() => setCopiedEmbed(false), 2500);
     });
   };
 
@@ -61,15 +80,61 @@ export const ShareBenchmarkModal: React.FC<ShareBenchmarkModalProps> = ({
             </div>
             <div>
               <h3 id="share-modal-title" style={{ margin: 0, fontSize: '1.2rem', fontFamily: 'var(--font-display)', fontWeight: 800 }}>
-                Share Benchmark Setup
+                Share & Embed Benchmark
               </h3>
               <p style={{ margin: '2px 0 0', fontSize: '0.82rem', color: 'var(--color-text-muted)' }}>
-                Collaborate and compare exact dataset executions with encoded URLs
+                Collaborate with encoded URLs or embed interactive races in blog posts
               </p>
             </div>
           </div>
           <button type="button" className="modal-close-btn" onClick={onClose} aria-label="Close modal">
             <X size={18} />
+          </button>
+        </div>
+
+        {/* Modal Tab Switcher */}
+        <div style={{ display: 'flex', borderBottom: '1px solid var(--color-border-line)', padding: '0 24px' }}>
+          <button
+            type="button"
+            className={`share-tab-btn ${activeTab === 'link' ? 'active' : ''}`}
+            onClick={() => setActiveTab('link')}
+            style={{
+              padding: '12px 16px',
+              background: 'none',
+              border: 'none',
+              borderBottom: activeTab === 'link' ? '2px solid #6366f1' : '2px solid transparent',
+              color: activeTab === 'link' ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
+              fontWeight: 700,
+              fontSize: '0.86rem',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              cursor: 'pointer',
+            }}
+          >
+            <Link size={15} />
+            <span>Share Link</span>
+          </button>
+          <button
+            type="button"
+            className={`share-tab-btn ${activeTab === 'embed' ? 'active' : ''}`}
+            onClick={() => setActiveTab('embed')}
+            style={{
+              padding: '12px 16px',
+              background: 'none',
+              border: 'none',
+              borderBottom: activeTab === 'embed' ? '2px solid #6366f1' : '2px solid transparent',
+              color: activeTab === 'embed' ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
+              fontWeight: 700,
+              fontSize: '0.86rem',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              cursor: 'pointer',
+            }}
+          >
+            <Code2 size={15} />
+            <span>Embed Widget</span>
           </button>
         </div>
 
@@ -113,30 +178,73 @@ export const ShareBenchmarkModal: React.FC<ShareBenchmarkModalProps> = ({
             )}
           </div>
 
-          {/* Copyable Share URL Input Field */}
-          <div className="share-url-field-group">
-            <label htmlFor="share-url-input" style={{ fontSize: '0.78rem', fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Shareable Link
-            </label>
-            <div className="share-url-input-container">
-              <input
-                id="share-url-input"
-                type="text"
-                readOnly
-                value={shareUrl}
-                onClick={(e) => (e.target as HTMLInputElement).select()}
-                className="share-url-input"
-              />
-              <button
-                type="button"
-                className={`btn share-copy-btn ${copied ? 'btn-success' : 'btn-primary'}`}
-                onClick={handleCopy}
-              >
-                {copied ? <Check size={16} /> : <Copy size={16} />}
-                <span>{copied ? 'Copied!' : 'Copy Link'}</span>
-              </button>
+          {activeTab === 'link' ? (
+            /* Shareable Link Tab */
+            <div className="share-url-field-group">
+              <label htmlFor="share-url-input" style={{ fontSize: '0.78rem', fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Shareable Link
+              </label>
+              <div className="share-url-input-container">
+                <input
+                  id="share-url-input"
+                  type="text"
+                  readOnly
+                  value={shareUrl}
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
+                  className="share-url-input"
+                />
+                <button
+                  type="button"
+                  className={`btn share-copy-btn ${copiedLink ? 'btn-success' : 'btn-primary'}`}
+                  onClick={handleCopyLink}
+                >
+                  {copiedLink ? <Check size={16} /> : <Copy size={16} />}
+                  <span>{copiedLink ? 'Copied!' : 'Copy Link'}</span>
+                </button>
+              </div>
             </div>
-          </div>
+          ) : (
+            /* Embed Widget Tab */
+            <div className="share-url-field-group">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <label htmlFor="embed-code-textarea" style={{ fontSize: '0.78rem', fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  HTML &lt;iframe&gt; Embed Code
+                </label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.78rem', color: 'var(--color-text-muted)' }}>
+                  <span>Height:</span>
+                  <select
+                    value={embedHeight}
+                    onChange={(e) => setEmbedHeight(Number(e.target.value))}
+                    style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid var(--color-border-line)', borderRadius: '6px', color: 'var(--color-text-primary)', padding: '2px 6px', fontSize: '0.78rem' }}
+                  >
+                    <option value={420}>420px (Compact)</option>
+                    <option value={520}>520px (Standard)</option>
+                    <option value={640}>640px (Spacious)</option>
+                  </select>
+                </div>
+              </div>
+              <div className="share-url-input-container" style={{ alignItems: 'stretch' }}>
+                <textarea
+                  id="embed-code-textarea"
+                  readOnly
+                  rows={3}
+                  value={embedSnippet}
+                  onClick={(e) => (e.target as HTMLTextAreaElement).select()}
+                  className="share-url-input"
+                  style={{ resize: 'none', lineHeight: 1.4 }}
+                />
+                <button
+                  type="button"
+                  className={`btn share-copy-btn ${copiedEmbed ? 'btn-success' : 'btn-primary'}`}
+                  onClick={handleCopyEmbed}
+                  style={{ alignSelf: 'flex-start', minHeight: '44px' }}
+                >
+                  {copiedEmbed ? <Check size={16} /> : <Copy size={16} />}
+                  <span>{copiedEmbed ? 'Copied!' : 'Copy Code'}</span>
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Extra Developer Quick Actions */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid var(--color-border-line)' }}>
@@ -160,3 +268,4 @@ export const ShareBenchmarkModal: React.FC<ShareBenchmarkModalProps> = ({
     </div>
   );
 };
+

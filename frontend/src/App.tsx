@@ -12,6 +12,7 @@ import { SettingsPage } from './pages/SettingsPage';
 import { SortingPage } from './pages/SortingPage';
 import { DPPage } from './pages/DPPage';
 import { TreesPage } from './pages/TreesPage';
+import { QuizPage } from './pages/QuizPage';
 import type { CatalogResponse } from './models/types';
 import { api } from './services/api';
 import { AudioCtx } from './context/AudioContext';
@@ -19,8 +20,9 @@ import { useAudioSettings } from './hooks/useAudioSettings';
 import { useSound } from './hooks/useSound';
 
 import { fallbackCatalog } from './data/fallbackCatalog';
+import { ThemeProvider } from './context/ThemeContext';
 
-type Page = 'landing' | 'sorting' | 'searching' | 'pathfinding' | 'dp' | 'trees' | 'history' | 'settings';
+type Page = 'landing' | 'sorting' | 'searching' | 'pathfinding' | 'dp' | 'trees' | 'quiz' | 'history' | 'settings';
 
 const getPageFromHash = (): Page => {
   const searchParams = new URLSearchParams(window.location.search);
@@ -32,6 +34,7 @@ const getPageFromHash = (): Page => {
     if (pageParam === 'pathfinding') return 'pathfinding';
     if (pageParam === 'dp') return 'dp';
     if (pageParam === 'trees') return 'trees';
+    if (pageParam === 'quiz') return 'quiz';
     if (pageParam === 'history') return 'history';
     if (pageParam === 'settings') return 'settings';
   }
@@ -42,12 +45,11 @@ const getPageFromHash = (): Page => {
   if (hash === 'pathfinding' || hash === 'pathfinding-arena') return 'pathfinding';
   if (hash === 'dp' || hash === 'dp-arena' || hash === 'dynamic-programming') return 'dp';
   if (hash === 'trees' || hash === 'trees-arena' || hash === 'tree-structures') return 'trees';
+  if (hash === 'quiz' || hash === 'leetcode-quiz' || hash === 'quiz-arena') return 'quiz';
   if (hash === 'history' || hash === 'benchmarks') return 'history';
   if (hash === 'settings') return 'settings';
   return 'landing';
 };
-
-import { ThemeProvider } from './context/ThemeContext';
 
 export default function App() {
   const [active, setActive] = useState<Page>(() => getPageFromHash());
@@ -140,6 +142,8 @@ export default function App() {
         setActive('dp');
       } else if (e.key === '5') {
         setActive('trees');
+      } else if (e.key === '6' || e.key === 'q' || e.key === 'Q') {
+        setActive('quiz');
       } else if (e.key === 'h' || e.key === 'H') {
         setActive('history');
       } else if (e.key === 's' || e.key === 'S') {
@@ -152,6 +156,8 @@ export default function App() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  const isEmbedMode = new URLSearchParams(window.location.search).get('embed') === 'true';
 
   if (error) {
     return (
@@ -173,7 +179,48 @@ export default function App() {
   return (
     <ThemeProvider>
       <AudioCtx.Provider value={{ play, playToneForValue, audioSettings, setAudioSettings }}>
-        {active === 'landing' ? (
+        {isEmbedMode ? (
+          <div className="embed-shell" style={{ minHeight: '100vh', padding: '16px', background: 'var(--color-bg-primary)', position: 'relative' }}>
+            <div className="content-shell" style={{ maxWidth: '100%', margin: 0, padding: 0 }}>
+              {active === 'sorting' && <SortingPage catalog={catalog} />}
+              {active === 'searching' && <SearchingPage catalog={catalog} />}
+              {active === 'pathfinding' && <PathfindingPage catalog={catalog} />}
+              {active === 'dp' && <DPPage />}
+              {active === 'trees' && <TreesPage />}
+              {active === 'quiz' && <QuizPage onNavigateArena={(page) => setActive(page as Page)} />}
+              {active === 'history' && <HistoryPage catalog={catalog} />}
+              {active === 'settings' && <SettingsPage darkMode={darkMode} setDarkMode={setDarkMode} />}
+            </div>
+            <a
+              href="https://github.com/Sanan507/AlgorithmRaceVisualizer"
+              target="_blank"
+              rel="noreferrer"
+              className="embed-brand-watermark"
+              style={{
+                position: 'fixed',
+                bottom: '12px',
+                right: '16px',
+                zIndex: 999,
+                background: 'rgba(10, 15, 30, 0.85)',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                backdropFilter: 'blur(12px)',
+                borderRadius: '8px',
+                padding: '4px 10px',
+                fontSize: '0.75rem',
+                fontFamily: 'var(--font-mono)',
+                color: 'var(--color-text-primary)',
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+              }}
+            >
+              <span>AlgoRace</span>
+              <span style={{ color: '#38bdf8', fontWeight: 700 }}>⚡ Live</span>
+            </a>
+          </div>
+        ) : active === 'landing' ? (
           <LandingPage onNavigate={setActive} darkMode={darkMode} setDarkMode={setDarkMode} />
         ) : (
           <div className={`app-shell ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
@@ -220,6 +267,7 @@ export default function App() {
               {active === 'pathfinding' && <PathfindingPage catalog={catalog} />}
               {active === 'dp' && <DPPage />}
               {active === 'trees' && <TreesPage />}
+              {active === 'quiz' && <QuizPage onNavigateArena={(page) => setActive(page as Page)} />}
               {active === 'history' && <HistoryPage catalog={catalog} />}
               {active === 'settings' && (
                 <SettingsPage darkMode={darkMode} setDarkMode={setDarkMode} />
