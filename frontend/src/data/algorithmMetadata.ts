@@ -185,6 +185,14 @@ export const PATHFINDING_META: Record<string, PathfindingMeta> = {
     advantage: 'Explores ~half the nodes compared to standard BFS',
     limitation: 'Complex implementation; restricted to unweighted graphs',
   },
+  'Jump Point Search': {
+    complete: true,
+    optimal: true,
+    weighted: false,
+    bestFor: 'Uniform-cost grids where memory and time optimization is critical',
+    advantage: 'Dramatically faster than standard A* on open grids by skipping symmetric paths',
+    limitation: 'Only applicable to uniform-cost grids',
+  },
 };
 
 // ── Algorithm Detailed Metadata ─────────────────────────────────────────────
@@ -490,6 +498,19 @@ export const algorithmMetadata: Record<string, {
       'expand forward queue',
       'expand backward queue',
       'stop when search frontiers intersect',
+    ],
+  },
+  'Jump Point Search': {
+    name: 'Jump Point Search',
+    description: 'Optimization of A* on uniform-cost grids that skips symmetric paths by jumping across straight lines.',
+    timeComplexity: 'Best: O(E) | Worst: O(bᵈ)',
+    spaceComplexity: 'O(V) auxiliary',
+    pseudocode: [
+      'openSet.add(start)',
+      'while openSet not empty:',
+      '  curr = node with lowest fScore',
+      '  identify successors by jumping in valid directions',
+      '  evaluate jump points and update fScores',
     ],
   },
 

@@ -16,7 +16,7 @@ class PathfindingAlgorithmsTest {
 
   private final SimulationService simulationService = new SimulationService();
   private final List<String> algorithms =
-      List.of("BFS", "DFS", "Dijkstra", "A* Search", "Bidirectional BFS");
+      List.of("BFS", "DFS", "Dijkstra", "A* Search", "Bidirectional BFS", "Jump Point Search");
 
   @Test
   @DisplayName("Verify pathfinding models find path in unblocked grid")

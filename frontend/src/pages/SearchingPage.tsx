@@ -15,15 +15,10 @@ import { createSimulationStream } from '../services/sseClient';
 import { parseCustomArrayInput } from '../utils/arrayParser';
 import { StepExplanationCard } from '../components/StepExplanationCard';
 import { CustomDatasetModal } from '../components/CustomDatasetModal';
-import { ShareBenchmarkModal } from '../components/ShareBenchmarkModal';
 import { CsvUploader } from '../components/CsvUploader';
 import { appendHistory } from '../utils/historyStorage';
-import { Share2, Cpu, Video } from 'lucide-react';
+import { Share2 } from 'lucide-react';
 import { getUrlParams } from '../utils/urlParams';
-import { parseCurrentShareableConfig } from '../utils/shareableBenchmark';
-import { workerSimulationService } from '../services/workerSimulationService';
-import { generateDataset } from '../utils/datasetGenerator';
-import { useCanvasRecorder } from '../hooks/useCanvasRecorder';
 
 export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
   const [algorithms, setAlgorithms] = useState(['Linear Search', 'Binary Search', 'Jump Search']);
@@ -38,11 +33,6 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
   const [loading, setLoading] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [isWorkerActive, setIsWorkerActive] = useState(false);
-  const [workerProgress, setWorkerProgress] = useState(0);
-
-  const { isRecording, formattedTime, toggleRecording } = useCanvasRecorder('searching');
 
   const { play } = useAudio();
   const winnerAnnouncedRef = useRef(false);
@@ -220,55 +210,6 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
 
       const useSize = customSize ?? (isCustomMode && useDataset ? Math.max(1, useDataset.length) : size);
 
-      // Web Worker Simulation Offloading for N >= 1,000
-      if (useSize >= 1000 && workerSimulationService.isWorkerAvailable()) {
-        setIsWorkerActive(true);
-        setWorkerProgress(0);
-
-        let arrayToSimulate: number[];
-        if (useDataset && useDataset.length > 0) {
-          arrayToSimulate = useDataset;
-        } else {
-          arrayToSimulate = generateDataset(useSize, 'Sorted');
-        }
-
-        try {
-          const workerRes = await workerSimulationService.runSimulation(
-            {
-              type: 'searching',
-              algorithms: useAlgos,
-              array: arrayToSimulate,
-              target: useTarget,
-            },
-            (percent) => {
-              if (requestId === requestIdRef.current) {
-                setWorkerProgress(percent);
-              }
-            }
-          );
-
-          if (requestId === requestIdRef.current) {
-            setResponse(workerRes);
-            setDataset(workerRes.dataset);
-            setHasFreshDataset(true);
-            playback.reset();
-            if (autoplay) {
-              play('start');
-              playback.setPlaying(true);
-              setHasFreshDataset(false);
-            }
-          }
-          return;
-        } catch (workerErr) {
-          console.warn('Worker offloading warning for search, falling back to SSE stream:', workerErr);
-        } finally {
-          if (requestId === requestIdRef.current) {
-            setIsWorkerActive(false);
-            setLoading(false);
-          }
-        }
-      }
-
       try {
         const params = {
           algorithms: useAlgos,
@@ -323,21 +264,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
             setResponse(prev => prev ? { ...prev, winner: endData.winner } : endData);
           },
           (err: any) => {
-            console.error('SSE Error, running Web Worker fallback:', err);
-            const arrayFallback = useDataset || dataset || generateDataset(useSize, 'Sorted');
-            workerSimulationService.runSimulation({
-              type: 'searching',
-              algorithms: useAlgos,
-              array: arrayFallback,
-              target: useTarget,
-            }).then((fallbackRes) => {
-              if (requestId === requestIdRef.current) {
-                setResponse(fallbackRes);
-                setDataset(fallbackRes.dataset);
-                setHasFreshDataset(true);
-                playback.reset();
-              }
-            }).catch(console.error);
+            console.error('SSE Error', err);
           }
         );
       } finally {
@@ -352,20 +279,17 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
   useEffect(() => {
     if (!initialized.current) {
       initialized.current = true;
-      const sharedConfig = parseCurrentShareableConfig();
       const params = getUrlParams();
-
-      if (sharedConfig && (sharedConfig.arena === 'searching' || (params && params.page === 'searching'))) {
-        const urlAlgos = sharedConfig.algorithms || params?.algos;
-        const urlSize = sharedConfig.size || params?.size;
-        const urlTarget = sharedConfig.target !== undefined ? sharedConfig.target : params?.target;
+      if (params && params.page === 'searching') {
+        const urlAlgos = params.algos;
+        const urlSize = params.size;
+        const urlMode = params.mode;
 
         let newAlgos = [...algorithms];
         let newSize = size;
         let newTarget = target;
-        let loadedArray: number[] | undefined;
 
-        if (urlAlgos && urlAlgos.length > 0) {
+        if (urlAlgos) {
           newAlgos = [
              urlAlgos[0] || algorithms[0],
              urlAlgos[1] || algorithms[1],
@@ -377,30 +301,30 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
            newSize = urlSize;
            setSize(urlSize);
         }
-        if (urlTarget !== undefined) {
-           newTarget = urlTarget;
-           setTarget(urlTarget);
-        }
-        if (sharedConfig.customArray && sharedConfig.customArray.length > 0) {
-          setIsCustomMode(true);
-          setCustomArrayStr(sharedConfig.customArray.join(', '));
-          setDataset(sharedConfig.customArray);
-          loadedArray = sharedConfig.customArray;
-          newSize = sharedConfig.customArray.length;
-          setSize(newSize);
-        } else if (params?.cArray) {
+        if (params.cArray) {
           setIsCustomMode(true);
           setCustomArrayStr(params.cArray);
           const parsed = parseCustomArrayInput(params.cArray);
           setDataset(parsed);
-          loadedArray = parsed;
           if (parsed.length > 0) newSize = parsed.length;
+          if (params.target !== undefined) {
+            newTarget = params.target;
+            setTarget(params.target);
+          }
+
+          const url = new URL(window.location.href);
+          url.search = '';
+          window.history.replaceState(null, '', url.href);
+
+          fetchSimulation(true, false, newTarget, newAlgos, newSize, parsed);
+          return;
         }
 
-        setToastMessage(`✨ Shared Benchmark Loaded: Search Arena (Target = ${newTarget}, N = ${newSize})`);
-        setTimeout(() => setToastMessage(null), 4000);
+        const url = new URL(window.location.href);
+        url.search = '';
+        window.history.replaceState(null, '', url.href);
 
-        fetchSimulation(true, false, newTarget, newAlgos, newSize, loadedArray);
+        fetchSimulation(true, false, newTarget, newAlgos, newSize, undefined);
       } else {
         fetchSimulation(true, false);
       }
@@ -408,7 +332,26 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
   }, []);
 
   function handleShareRun() {
-    setIsShareModalOpen(true);
+    const url = new URL(window.location.href);
+    url.searchParams.set('page', 'searching');
+    url.searchParams.set('algos', algorithms.join(','));
+    url.searchParams.set('target', target.toString());
+    if (dataset && dataset.length > 0) {
+      url.searchParams.set('mode', 'Custom');
+      url.searchParams.set('cArray', dataset.join(', '));
+    } else if (!isCustomMode) {
+      url.searchParams.set('size', size.toString());
+    } else {
+      url.searchParams.set('mode', 'Custom');
+      url.searchParams.set('cArray', customArrayStr);
+    }
+
+    navigator.clipboard.writeText(url.href)
+      .then(() => {
+        setToastMessage('Link copied to clipboard!');
+        setTimeout(() => setToastMessage(null), 3000);
+      })
+      .catch((err) => console.error('Failed to copy link', err));
   }
 
   async function startRace() {
@@ -607,48 +550,15 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
     <main className="page">
       <header className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <h1>Search Arena</h1>
-            {size >= 1000 && (
-              <span className="worker-pill-badge" title="Simulations for N >= 1,000 are computed in a background Web Worker">
-                <Cpu size={13} className="text-cyan-400" />
-                <span>Web Worker Isolated</span>
-              </span>
-            )}
-          </div>
-          <p>Real-time comparative search benchmarking</p>
+          <h1>Search Arena</h1>
+          <p>Real-time benchmarking of search algorithms</p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          {isWorkerActive && (
-            <div className="worker-progress-pill">
-              <span className="worker-pulse-dot" />
-              <span>Worker Computing: {workerProgress}%</span>
-            </div>
-          )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           {activeResponse?.target !== undefined && activeResponse?.target !== null && (
             <div className="winner-pill target-pill" style={{ margin: 0 }}>Target: {activeResponse.target}</div>
           )}
-          <button
-            type="button"
-            className={`btn ${isRecording ? 'btn-danger rec-active-btn' : 'btn-secondary'}`}
-            onClick={() => toggleRecording('canvas')}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-            title={isRecording ? 'Stop and download video recording' : 'Record canvas visualizer as WebM video'}
-          >
-            {isRecording ? (
-              <>
-                <span className="rec-pulse-dot" />
-                <span>REC {formattedTime}</span>
-              </>
-            ) : (
-              <>
-                <Video size={16} className="text-rose-400" />
-                <span>Record Video</span>
-              </>
-            )}
-          </button>
           <button className="btn btn-secondary" onClick={handleShareRun} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Share2 size={16} className="text-cyan-400" /> Share Benchmark
+            <Share2 size={16} /> Share Run
           </button>
         </div>
       </header>
@@ -838,20 +748,6 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
           fetchSimulation(true, false, target, algorithms, parsedArray.length, parsedArray);
           setToastMessage(`Applied ${label} dataset (${parsedArray.length} elements)!`);
           setTimeout(() => setToastMessage(null), 3500);
-        }}
-      />
-
-      <ShareBenchmarkModal
-        isOpen={isShareModalOpen}
-        onClose={() => setIsShareModalOpen(false)}
-        config={{
-          arena: 'searching',
-          algorithms,
-          datasetType: isCustomMode ? 'Custom' : 'Random',
-          size: isCustomMode ? parsedCustomArray.length : size,
-          customArray: isCustomMode ? parsedCustomArray : (dataset || undefined),
-          target,
-          speed,
         }}
       />
     </main>

@@ -14,6 +14,7 @@ public final class PathfindingFactory {
       case "Bellman-Ford" -> new BellmanFordModel();
       case "Bidirectional BFS" -> new BidirectionalBFSModel();
       case "Greedy Best-First" -> new GreedyBFSModel();
+      case "Jump Point Search" -> new JPSModel();
       default ->
           throw new IllegalArgumentException("Unrecognized pathfinding algorithm requested.");
     };
@@ -27,6 +28,7 @@ public final class PathfindingFactory {
         "A* Search",
         "Bellman-Ford",
         "Greedy Best-First",
-        "Bidirectional BFS");
+        "Bidirectional BFS",
+        "Jump Point Search");
   }
 }

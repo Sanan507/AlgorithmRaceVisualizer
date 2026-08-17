@@ -15,15 +15,10 @@ import { createSimulationStream } from '../services/sseClient';
 import { parseCustomArrayInput } from '../utils/arrayParser';
 import { StepExplanationCard } from '../components/StepExplanationCard';
 import { CustomDatasetModal } from '../components/CustomDatasetModal';
-import { ShareBenchmarkModal } from '../components/ShareBenchmarkModal';
 import { CsvUploader } from '../components/CsvUploader';
 import { appendHistory } from '../utils/historyStorage';
-import { Share2, Cpu, Zap, Sparkles, Video } from 'lucide-react';
+import { Share2 } from 'lucide-react';
 import { getUrlParams } from '../utils/urlParams';
-import { parseCurrentShareableConfig } from '../utils/shareableBenchmark';
-import { workerSimulationService } from '../services/workerSimulationService';
-import { generateDataset } from '../utils/datasetGenerator';
-import { useCanvasRecorder } from '../hooks/useCanvasRecorder';
 
 export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
   const [algorithms, setAlgorithms] = useState(['Bubble Sort', 'Quick Sort', 'Merge Sort']);
@@ -37,19 +32,14 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
   const [loading, setLoading] = useState(false);
   const [speed, setSpeed] = useState(6);
   const [validationError, setValidationError] = useState<string | null>(null);
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [isWorkerActive, setIsWorkerActive] = useState(false);
-  const [workerProgress, setWorkerProgress] = useState(0);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const { isRecording, formattedTime, toggleRecording } = useCanvasRecorder('sorting');
 
   const { play } = useAudio();
   const winnerAnnouncedRef = useRef(false);
   const hasStartedPlaybackRef = useRef(false);
   const requestIdRef = useRef(0);
   const initialized = useRef(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Filter out "Custom" from Dataset selection dropdown options
   const predefinedOptions = useMemo(
@@ -223,56 +213,6 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
 
       const useSize = customParams?.sz ?? (useType === 'Custom' && sendCustomArray ? Math.max(1, sendCustomArray.length) : size);
 
-      // Web Worker Offloading for Massive Datasets (N >= 1,000) or client offloading
-      if (useSize >= 1000 && workerSimulationService.isWorkerAvailable()) {
-        setIsWorkerActive(true);
-        setWorkerProgress(0);
-
-        let arrayToSimulate: number[];
-        if (sendCustomArray && sendCustomArray.length > 0) {
-          arrayToSimulate = sendCustomArray;
-        } else if (!newDataset && dataset && dataset.length === useSize) {
-          arrayToSimulate = dataset;
-        } else {
-          arrayToSimulate = generateDataset(useSize, useType);
-        }
-
-        try {
-          const workerRes = await workerSimulationService.runSimulation(
-            {
-              type: 'sorting',
-              algorithms: useAlgos,
-              array: arrayToSimulate,
-            },
-            (percent) => {
-              if (requestId === requestIdRef.current) {
-                setWorkerProgress(percent);
-              }
-            }
-          );
-
-          if (requestId === requestIdRef.current) {
-            setResponse(workerRes);
-            setDataset(workerRes.dataset);
-            setHasFreshDataset(true);
-            playback.reset();
-            if (autoplay) {
-              play('start');
-              playback.setPlaying(true);
-              setHasFreshDataset(false);
-            }
-          }
-          return;
-        } catch (workerErr) {
-          console.warn('Worker offloading warning, falling back to SSE stream:', workerErr);
-        } finally {
-          if (requestId === requestIdRef.current) {
-            setIsWorkerActive(false);
-            setLoading(false);
-          }
-        }
-      }
-
       try {
         const params = {
           algorithms: useAlgos,
@@ -329,21 +269,7 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
             setResponse(prev => prev ? { ...prev, winner: endData.winner } : endData);
           },
           (err: any) => {
-            console.error('SSE Error, generating fallback simulation via Web Worker:', err);
-            // Fallback to Web Worker for client simulation
-            let arrayFallback = sendCustomArray || dataset || generateDataset(useSize, useType);
-            workerSimulationService.runSimulation({
-              type: 'sorting',
-              algorithms: useAlgos,
-              array: arrayFallback,
-            }).then((fallbackRes) => {
-              if (requestId === requestIdRef.current) {
-                setResponse(fallbackRes);
-                setDataset(fallbackRes.dataset);
-                setHasFreshDataset(true);
-                playback.reset();
-              }
-            }).catch(console.error);
+            console.error('SSE Error', err);
           }
         );
       } finally {
@@ -358,20 +284,17 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
   useEffect(() => {
     if (!initialized.current) {
       initialized.current = true;
-      const sharedConfig = parseCurrentShareableConfig();
       const params = getUrlParams();
-
-      if (sharedConfig && (sharedConfig.arena === 'sorting' || (params && params.page === 'sorting'))) {
-        const urlAlgos = sharedConfig.algorithms || params?.algos;
-        const urlSize = sharedConfig.size || params?.size;
-        const urlMode = sharedConfig.datasetType || params?.mode;
+      if (params && params.page === 'sorting') {
+        const urlAlgos = params.algos;
+        const urlSize = params.size;
+        const urlMode = params.mode;
 
         let newAlgos = [...algorithms];
         let newMode = datasetType;
         let newSize = size;
-        let loadedCustomArrayStr = customArrayStr;
 
-        if (urlAlgos && urlAlgos.length > 0) {
+        if (urlAlgos) {
           newAlgos = [
              urlAlgos[0] || algorithms[0],
              urlAlgos[1] || algorithms[1],
@@ -383,18 +306,9 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
            newSize = urlSize;
            setSize(urlSize);
         }
-        if (sharedConfig.customArray && sharedConfig.customArray.length > 0) {
+        if (params.cArray) {
           newMode = 'Custom';
           setIsCustomMode(true);
-          loadedCustomArrayStr = sharedConfig.customArray.join(', ');
-          setCustomArrayStr(loadedCustomArrayStr);
-          setDataset(sharedConfig.customArray);
-          newSize = sharedConfig.customArray.length;
-          setSize(newSize);
-        } else if (params?.cArray) {
-          newMode = 'Custom';
-          setIsCustomMode(true);
-          loadedCustomArrayStr = params.cArray;
           setCustomArrayStr(params.cArray);
           const parsed = parseCustomArrayInput(params.cArray);
           setDataset(parsed);
@@ -404,15 +318,11 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
            setDatasetType(urlMode);
         }
 
-        setToastMessage(`✨ Shared Benchmark Loaded: Sorting Arena (${newMode} Dataset, N = ${newSize})`);
-        setTimeout(() => setToastMessage(null), 4000);
+        const url = new URL(window.location.href);
+        url.search = '';
+        window.history.replaceState(null, '', url.href);
 
-        fetchSimulation(true, false, {
-          algos: newAlgos,
-          dType: newMode,
-          sz: newSize,
-          cArray: newMode === 'Custom' ? loadedCustomArrayStr : undefined,
-        });
+        fetchSimulation(true, false, { algos: newAlgos, dType: newMode, sz: newSize, cArray: params.cArray });
       } else {
         fetchSimulation(true, false);
       }
@@ -420,7 +330,26 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
   }, []);
 
   function handleShareRun() {
-    setIsShareModalOpen(true);
+    const url = new URL(window.location.href);
+    url.searchParams.set('page', 'sorting');
+    url.searchParams.set('algos', algorithms.join(','));
+    if (dataset && dataset.length > 0) {
+      url.searchParams.set('mode', 'Custom');
+      url.searchParams.set('cArray', dataset.join(', '));
+    } else if (!isCustomMode) {
+      url.searchParams.set('size', size.toString());
+      url.searchParams.set('mode', datasetType);
+    } else {
+      url.searchParams.set('mode', 'Custom');
+      url.searchParams.set('cArray', customArrayStr);
+    }
+
+    navigator.clipboard.writeText(url.href)
+      .then(() => {
+        setToastMessage('Link copied to clipboard!');
+        setTimeout(() => setToastMessage(null), 3000);
+      })
+      .catch((err) => console.error('Failed to copy link', err));
   }
 
   async function startRace() {
@@ -587,47 +516,12 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
     <main className="page">
       <header className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <h1>Sorting Arena</h1>
-            {size >= 1000 && (
-              <span className="worker-pill-badge" title="Simulations for N >= 1,000 are computed in a background Web Worker">
-                <Cpu size={13} className="text-cyan-400" />
-                <span>Web Worker Isolated</span>
-              </span>
-            )}
-          </div>
+          <h1>Sorting Arena</h1>
           <p>Real-time benchmarking of sorting algorithms</p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          {isWorkerActive && (
-            <div className="worker-progress-pill">
-              <span className="worker-pulse-dot" />
-              <span>Worker Computing: {workerProgress}%</span>
-            </div>
-          )}
-          <button
-            type="button"
-            className={`btn ${isRecording ? 'btn-danger rec-active-btn' : 'btn-secondary'}`}
-            onClick={() => toggleRecording('canvas')}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-            title={isRecording ? 'Stop and download video recording' : 'Record canvas visualizer as WebM video'}
-          >
-            {isRecording ? (
-              <>
-                <span className="rec-pulse-dot" />
-                <span>REC {formattedTime}</span>
-              </>
-            ) : (
-              <>
-                <Video size={16} className="text-rose-400" />
-                <span>Record Video</span>
-              </>
-            )}
-          </button>
-          <button className="btn btn-secondary" onClick={handleShareRun} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Share2 size={16} className="text-cyan-400" /> Share Benchmark
-          </button>
-        </div>
+        <button className="btn btn-secondary" onClick={handleShareRun} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Share2 size={16} /> Share Run
+        </button>
       </header>
 
       {toastMessage && (
@@ -806,19 +700,6 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
           fetchSimulation(true, false, { dType: 'Custom', cArray: parsedArray.join(', '), sz: parsedArray.length });
           setToastMessage(`Applied ${label} dataset (${parsedArray.length} elements)!`);
           setTimeout(() => setToastMessage(null), 3500);
-        }}
-      />
-
-      <ShareBenchmarkModal
-        isOpen={isShareModalOpen}
-        onClose={() => setIsShareModalOpen(false)}
-        config={{
-          arena: 'sorting',
-          algorithms,
-          datasetType: isCustomMode ? 'Custom' : datasetType,
-          size: isCustomMode ? parsedCustomArray.length : size,
-          customArray: isCustomMode ? parsedCustomArray : (dataset || undefined),
-          speed,
         }}
       />
     </main>
