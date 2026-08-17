@@ -38,6 +38,9 @@ Unlike static single-algorithm visualizers, **AlgoRace** is built around a concu
 ### 🌟 Key Enterprise Features:
 - **🎨 HTML5 Canvas 60 FPS Renderer**: High-density datasets ($N \ge 10,000$) animate at 60 FPS using hardware-accelerated 2D canvas contexts without DOM frame drops.
 - **🧵 Web Worker Simulation Engine**: Complex algorithm simulations offloaded to background Web Worker threads (`simulationWorker.ts`), keeping the main UI thread 100% responsive.
+- **🌐 Embeddable Iframe Widget & Zero-Chrome Mode**: Embed interactive algorithm visualizer races into external blogs (Dev.to, Medium, Hashnode), docs, and portfolios via `?embed=true` and the 1-click `<iframe src="...">` code generator.
+- **🧠 LeetCode Prep Diagnostic Quiz Arena**: Interactive CS interview diagnostic assessment with real-time scoring, multiplier streaks, sound feedback, and in-depth technical explanations.
+- **🔗 Deep-Link URL State & Permalinks**: Exact custom arrays, algorithm selections, speed, and size are encoded into URL query parameters for 1-click collaborative sharing.
 - **📱 Mobile Responsive Tabbed Layout**: Automatic layout adaptation for mobile viewports (`< 768px`) with tabbed lane navigation and touch-optimized controls.
 - **👁️ Colorblind & Accessibility Modes**: Built-in support for **Deuteranopia**, **Protanopia**, **High-Contrast Dark**, and **Light** presentation themes mapped via CSS Design Tokens (`:root`).
 - **💻 Synchronized Multi-Language Code Tracing**: Real-time line-by-line code execution highlighter supporting **TypeScript, Java, Python, and C++** with step operation tags (`COMPARING`, `SWAPPING`, `VISITING`).
@@ -94,6 +97,35 @@ Visualize graph traversal and shortest-path calculation on custom 2D grid maps:
 - **Breadth-First Search (BFS)** — Unweighted graph shortest-path queue traversal.
 - **Bidirectional BFS** — Dual-frontier simultaneous search meeting in the middle.
 - **Depth-First Search (DFS)** — Stack-based maze exploration.
+
+---
+
+### 4. 🧠 LeetCode Prep Diagnostic Quiz Arena
+Test algorithmic trade-offs and complexity intuition with interactive technical interview questions:
+- **Categorized Question Tracks**: Sorting, Searching, Pathfinding, Dynamic Programming, and Trees.
+- **Multiplier Streaks & Live HUD**: Consecutive correct answers trigger score bonuses (`🔥 3 Streak`).
+- **Comprehensive Explanations**: Deep technical breakdowns on runtime degradation, space complexity, and implementation edge cases.
+- **Rank Tier Scorecards**: End-of-round performance rankings (**S-Tier Grandmaster**, **A-Tier Architect**, **B-Tier Practitioner**).
+
+---
+
+### 5. 🌐 Embedding AlgoRace in Your Website / Blog
+Embed interactive visualizers inside any Markdown file, Medium post, Notion page, or portfolio writeup:
+
+1. Click **Share Benchmark** on any race screen.
+2. Select the **Embed Widget** tab and choose your preferred height (`420px`, `520px`, `640px`).
+3. Click **Copy Code** and paste the snippet:
+
+```html
+<iframe 
+  src="https://algorace.app/?page=sorting&embed=true#sorting" 
+  width="100%" 
+  height="520" 
+  frameborder="0" 
+  loading="lazy" 
+  style="border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 12px 32px rgba(0,0,0,0.5);">
+</iframe>
+```
 
 ---
 

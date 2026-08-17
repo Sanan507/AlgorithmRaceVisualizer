@@ -24,12 +24,12 @@ Below is the definitive breakdown of **Existing Capabilities**, **Upgrades Neede
 | **Custom Inputs** | Custom Array & Grid Canvas Drawing | `arrayParser.ts` exists, but UI modal & drag-drawing on canvas grid are missing. | 🟡 Partial | Add Custom Input Modal & Interactive Canvas Painter. |
 | **Audio Feedback** | Value-to-Pitch Synthesizer | Basic sound triggers exist in `AudioContext.tsx`. | 🟡 Partial | Upgrade to Web Audio API polyphonic value-to-frequency pitch mapping. |
 | **Styling & Tokens** | Design Token Architecture & Accessibility | Hardcoded CSS colors in `styles.css`. | 🟡 Partial | Refactor to `:root` design tokens & add Colorblind (Deuteranopia) mode. |
-| **Mobile Experience** | Mobile Responsive Stacked / Tabbed View | Multi-lane grid breaks on viewports <768px. | ❌ Missing | Build Mobile Tabbed / Stacked View with touch controls. |
-| **Performance Engine** | Web Worker & Canvas/WebGL Renderer | React DOM `<div>` bars cause frame drops for $N > 500$. | ❌ Missing | Implement HTML5 Canvas / Web Worker streaming engine. |
-| **Pathfinding Extras** | Maze Generators & Weighted Terrain | Only manual walls exist on grid. | ❌ Missing | Add Maze Generators (Recursive Division, Prim's) & Terrain Weights (Mud/Water). |
-| **New Categories** | Dynamic Programming & Data Structure Trees | Only Array Sorting, Searching, and 2D Pathfinding exist. | ❌ Missing | Add Dynamic Programming Matrix (Knapsack, LCS) & BST/AVL Tree Visualizers. |
-| **Share & Export** | URL Permalinks & GIF/MP4 Export | No URL encoding or video recording exists. | ❌ Missing | Implement URL Hash State & CanvasRecorder GIF/MP4 Exporter. |
-| **Gamification** | LeetCode Prep & Quiz Mode | No quiz or diagnostic assessment mode. | ❌ Missing | Build Interactive Diagnostic Quiz & LeetCode Prep Arena. |
+| **Mobile Experience** | Mobile Responsive Stacked / Tabbed View | Implemented with auto-collapsible mobile tabbed layout & bottom controls. | ✅ Done | Tested across mobile viewports. |
+| **Performance Engine** | Web Worker & Canvas/WebGL Renderer | Implemented HTML5 Canvas 60 FPS renderer & Web Worker background simulation. | ✅ Done | High density N>=1,000 isolated. |
+| **Pathfinding Extras** | Maze Generators & Weighted Terrain | Implemented Recursive Division / Prim's mazes & mud/water weighted terrain. | ✅ Done | Grid painting & weights enabled. |
+| **New Categories** | Dynamic Programming & Data Structure Trees | Implemented DP Matrix (Knapsack, LCS) & BST / Self-Balancing AVL Trees. | ✅ Done | Added DP & Trees Arenas. |
+| **Share & Export** | URL Permalinks & Embeddable Iframe Widget | Implemented Deep-Link State URL encoder & `<iframe src="...">` Generator. | ✅ Done | Added ?embed=true layout & snippet modal. |
+| **Gamification** | LeetCode Prep & Quiz Mode | Implemented interactive Diagnostic Quiz Arena with streak scoring & deep dives. | ✅ Done | Added LeetCode Quiz Arena. |
 
 ---
 
@@ -107,18 +107,15 @@ flowchart TD
   `https://algorace.app/race?category=sorting&algo1=quicksort&algo2=heapsort&size=100&seed=89234`
 - **One-Click Share Button**: Instant copy-to-clipboard permalink generation.
 
-#### 4.2 GIF & MP4 Video Export Engine
-- **CanvasRecorder / WebM Converter**: Add an "Export Video" button allowing educators and tech influencers to download visualizer animations as `.mp4` or `.gif` files for LinkedIn/X/YouTube.
+#### 4.2 Embeddable Iframe Widget & Zero-Chrome Mode
+- **Zero-Chrome View (`?embed=true`)**: Strips navigation headers and sidebars, rendering the visualizer at 100% viewport width with a subtle floating `AlgoRace ⚡ Live` badge.
+- **Iframe Embed Code Generator**: Built into `ShareBenchmarkModal.tsx` allowing 1-click `<iframe src="...">` generation with selectable heights (420px, 520px, 640px) for technical blogs, course notes, and portfolios.
 
-#### 4.3 Embeddable Iframe Widget
-- **Iframe Embed Code**: Generate light `<iframe src="https://algorace.app/embed?algo=quicksort"></iframe>` snippets for technical blog posts (Medium, Dev.to, Hashnode).
-
-#### 4.4 LeetCode Prep Diagnostic Quiz Mode
-- **Interactive Quiz Arena**:
-  - Present automated race simulations and ask diagnostic questions:
-    - *"Which algorithm used less memory during this race and why?"*
-    - *"What is the worst-case scenario for the losing algorithm on this dataset?"*
-  - Instant scoring, explanations, and progress badges.
+#### 4.3 LeetCode Prep Diagnostic Quiz Mode
+- **Interactive Quiz Arena (`QuizPage.tsx`, `quizQuestions.ts`)**:
+  - Curated diagnostic questions across Sorting, Searching, Pathfinding, Dynamic Programming, and Tree Structures.
+  - Multiplier streak scoring (`🔥 Streak Bonus`), instant sound effects, and comprehensive technical deep-dive explanations.
+  - End-of-round Mastery Tier scorecard (S-Tier Grandmaster, A-Tier Architect, B-Tier Practitioner).
 
 ---
 
