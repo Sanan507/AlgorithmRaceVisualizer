@@ -100,12 +100,12 @@ Visualize graph traversal and shortest-path calculation on custom 2D grid maps:
 
 ---
 
-### 4. 🧠 LeetCode Prep Diagnostic Quiz Arena
-Test algorithmic trade-offs and complexity intuition with interactive technical interview questions:
-- **Categorized Question Tracks**: Sorting, Searching, Pathfinding, Dynamic Programming, and Trees.
-- **Multiplier Streaks & Live HUD**: Consecutive correct answers trigger score bonuses (`🔥 3 Streak`).
-- **Comprehensive Explanations**: Deep technical breakdowns on runtime degradation, space complexity, and implementation edge cases.
-- **Rank Tier Scorecards**: End-of-round performance rankings (**S-Tier Grandmaster**, **A-Tier Architect**, **B-Tier Practitioner**).
+### 4. 🏆 AlgoGym & Interactive Challenge Arena
+Sharpen algorithmic intuition through live race prediction, empirical stress-testing, and bug diagnosis:
+- **🏁 Predict the Winner (Live Race Wagering)**: Predict algorithmic performance on adversarial distributions (Dutch National Flag, 98% Inversions, Reversed Permutations) and watch the live multi-lane HTML5 Canvas race prove the theory.
+- **🐛 Spot the Bug & Visual Stress-Testing**: Interactive code diagnosis for classic software traps (Joshua Bloch's Binary Search overflow, 0/1 Knapsack 1D loop direction).
+- **🎲 Procedural Infinite Showdown Generator**: Infinite dynamic mathematical distributions (*Organ-Pipe, Sawtooth, Gaussian Normal, Staircase*).
+- **🏅 Persistent Elo Skill Rating & Streaks**: Developer rank tiers (**Apprentice**, **Practitioner**, **System Architect**, **Grandmaster**) with daily showdowns and multiplier streak rewards.
 
 ---
 

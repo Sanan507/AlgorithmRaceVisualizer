@@ -34,7 +34,7 @@ const getPageFromHash = (): Page => {
     if (pageParam === 'pathfinding') return 'pathfinding';
     if (pageParam === 'dp') return 'dp';
     if (pageParam === 'trees') return 'trees';
-    if (pageParam === 'quiz') return 'quiz';
+    if (pageParam === 'quiz' || pageParam === 'gym' || pageParam === 'algogym') return 'quiz';
     if (pageParam === 'history') return 'history';
     if (pageParam === 'settings') return 'settings';
   }
@@ -45,7 +45,7 @@ const getPageFromHash = (): Page => {
   if (hash === 'pathfinding' || hash === 'pathfinding-arena') return 'pathfinding';
   if (hash === 'dp' || hash === 'dp-arena' || hash === 'dynamic-programming') return 'dp';
   if (hash === 'trees' || hash === 'trees-arena' || hash === 'tree-structures') return 'trees';
-  if (hash === 'quiz' || hash === 'leetcode-quiz' || hash === 'quiz-arena') return 'quiz';
+  if (hash === 'quiz' || hash === 'gym' || hash === 'algogym' || hash === 'leetcode-quiz' || hash === 'quiz-arena') return 'quiz';
   if (hash === 'history' || hash === 'benchmarks') return 'history';
   if (hash === 'settings') return 'settings';
   return 'landing';

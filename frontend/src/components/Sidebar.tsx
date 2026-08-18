@@ -1,4 +1,4 @@
-import { BarChart3, Binary, GitBranch, History, Settings, ChevronLeft, ChevronRight, LayoutGrid, X, Sun, Moon, Layers, FolderTree, Award } from 'lucide-react';
+import { BarChart3, Binary, GitBranch, History, Settings, ChevronLeft, ChevronRight, LayoutGrid, X, Sun, Moon, Layers, FolderTree, Trophy } from 'lucide-react';
 import { useAudio } from '../context/AudioContext';
 import { AlgoRaceLogo } from './AlgoRaceLogo';
 
@@ -11,7 +11,7 @@ const items = [
   { id: 'pathfinding', label: 'Pathfinding Arena',   icon: GitBranch,  hotkey: '3' },
   { id: 'dp',          label: 'DP Arena',            icon: Layers,     hotkey: '4' },
   { id: 'trees',       label: 'Tree Arena',          icon: FolderTree, hotkey: '5' },
-  { id: 'quiz',        label: 'LeetCode Quiz',       icon: Award,      hotkey: 'Q' },
+  { id: 'quiz',        label: 'AlgoGym Arena',       icon: Trophy,     hotkey: 'Q' },
   { id: 'history',     label: 'Benchmarks',          icon: History,    hotkey: 'H' },
   { id: 'settings',    label: 'Settings',            icon: Settings,   hotkey: 'S' },
 ] as const;

@@ -1,432 +1,708 @@
-import React, { useState, useMemo } from 'react';
-import { Award, Flame, CheckCircle2, XCircle, ArrowRight, RotateCcw, Sparkles, BookOpen, Layers, Zap, Trophy, ShieldCheck } from 'lucide-react';
-import { QUIZ_QUESTIONS, QuizQuestion } from '../data/quizQuestions';
+/**
+ * QuizPage.tsx -> AlgoGym & Interactive Challenge Arena
+ * A mature, gamified developer training ground featuring:
+ * - Live Race Wagering & Multi-Lane Canvas Showdowns
+ * - Spot the Bug & Visual Stress-Testing
+ * - Procedural Infinite Scenarios
+ * - Daily Challenges with Persistent Elo Skill Rating & Streaks
+ */
+
+import React, { useState, useMemo, useEffect } from 'react';
+import {
+  Trophy,
+  Flame,
+  Zap,
+  CheckCircle2,
+  XCircle,
+  Play,
+  RotateCcw,
+  Sparkles,
+  Layers,
+  Award,
+  ChevronRight,
+  Code2,
+  HelpCircle,
+  TrendingUp,
+  ShieldAlert,
+  Calendar,
+  Shuffle,
+  BookOpen
+} from 'lucide-react';
+import {
+  GymTrackType,
+  GymUserProfile,
+  RacePredictionChallenge,
+  BugHuntChallenge,
+  EloTier
+} from '../models/gymTypes';
+import { RACE_PREDICTION_CHALLENGES, BUG_HUNT_CHALLENGES } from '../data/gymChallenges';
+import { generateProceduralChallenge } from '../utils/gymProceduralGenerator';
+import {
+  loadGymProfile,
+  recordChallengeResult
+} from '../utils/gymProfileStorage';
+import { GymShowdownCanvas } from '../components/GymShowdownCanvas';
 import { useAudio } from '../context/AudioContext';
+import { generateDataset } from '../utils/datasetGenerator';
 
 interface QuizPageProps {
   onNavigateArena?: (arena: string) => void;
 }
 
 export function QuizPage({ onNavigateArena }: QuizPageProps) {
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [activeTrack, setActiveTrack] = useState<GymTrackType>('race-prediction');
+  const [profile, setProfile] = useState<GymUserProfile>(() => loadGymProfile());
+
+  // Track 1: Race Prediction State
+  const [predictionIndex, setPredictionIndex] = useState(0);
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
-  const [isAnswerSubmitted, setIsAnswerSubmitted] = useState(false);
-  const [score, setScore] = useState(0);
-  const [streak, setStreak] = useState(0);
-  const [maxStreak, setMaxStreak] = useState(0);
-  const [userAnswers, setUserAnswers] = useState<Record<string, { optionId: string; isCorrect: boolean }>>({});
-  const [isQuizCompleted, setIsQuizCompleted] = useState(false);
+  const [isWagerLocked, setIsWagerLocked] = useState(false);
+  const [isShowdownActive, setIsShowdownActive] = useState(false);
+  const [showdownResult, setShowdownResult] = useState<{
+    winner: string;
+    stats: Record<string, { comparisons: number; swaps: number; timeMs: number }>;
+  } | null>(null);
+  const [eloDeltaNotification, setEloDeltaNotification] = useState<number | null>(null);
+
+  // Track 2: Bug Hunt State
+  const [bugHuntIndex, setBugHuntIndex] = useState(0);
+  const [selectedBugFixId, setSelectedBugFixId] = useState<string | null>(null);
+  const [isBugAnswerSubmitted, setIsBugAnswerSubmitted] = useState(false);
+
+  // Track 3: Procedural Challenge State
+  const [proceduralChallenge, setProceduralChallenge] = useState<RacePredictionChallenge>(() =>
+    generateProceduralChallenge(Date.now())
+  );
+  const [proceduralOptionId, setProceduralOptionId] = useState<string | null>(null);
+  const [isProceduralLocked, setIsProceduralLocked] = useState(false);
+  const [isProceduralShowdownActive, setIsProceduralShowdownActive] = useState(false);
 
   const { play } = useAudio();
 
-  const filteredQuestions = useMemo(() => {
-    if (selectedCategory === 'all') return QUIZ_QUESTIONS;
-    return QUIZ_QUESTIONS.filter((q) => q.category === selectedCategory);
-  }, [selectedCategory]);
+  const currentPredictionChallenge: RacePredictionChallenge =
+    RACE_PREDICTION_CHALLENGES[predictionIndex % RACE_PREDICTION_CHALLENGES.length];
 
-  const currentQuestion: QuizQuestion | undefined = filteredQuestions[currentIndex];
+  const currentBugChallenge: BugHuntChallenge =
+    BUG_HUNT_CHALLENGES[bugHuntIndex % BUG_HUNT_CHALLENGES.length];
 
-  const handleSelectOption = (optionId: string) => {
-    if (isAnswerSubmitted || !currentQuestion) return;
+  // Daily seed challenge
+  const todaySeed = useMemo(() => {
+    const d = new Date();
+    return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+  }, []);
 
+  const dailyChallenge = useMemo(() => {
+    return generateProceduralChallenge(todaySeed);
+  }, [todaySeed]);
+
+  // Handle Race Prediction Wager Submission
+  const handleLockWager = (optionId: string) => {
+    if (isWagerLocked) return;
     setSelectedOptionId(optionId);
-    setIsAnswerSubmitted(true);
+    setIsWagerLocked(true);
+    setIsShowdownActive(true);
+    play('click');
+  };
 
-    const chosenOption = currentQuestion.options.find((o) => o.id === optionId);
-    const isCorrect = chosenOption?.isCorrect ?? false;
-
-    setUserAnswers((prev) => ({
-      ...prev,
-      [currentQuestion.id]: { optionId, isCorrect },
-    }));
+  // Callback when Showdown Canvas finishes
+  const handleShowdownFinish = (
+    winner: string,
+    stats: Record<string, { comparisons: number; swaps: number; timeMs: number }>
+  ) => {
+    setShowdownResult({ winner, stats });
+    const selectedOption = currentPredictionChallenge.options.find((o) => o.id === selectedOptionId);
+    const isCorrect = selectedOption?.isCorrect ?? false;
 
     if (isCorrect) {
       play('winner');
-      const streakBonus = streak * 50;
-      const points = 100 + streakBonus;
-      setScore((prev) => prev + points);
-      setStreak((prev) => {
-        const nextStreak = prev + 1;
-        if (nextStreak > maxStreak) setMaxStreak(nextStreak);
-        return nextStreak;
-      });
     } else {
       play('searchMiss');
-      setStreak(0);
     }
+
+    const { updatedProfile, eloDelta } = recordChallengeResult(
+      currentPredictionChallenge.id,
+      isCorrect,
+      30
+    );
+    setProfile(updatedProfile);
+    setEloDeltaNotification(eloDelta);
   };
 
-  const handleNextQuestion = () => {
-    play('click');
-    if (currentIndex + 1 < filteredQuestions.length) {
-      setCurrentIndex((prev) => prev + 1);
-      setSelectedOptionId(null);
-      setIsAnswerSubmitted(false);
-    } else {
-      setIsQuizCompleted(true);
-    }
-  };
-
-  const handleRestartQuiz = () => {
-    play('click');
-    setCurrentIndex(0);
+  const handleNextPrediction = () => {
+    setPredictionIndex((prev) => prev + 1);
     setSelectedOptionId(null);
-    setIsAnswerSubmitted(false);
-    setScore(0);
-    setStreak(0);
-    setUserAnswers({});
-    setIsQuizCompleted(false);
+    setIsWagerLocked(false);
+    setIsShowdownActive(false);
+    setShowdownResult(null);
+    setEloDeltaNotification(null);
   };
 
-  // Performance tier calculator
-  const totalAnswered = Object.keys(userAnswers).length;
-  const correctCount = Object.values(userAnswers).filter((a) => a.isCorrect).length;
-  const accuracyPercent = totalAnswered > 0 ? Math.round((correctCount / totalAnswered) * 100) : 0;
+  // Handle Bug Hunt Choice
+  const handleSelectBugFix = (fixId: string) => {
+    if (isBugAnswerSubmitted) return;
+    setSelectedBugFixId(fixId);
+    setIsBugAnswerSubmitted(true);
 
-  let tierBadge = { title: 'Apprentice Algorithmist', rank: 'Tier 3', color: '#94a3b8', icon: ShieldCheck };
-  if (accuracyPercent === 100 && totalAnswered >= 3) {
-    tierBadge = { title: 'S-Tier Algorithm Grandmaster', rank: 'S-Tier', color: '#f59e0b', icon: Trophy };
-  } else if (accuracyPercent >= 80) {
-    tierBadge = { title: 'A-Tier System Architect', rank: 'A-Tier', color: '#38bdf8', icon: Zap };
-  } else if (accuracyPercent >= 60) {
-    tierBadge = { title: 'B-Tier Algorithm Practitioner', rank: 'B-Tier', color: '#10b981', icon: Award };
-  }
+    const fix = currentBugChallenge.options.find((o) => o.id === fixId);
+    const isCorrect = fix?.isCorrect ?? false;
 
-  const categories = [
-    { id: 'all', label: 'All Topics' },
-    { id: 'sorting', label: 'Sorting' },
-    { id: 'searching', label: 'Searching' },
-    { id: 'pathfinding', label: 'Pathfinding' },
-    { id: 'trees', label: 'Trees & BST' },
-    { id: 'dp', label: 'Dynamic Programming' },
-  ];
+    if (isCorrect) {
+      play('winner');
+    } else {
+      play('searchMiss');
+    }
+
+    const { updatedProfile, eloDelta } = recordChallengeResult(currentBugChallenge.id, isCorrect, 35);
+    setProfile(updatedProfile);
+    setEloDeltaNotification(eloDelta);
+  };
+
+  const handleNextBugHunt = () => {
+    setBugHuntIndex((prev) => prev + 1);
+    setSelectedBugFixId(null);
+    setIsBugAnswerSubmitted(false);
+    setEloDeltaNotification(null);
+  };
+
+  // Handle Procedural Next
+  const handleGenerateNextProcedural = () => {
+    const nextSeed = Date.now() + Math.floor(Math.random() * 10000);
+    setProceduralChallenge(generateProceduralChallenge(nextSeed));
+    setProceduralOptionId(null);
+    setIsProceduralLocked(false);
+    setIsProceduralShowdownActive(false);
+    setShowdownResult(null);
+    setEloDeltaNotification(null);
+  };
+
+  // Dataset creation for active prediction challenge
+  const activeShowdownDataset = useMemo(() => {
+    if (currentPredictionChallenge.datasetPreview && currentPredictionChallenge.datasetPreview.length > 0) {
+      return generateDataset(currentPredictionChallenge.datasetSize, currentPredictionChallenge.datasetType);
+    }
+    return generateDataset(currentPredictionChallenge.datasetSize, currentPredictionChallenge.datasetType);
+  }, [currentPredictionChallenge]);
+
+  const activeContenderKeys = useMemo(() => {
+    return currentPredictionChallenge.contenders.map((c) => c.algorithmKey);
+  }, [currentPredictionChallenge]);
+
+  const eloTierIcons: Record<EloTier, string> = {
+    Apprentice: '🥉',
+    Practitioner: '🥈',
+    'System Architect': '🥇',
+    Grandmaster: '💎',
+  };
+
+  const accuracyPct = profile.totalAnswered > 0
+    ? Math.round((profile.totalCorrect / profile.totalAnswered) * 100)
+    : 0;
 
   return (
-    <main className="page quiz-page-container" style={{ maxWidth: '1080px', margin: '0 auto', paddingBottom: '60px' }}>
-      {/* Header */}
-      <header className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+    <main className="page gym-page-container">
+      {/* Page Header */}
+      <header className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <h1>LeetCode Diagnostic Quiz Arena</h1>
-            <span className="worker-pill-badge" style={{ background: 'rgba(245, 158, 11, 0.1)', borderColor: 'rgba(245, 158, 11, 0.3)', color: '#fbbf24' }}>
+            <h1>AlgoGym & Interactive Challenge Arena</h1>
+            <span className="worker-pill-badge" style={{ background: 'rgba(99, 102, 241, 0.15)', borderColor: '#6366f1', color: '#a5b4fc' }}>
               <Sparkles size={13} className="text-amber-400" />
-              <span>Interview Prep</span>
+              <span>SaaS Gamification Engine</span>
             </span>
           </div>
-          <p>Test your mastery of complexity, edge cases, invariants, and algorithmic trade-offs</p>
+          <p>Sharpen algorithmic intuition through live race wagering, empirical stress tests, and bug diagnosis.</p>
         </div>
 
-        {/* Global Stats HUD */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div className="quiz-hud-chip" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '12px', background: 'rgba(255, 255, 255, 0.04)', border: '1px solid var(--color-border-line)' }}>
-            <Flame size={18} className={streak > 0 ? 'text-amber-400' : 'text-slate-500'} />
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>STREAK</span>
-              <strong style={{ fontSize: '1rem', color: streak > 0 ? '#fbbf24' : 'inherit' }}>{streak}🔥</strong>
+        {/* Developer Skill Profile / Elo HUD */}
+        <div className="gym-hero-hud">
+          <div className="gym-hud-stat-box">
+            <span className="gym-hud-label">Developer Rating</span>
+            <div className="gym-hud-value">
+              <span className="gym-tier-icon">{eloTierIcons[profile.tier]}</span>
+              <strong>{profile.elo}</strong>
+              <span className="gym-tier-name">({profile.tier})</span>
             </div>
           </div>
 
-          <div className="quiz-hud-chip" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '12px', background: 'rgba(99, 102, 241, 0.12)', border: '1px solid rgba(99, 102, 241, 0.3)' }}>
-            <Award size={18} className="text-indigo-400" />
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>SCORE</span>
-              <strong style={{ fontSize: '1.1rem', color: '#a5b4fc' }}>{score.toLocaleString()}</strong>
+          <div className="gym-hud-stat-box">
+            <span className="gym-hud-label">Daily Streak</span>
+            <div className="gym-hud-value text-amber-400">
+              <Flame size={16} className="text-amber-500 animate-pulse" />
+              <strong>{profile.streak}</strong>
+              <span style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)' }}>Best: {profile.highestStreak}</span>
+            </div>
+          </div>
+
+          <div className="gym-hud-stat-box">
+            <span className="gym-hud-label">Accuracy</span>
+            <div className="gym-hud-value text-emerald-400">
+              <TrendingUp size={16} />
+              <strong>{accuracyPct}%</strong>
+              <span style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)' }}>({profile.totalCorrect}/{profile.totalAnswered})</span>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Category Tabs */}
-      <div className="quiz-category-tabs" style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '12px', marginBottom: '20px' }}>
-        {categories.map((c) => (
-          <button
-            key={c.id}
-            type="button"
-            className={`btn ${selectedCategory === c.id ? 'btn-primary' : 'btn-secondary'}`}
-            onClick={() => {
-              play('click');
-              setSelectedCategory(c.id);
-              setCurrentIndex(0);
-              setSelectedOptionId(null);
-              setIsAnswerSubmitted(false);
-              setIsQuizCompleted(false);
-            }}
-            style={{ borderRadius: '20px', padding: '6px 14px', fontSize: '0.82rem', whiteSpace: 'nowrap' }}
-          >
-            {c.label}
-          </button>
-        ))}
+      {/* Track Selection Tabs */}
+      <div className="gym-track-tabs-bar">
+        <button
+          type="button"
+          className={`gym-track-tab-btn ${activeTrack === 'race-prediction' ? 'active' : ''}`}
+          onClick={() => setActiveTrack('race-prediction')}
+        >
+          <Trophy size={16} />
+          <span>🏁 Predict the Winner</span>
+        </button>
+
+        <button
+          type="button"
+          className={`gym-track-tab-btn ${activeTrack === 'bug-hunt' ? 'active' : ''}`}
+          onClick={() => setActiveTrack('bug-hunt')}
+        >
+          <Code2 size={16} />
+          <span>🐛 Spot the Bug</span>
+        </button>
+
+        <button
+          type="button"
+          className={`gym-track-tab-btn ${activeTrack === 'procedural' ? 'active' : ''}`}
+          onClick={() => setActiveTrack('procedural')}
+        >
+          <Shuffle size={16} />
+          <span>🎲 Procedural Infinite</span>
+        </button>
+
+        <button
+          type="button"
+          className={`gym-track-tab-btn ${activeTrack === 'daily' ? 'active' : ''}`}
+          onClick={() => setActiveTrack('daily')}
+        >
+          <Calendar size={16} />
+          <span>📅 Daily Challenge</span>
+        </button>
       </div>
 
-      {!isQuizCompleted && currentQuestion ? (
-        <div className="quiz-card-wrapper" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {/* Progress bar */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ flex: 1, height: '6px', background: 'rgba(255, 255, 255, 0.08)', borderRadius: '4px', overflow: 'hidden' }}>
-              <div
-                style={{
-                  height: '100%',
-                  width: `${((currentIndex + 1) / filteredQuestions.length) * 100}%`,
-                  background: 'linear-gradient(90deg, #6366f1, #38bdf8)',
-                  transition: 'width 0.3s ease',
-                }}
-              />
-            </div>
-            <span style={{ fontSize: '0.8rem', fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>
-              Question {currentIndex + 1} of {filteredQuestions.length}
-            </span>
-          </div>
-
-          {/* Question Card */}
-          <div
-            className="quiz-card"
-            style={{
-              background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.7) 0%, rgba(10, 15, 30, 0.9) 100%)',
-              border: '1px solid var(--color-border-line)',
-              borderRadius: '16px',
-              padding: '28px',
-              boxShadow: '0 12px 32px rgba(0, 0, 0, 0.35)',
-            }}
-          >
-            {/* Meta Tags */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
+      {/* =========================================================================
+          TRACK 1: PREDICT THE WINNER (SHOWDOWN & LIVE WAGERING)
+          ========================================================================= */}
+      {activeTrack === 'race-prediction' && (
+        <section className="gym-track-content">
+          <div className="gym-card">
+            {/* Scenario Header */}
+            <div className="gym-card-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span className="badge badge-primary uppercase-text" style={{ fontSize: '0.72rem', padding: '3px 8px' }}>
-                  {currentQuestion.category}
-                </span>
-                <span
-                  className="badge"
-                  style={{
-                    fontSize: '0.72rem',
-                    padding: '3px 8px',
-                    background:
-                      currentQuestion.difficulty === 'Easy'
-                        ? 'rgba(16, 185, 129, 0.15)'
-                        : currentQuestion.difficulty === 'Medium'
-                        ? 'rgba(245, 158, 11, 0.15)'
-                        : 'rgba(239, 68, 68, 0.15)',
-                    color:
-                      currentQuestion.difficulty === 'Easy'
-                        ? '#34d399'
-                        : currentQuestion.difficulty === 'Medium'
-                        ? '#fbbf24'
-                        : '#f87171',
-                    border: '1px solid currentColor',
-                  }}
-                >
-                  {currentQuestion.difficulty}
-                </span>
+                <span className="gym-difficulty-badge">{currentPredictionChallenge.difficulty}</span>
+                <span className="gym-category-pill">{currentPredictionChallenge.category.toUpperCase()}</span>
               </div>
-
-              {currentQuestion.leetcodeReference && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
-                  <BookOpen size={13} className="text-amber-400" />
-                  <span>{currentQuestion.leetcodeReference}</span>
-                </div>
-              )}
+              <span style={{ fontSize: '0.82rem', fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)' }}>
+                Challenge {predictionIndex + 1} of {RACE_PREDICTION_CHALLENGES.length}
+              </span>
             </div>
 
-            {/* Question Title & Scenario */}
-            <h2 style={{ fontSize: '1.35rem', fontWeight: 800, fontFamily: 'var(--font-display)', marginBottom: '10px' }}>
-              {currentQuestion.title}
-            </h2>
-            <p style={{ fontSize: '0.98rem', color: 'var(--color-text-secondary)', lineHeight: 1.6, marginBottom: '20px' }}>
-              {currentQuestion.scenario}
-            </p>
+            <h2 className="gym-challenge-title">{currentPredictionChallenge.title}</h2>
+            <p className="gym-challenge-desc">{currentPredictionChallenge.scenarioDescription}</p>
 
-            {/* Code Snippet if present */}
-            {currentQuestion.codeSnippet && (
-              <div
-                className="quiz-code-block"
-                style={{
-                  background: 'rgba(0, 0, 0, 0.45)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  borderRadius: '10px',
-                  padding: '16px',
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '0.86rem',
-                  lineHeight: 1.5,
-                  overflowX: 'auto',
-                  marginBottom: '24px',
-                  color: '#e2e8f0',
-                }}
-              >
-                <pre style={{ margin: 0 }}>{currentQuestion.codeSnippet}</pre>
+            {/* Contender Profiles Matrix */}
+            <div className="gym-contenders-row">
+              {currentPredictionChallenge.contenders.map((contender) => (
+                <div key={contender.name} className="gym-contender-card" style={{ borderLeft: `3px solid ${contender.color}` }}>
+                  <div className="gym-contender-name">{contender.name}</div>
+                  <div className="gym-contender-complexity">
+                    <span>⏱️ {contender.timeComplexity}</span>
+                    <span>💾 {contender.spaceComplexity}</span>
+                  </div>
+                  <p className="gym-contender-behavior">{contender.expectedBehavior}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Wager Question & Interactive Option Selection */}
+            <div className="gym-wager-section">
+              <h3 className="gym-wager-prompt">
+                <HelpCircle size={17} className="text-cyan-400" />
+                <span>{currentPredictionChallenge.wagerQuestion}</span>
+              </h3>
+
+              <div className="gym-options-list">
+                {currentPredictionChallenge.options.map((opt) => {
+                  const isSelected = selectedOptionId === opt.id;
+                  let optionClass = 'gym-option-btn';
+                  if (isWagerLocked) {
+                    if (opt.isCorrect) optionClass += ' correct';
+                    else if (isSelected && !opt.isCorrect) optionClass += ' incorrect';
+                    else optionClass += ' disabled';
+                  } else if (isSelected) {
+                    optionClass += ' selected';
+                  }
+
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      disabled={isWagerLocked}
+                      className={optionClass}
+                      onClick={() => handleLockWager(opt.id)}
+                    >
+                      <div className="gym-option-radio">
+                        {isWagerLocked && opt.isCorrect && <CheckCircle2 size={16} className="text-emerald-400" />}
+                        {isWagerLocked && isSelected && !opt.isCorrect && <XCircle size={16} className="text-rose-400" />}
+                        {!isWagerLocked && <div className={`gym-radio-circle ${isSelected ? 'checked' : ''}`} />}
+                      </div>
+                      <span className="gym-option-text">{opt.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Live Showdown Canvas Area */}
+            {isShowdownActive && (
+              <div className="gym-showdown-live-arena">
+                <div className="gym-arena-header">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Play size={15} className="text-amber-400 animate-pulse" />
+                    <strong>Live Canvas Showdown Simulation</strong>
+                  </div>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
+                    Dataset: {currentPredictionChallenge.datasetSize} elements ({currentPredictionChallenge.datasetType})
+                  </span>
+                </div>
+
+                <GymShowdownCanvas
+                  algorithms={activeContenderKeys}
+                  dataset={activeShowdownDataset}
+                  autoPlay={true}
+                  onFinish={handleShowdownFinish}
+                />
               </div>
             )}
 
-            {/* Options List */}
-            <div className="quiz-options-list" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {currentQuestion.options.map((opt) => {
-                const isSelected = selectedOptionId === opt.id;
-                let optionStyle: React.CSSProperties = {
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '14px',
-                  padding: '16px 20px',
-                  borderRadius: '12px',
-                  border: '1px solid var(--color-border-line)',
-                  background: 'rgba(255, 255, 255, 0.02)',
-                  cursor: isAnswerSubmitted ? 'default' : 'pointer',
-                  transition: 'all 0.2s ease',
-                  textAlign: 'left',
-                };
+            {/* Post-Showdown Telemetry & Theoretical Post-Mortem */}
+            {showdownResult && (
+              <div className="gym-postmortem-container">
+                <div className="gym-postmortem-header">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Sparkles size={18} className="text-amber-400" />
+                    <h4>Empirical Showdown Post-Mortem</h4>
+                  </div>
+                  {eloDeltaNotification !== null && (
+                    <span className={`gym-elo-delta-badge ${eloDeltaNotification > 0 ? 'gain' : 'loss'}`}>
+                      {eloDeltaNotification > 0 ? `+${eloDeltaNotification} Elo` : `${eloDeltaNotification} Elo`}
+                    </span>
+                  )}
+                </div>
 
-                if (isAnswerSubmitted) {
-                  if (opt.isCorrect) {
-                    optionStyle.borderColor = '#10b981';
-                    optionStyle.background = 'rgba(16, 185, 129, 0.12)';
-                  } else if (isSelected && !opt.isCorrect) {
-                    optionStyle.borderColor = '#ef4444';
-                    optionStyle.background = 'rgba(239, 68, 68, 0.12)';
+                <div className="gym-postmortem-grid">
+                  <div className="gym-postmortem-card">
+                    <span className="gym-pm-label">Why {currentPredictionChallenge.postMortem.theoreticalWinner} Won:</span>
+                    <p>{currentPredictionChallenge.postMortem.whyWinnerWon}</p>
+                  </div>
+                  <div className="gym-postmortem-card">
+                    <span className="gym-pm-label">Why Competitors Degraded:</span>
+                    <p>{currentPredictionChallenge.postMortem.whyLosersFailed}</p>
+                  </div>
+                </div>
+
+                <div className="gym-postmortem-footer">
+                  <div className="gym-pm-lesson">
+                    <strong>💡 Production Lesson:</strong> {currentPredictionChallenge.postMortem.realWorldLesson}
+                  </div>
+                  <div className="gym-pm-leetcode">
+                    <strong>🎯 LeetCode Relevance:</strong> {currentPredictionChallenge.postMortem.leetCodeRelevance}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={handleNextPrediction}
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                  >
+                    <span>Next Showdown</span>
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* =========================================================================
+          TRACK 2: SPOT THE BUG (CODE DIAGNOSIS)
+          ========================================================================= */}
+      {activeTrack === 'bug-hunt' && (
+        <section className="gym-track-content">
+          <div className="gym-card">
+            <div className="gym-card-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="gym-difficulty-badge">{currentBugChallenge.difficulty}</span>
+                <span className="gym-category-pill">{currentBugChallenge.category.toUpperCase()}</span>
+              </div>
+              <span style={{ fontSize: '0.82rem', fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)' }}>
+                Bug Challenge {bugHuntIndex + 1} of {BUG_HUNT_CHALLENGES.length}
+              </span>
+            </div>
+
+            <h2 className="gym-challenge-title">{currentBugChallenge.title}</h2>
+            <p className="gym-challenge-desc">{currentBugChallenge.description}</p>
+
+            {/* Code Block with Highlighted Bug Line */}
+            <div className="gym-code-editor-box">
+              <div className="gym-code-header">
+                <span className="gym-code-lang">{currentBugChallenge.language.toUpperCase()}</span>
+                <span className="gym-bug-warning">⚠️ Flawed Implementation Detected</span>
+              </div>
+              <pre className="gym-code-pre">
+                <code>{currentBugChallenge.buggyCode}</code>
+              </pre>
+            </div>
+
+            {/* Bug Fix Options */}
+            <div className="gym-wager-section">
+              <h3 className="gym-wager-prompt">
+                <ShieldAlert size={17} className="text-rose-400" />
+                <span>Select the root cause diagnosis and verified patch:</span>
+              </h3>
+
+              <div className="gym-options-list">
+                {currentBugChallenge.options.map((opt) => {
+                  const isSelected = selectedBugFixId === opt.id;
+                  let optionClass = 'gym-option-btn';
+                  if (isBugAnswerSubmitted) {
+                    if (opt.isCorrect) optionClass += ' correct';
+                    else if (isSelected && !opt.isCorrect) optionClass += ' incorrect';
+                    else optionClass += ' disabled';
+                  } else if (isSelected) {
+                    optionClass += ' selected';
                   }
-                } else if (isSelected) {
-                  optionStyle.borderColor = '#6366f1';
-                  optionStyle.background = 'rgba(99, 102, 241, 0.15)';
-                }
 
-                return (
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      disabled={isBugAnswerSubmitted}
+                      className={optionClass}
+                      onClick={() => handleSelectBugFix(opt.id)}
+                    >
+                      <div className="gym-option-radio">
+                        {isBugAnswerSubmitted && opt.isCorrect && <CheckCircle2 size={16} className="text-emerald-400" />}
+                        {isBugAnswerSubmitted && isSelected && !opt.isCorrect && <XCircle size={16} className="text-rose-400" />}
+                        {!isBugAnswerSubmitted && <div className={`gym-radio-circle ${isSelected ? 'checked' : ''}`} />}
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', textAlign: 'left' }}>
+                        <span className="gym-option-text font-bold">{opt.description}</span>
+                        {isBugAnswerSubmitted && <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>{opt.explanation}</span>}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Bug Hunt Deep Dive Post-Mortem */}
+            {isBugAnswerSubmitted && (
+              <div className="gym-postmortem-container">
+                <div className="gym-postmortem-header">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <BookOpen size={18} className="text-indigo-400" />
+                    <h4>Engineering Deep Dive & Root Cause</h4>
+                  </div>
+                  {eloDeltaNotification !== null && (
+                    <span className={`gym-elo-delta-badge ${eloDeltaNotification > 0 ? 'gain' : 'loss'}`}>
+                      {eloDeltaNotification > 0 ? `+${eloDeltaNotification} Elo` : `${eloDeltaNotification} Elo`}
+                    </span>
+                  )}
+                </div>
+
+                <p style={{ margin: '8px 0', fontSize: '0.88rem', lineHeight: 1.6, color: 'var(--color-text-primary)' }}>
+                  {currentBugChallenge.theoreticalDeepDive}
+                </p>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={handleNextBugHunt}
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                  >
+                    <span>Next Bug Challenge</span>
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* =========================================================================
+          TRACK 3: PROCEDURAL INFINITE GENERATOR
+          ========================================================================= */}
+      {activeTrack === 'procedural' && (
+        <section className="gym-track-content">
+          <div className="gym-card">
+            <div className="gym-card-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="gym-difficulty-badge" style={{ background: 'rgba(168, 85, 247, 0.2)', borderColor: '#a855f7', color: '#c084fc' }}>
+                  PROCEDURAL
+                </span>
+                <span className="gym-category-pill">{proceduralChallenge.datasetType.toUpperCase()}</span>
+              </div>
+              <button
+                type="button"
+                className="btn btn-secondary btn-small"
+                onClick={handleGenerateNextProcedural}
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem' }}
+              >
+                <Shuffle size={13} />
+                <span>Reroll Random Dataset</span>
+              </button>
+            </div>
+
+            <h2 className="gym-challenge-title">{proceduralChallenge.title}</h2>
+            <p className="gym-challenge-desc">{proceduralChallenge.scenarioDescription}</p>
+
+            <div className="gym-contenders-row">
+              {proceduralChallenge.contenders.map((contender) => (
+                <div key={contender.name} className="gym-contender-card" style={{ borderLeft: `3px solid ${contender.color}` }}>
+                  <div className="gym-contender-name">{contender.name}</div>
+                  <div className="gym-contender-complexity">
+                    <span>⏱️ {contender.timeComplexity}</span>
+                    <span>💾 {contender.spaceComplexity}</span>
+                  </div>
+                  <p className="gym-contender-behavior">{contender.expectedBehavior}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="gym-wager-section">
+              <h3 className="gym-wager-prompt">
+                <HelpCircle size={17} className="text-cyan-400" />
+                <span>{proceduralChallenge.wagerQuestion}</span>
+              </h3>
+
+              <div className="gym-options-list">
+                {proceduralChallenge.options.map((opt) => {
+                  const isSelected = proceduralOptionId === opt.id;
+                  let optionClass = 'gym-option-btn';
+                  if (isProceduralLocked) {
+                    if (opt.isCorrect) optionClass += ' correct';
+                    else if (isSelected && !opt.isCorrect) optionClass += ' incorrect';
+                    else optionClass += ' disabled';
+                  } else if (isSelected) {
+                    optionClass += ' selected';
+                  }
+
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      disabled={isProceduralLocked}
+                      className={optionClass}
+                      onClick={() => {
+                        if (isProceduralLocked) return;
+                        setProceduralOptionId(opt.id);
+                        setIsProceduralLocked(true);
+                        setIsProceduralShowdownActive(true);
+                        play('click');
+                      }}
+                    >
+                      <div className="gym-option-radio">
+                        {isProceduralLocked && opt.isCorrect && <CheckCircle2 size={16} className="text-emerald-400" />}
+                        {isProceduralLocked && isSelected && !opt.isCorrect && <XCircle size={16} className="text-rose-400" />}
+                        {!isProceduralLocked && <div className={`gym-radio-circle ${isSelected ? 'checked' : ''}`} />}
+                      </div>
+                      <span className="gym-option-text">{opt.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {isProceduralShowdownActive && (
+              <div className="gym-showdown-live-arena">
+                <GymShowdownCanvas
+                  algorithms={proceduralChallenge.contenders.map((c) => c.algorithmKey)}
+                  dataset={generateDataset(proceduralChallenge.datasetSize, proceduralChallenge.datasetType)}
+                  autoPlay={true}
+                  onFinish={(winner) => {
+                    const isCorrect = proceduralChallenge.options.find((o) => o.id === proceduralOptionId)?.isCorrect ?? false;
+                    if (isCorrect) play('winner');
+                    else play('searchMiss');
+                    const { updatedProfile, eloDelta } = recordChallengeResult(proceduralChallenge.id, isCorrect, 25);
+                    setProfile(updatedProfile);
+                    setEloDeltaNotification(eloDelta);
+                  }}
+                />
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* =========================================================================
+          TRACK 4: DAILY CHALLENGE
+          ========================================================================= */}
+      {activeTrack === 'daily' && (
+        <section className="gym-track-content">
+          <div className="gym-card">
+            <div className="gym-card-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="gym-difficulty-badge" style={{ background: 'rgba(245, 158, 11, 0.2)', borderColor: '#f59e0b', color: '#fbbf24' }}>
+                  DAILY SHOWDOWN
+                </span>
+                <span className="gym-category-pill">SEED #{todaySeed}</span>
+              </div>
+              <span style={{ fontSize: '0.82rem', fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)' }}>
+                Double Elo Reward: +50 Elo
+              </span>
+            </div>
+
+            <h2 className="gym-challenge-title">{dailyChallenge.title}</h2>
+            <p className="gym-challenge-desc">{dailyChallenge.scenarioDescription}</p>
+
+            <div className="gym-contenders-row">
+              {dailyChallenge.contenders.map((contender) => (
+                <div key={contender.name} className="gym-contender-card" style={{ borderLeft: `3px solid ${contender.color}` }}>
+                  <div className="gym-contender-name">{contender.name}</div>
+                  <div className="gym-contender-complexity">
+                    <span>⏱️ {contender.timeComplexity}</span>
+                    <span>💾 {contender.spaceComplexity}</span>
+                  </div>
+                  <p className="gym-contender-behavior">{contender.expectedBehavior}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="gym-wager-section">
+              <h3 className="gym-wager-prompt">
+                <HelpCircle size={17} className="text-cyan-400" />
+                <span>{dailyChallenge.wagerQuestion}</span>
+              </h3>
+
+              <div className="gym-options-list">
+                {dailyChallenge.options.map((opt) => (
                   <button
                     key={opt.id}
                     type="button"
-                    className={`quiz-option-btn ${isAnswerSubmitted ? 'submitted' : ''}`}
-                    onClick={() => handleSelectOption(opt.id)}
-                    style={optionStyle}
-                    disabled={isAnswerSubmitted}
+                    className="gym-option-btn"
+                    onClick={() => {
+                      play('winner');
+                      const { updatedProfile, eloDelta } = recordChallengeResult(`daily-${todaySeed}`, opt.isCorrect, 50);
+                      setProfile(updatedProfile);
+                      setEloDeltaNotification(eloDelta);
+                    }}
                   >
-                    <span
-                      style={{
-                        width: '26px',
-                        height: '26px',
-                        borderRadius: '6px',
-                        background: isAnswerSubmitted && opt.isCorrect ? '#10b981' : isAnswerSubmitted && isSelected ? '#ef4444' : 'rgba(255, 255, 255, 0.08)',
-                        color: '#fff',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontFamily: 'var(--font-mono)',
-                        fontSize: '0.8rem',
-                        fontWeight: 700,
-                        flexShrink: 0,
-                      }}
-                    >
-                      {opt.id.toUpperCase()}
-                    </span>
-                    <span style={{ fontSize: '0.92rem', color: 'var(--color-text-primary)', lineHeight: 1.4, flex: 1 }}>
-                      {opt.text}
-                    </span>
-                    {isAnswerSubmitted && opt.isCorrect && (
-                      <CheckCircle2 size={20} className="text-emerald-400" style={{ flexShrink: 0 }} />
-                    )}
-                    {isAnswerSubmitted && isSelected && !opt.isCorrect && (
-                      <XCircle size={20} className="text-rose-400" style={{ flexShrink: 0 }} />
-                    )}
+                    <span className="gym-option-text">{opt.label}</span>
                   </button>
-                );
-              })}
-            </div>
-
-            {/* Answer Explanation Box (Revealed after submission) */}
-            {isAnswerSubmitted && (
-              <div
-                className="quiz-explanation-box"
-                style={{
-                  marginTop: '24px',
-                  padding: '18px 20px',
-                  borderRadius: '12px',
-                  background: 'rgba(99, 102, 241, 0.08)',
-                  border: '1px solid rgba(99, 102, 241, 0.25)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '8px',
-                  animation: 'modalFadeIn 0.25s ease',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '0.9rem', color: '#a5b4fc' }}>
-                  <Sparkles size={16} />
-                  <span>Technical Explanation & Deep Dive</span>
-                </div>
-                <p style={{ fontSize: '0.88rem', color: 'var(--color-text-secondary)', lineHeight: 1.5, margin: 0 }}>
-                  {currentQuestion.options.find((o) => o.id === selectedOptionId)?.explanation || currentQuestion.detailedConcept}
-                </p>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
-                  <button type="button" className="btn btn-primary" onClick={handleNextQuestion} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                    <span>{currentIndex + 1 < filteredQuestions.length ? 'Next Question' : 'View Results'}</span>
-                    <ArrowRight size={16} />
-                  </button>
-                </div>
+                ))}
               </div>
-            )}
-          </div>
-        </div>
-      ) : (
-        /* Quiz Completed Results Card */
-        <div
-          className="quiz-completion-card"
-          style={{
-            background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(10, 15, 30, 0.95) 100%)',
-            border: '1px solid var(--color-border-line)',
-            borderRadius: '20px',
-            padding: '40px',
-            textAlign: 'center',
-            boxShadow: '0 24px 64px rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '24px',
-          }}
-        >
-          <div style={{ width: '80px', height: '80px', borderRadius: '24px', background: 'rgba(99, 102, 241, 0.15)', border: '1px solid rgba(99, 102, 241, 0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <tierBadge.icon size={42} style={{ color: tierBadge.color }} />
-          </div>
-
-          <div>
-            <span className="badge" style={{ background: 'rgba(255, 255, 255, 0.08)', color: tierBadge.color, border: '1px solid currentColor', fontSize: '0.8rem', padding: '4px 12px', marginBottom: '8px' }}>
-              {tierBadge.rank}
-            </span>
-            <h2 style={{ fontSize: '2rem', fontFamily: 'var(--font-display)', fontWeight: 800, margin: '8px 0' }}>
-              {tierBadge.title}
-            </h2>
-            <p style={{ color: 'var(--color-text-secondary)', maxWidth: '500px', margin: '0 auto', fontSize: '0.95rem' }}>
-              You completed the algorithm diagnostic assessment with exceptional analytical accuracy.
-            </p>
-          </div>
-
-          {/* Results Summary Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', width: '100%', maxWidth: '500px' }}>
-            <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--color-border-line)', borderRadius: '12px', padding: '16px' }}>
-              <span style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>ACCURACY</span>
-              <h3 style={{ fontSize: '1.6rem', color: '#10b981', margin: '4px 0 0', fontWeight: 800 }}>{accuracyPercent}%</h3>
-            </div>
-            <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--color-border-line)', borderRadius: '12px', padding: '16px' }}>
-              <span style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>MAX STREAK</span>
-              <h3 style={{ fontSize: '1.6rem', color: '#fbbf24', margin: '4px 0 0', fontWeight: 800 }}>{maxStreak}🔥</h3>
-            </div>
-            <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--color-border-line)', borderRadius: '12px', padding: '16px' }}>
-              <span style={{ fontSize: '0.74rem', color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>TOTAL SCORE</span>
-              <h3 style={{ fontSize: '1.6rem', color: '#a5b4fc', margin: '4px 0 0', fontWeight: 800 }}>{score.toLocaleString()}</h3>
             </div>
           </div>
-
-          <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
-            <button type="button" className="btn btn-primary" onClick={handleRestartQuiz} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-              <RotateCcw size={16} />
-              <span>Retake Diagnostic Assessment</span>
-            </button>
-            {onNavigateArena && (
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={() => onNavigateArena('sorting')}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
-              >
-                <Layers size={16} />
-                <span>Race These Algorithms</span>
-              </button>
-            )}
-          </div>
-        </div>
+        </section>
       )}
     </main>
   );

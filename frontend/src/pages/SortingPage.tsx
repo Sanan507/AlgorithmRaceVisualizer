@@ -22,6 +22,7 @@ import { getUrlParams } from '../utils/urlParams';
 import { parseCurrentShareableConfig } from '../utils/shareableBenchmark';
 import { workerSimulationService } from '../services/workerSimulationService';
 import { generateDataset } from '../utils/datasetGenerator';
+import { appendHistory } from '../utils/historyStorage';
 
 export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
   const [algorithms, setAlgorithms] = useState(['Bubble Sort', 'Quick Sort', 'Merge Sort']);

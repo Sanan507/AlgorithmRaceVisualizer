@@ -11054,22 +11054,496 @@ input[type="range"] {
 }
 
 /* ==========================================================================
-   PHASE 4: QUIZ ARENA & EMBED STYLES
+   PHASE 4: ALGOGYM ARENA & EMBED STYLES
    ========================================================================== */
 
-/* Quiz Arena Styling */
-.quiz-option-btn:hover:not(:disabled) {
-  border-color: #6366f1 !important;
-  background: rgba(99, 102, 241, 0.08) !important;
+/* Gym Hero Profile HUD */
+.gym-hero-hud {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.gym-hud-stat-box {
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid var(--color-border-line);
+  backdrop-filter: blur(12px);
+  border-radius: 10px;
+  padding: 8px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gym-hud-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-family: var(--font-mono);
+  color: var(--color-text-muted);
+}
+
+.gym-hud-value {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.96rem;
+}
+
+.gym-tier-icon {
+  font-size: 1.1rem;
+}
+
+.gym-tier-name {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+/* Gym Track Switcher Bar */
+.gym-track-tabs-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 20px 0;
+  border-bottom: 1px solid var(--color-border-line);
+  padding-bottom: 12px;
+  overflow-x: auto;
+}
+
+.gym-track-tab-btn {
+  background: none;
+  border: 1px solid transparent;
+  color: var(--color-text-muted);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+.gym-track-tab-btn:hover {
+  color: var(--color-text-primary);
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.gym-track-tab-btn.active {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: #a5b4fc;
+}
+
+/* Gym Main Card */
+.gym-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-line);
+  border-radius: 14px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.3);
+}
+
+.gym-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.gym-difficulty-badge {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #f87171;
+  font-size: 0.72rem;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  padding: 3px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+}
+
+.gym-category-pill {
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
+  font-size: 0.72rem;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.gym-challenge-title {
+  font-size: 1.45rem;
+  font-weight: 800;
+  font-family: var(--font-display);
+  margin: 0;
+  color: var(--color-text-primary);
+}
+
+.gym-challenge-desc {
+  font-size: 0.94rem;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+/* Contenders Matrix */
+.gym-contenders-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.gym-contender-card {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--color-border-line);
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gym-contender-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--color-text-primary);
+}
+
+.gym-contender-complexity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.76rem;
+  font-family: var(--font-mono);
+  color: var(--color-text-muted);
+}
+
+.gym-contender-behavior {
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+  margin: 4px 0 0;
+}
+
+/* Wager Section & Options */
+.gym-wager-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border-line);
+}
+
+.gym-wager-prompt {
+  font-size: 1.05rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--color-text-primary);
+}
+
+.gym-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.gym-option-btn {
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid var(--color-border-line);
+  border-radius: 10px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  color: var(--color-text-primary);
+}
+
+.gym-option-btn:hover:not(:disabled) {
+  border-color: #6366f1;
+  background: rgba(99, 102, 241, 0.08);
   transform: translateY(-1px);
 }
 
-.quiz-option-btn.submitted {
+.gym-option-btn.selected {
+  border-color: #6366f1;
+  background: rgba(99, 102, 241, 0.15);
+}
+
+.gym-option-btn.correct {
+  border-color: #10b981 !important;
+  background: rgba(16, 185, 129, 0.12) !important;
+}
+
+.gym-option-btn.incorrect {
+  border-color: #ef4444 !important;
+  background: rgba(239, 68, 68, 0.12) !important;
+}
+
+.gym-option-btn.disabled {
+  opacity: 0.65;
   cursor: default;
 }
 
-.quiz-option-btn:focus-visible {
-  outline: 2px solid #6366f1;
+.gym-option-radio {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gym-radio-circle {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--color-text-muted);
+}
+
+.gym-radio-circle.checked {
+  border-color: #6366f1;
+  background: #6366f1;
+}
+
+.gym-option-text {
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+/* Gym Showdown Live Canvas Arena */
+.gym-showdown-live-arena {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gym-arena-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.88rem;
+}
+
+.gym-showdown-canvas-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.gym-lanes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.gym-lane-card {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid var(--color-border-line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.gym-lane-card.winner-lane {
+  border-color: #10b981;
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.25);
+}
+
+.gym-lane-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.82rem;
+}
+
+.gym-lane-name {
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.gym-lane-live-stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  color: var(--color-text-muted);
+}
+
+.gym-lane-winner-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(16, 185, 129, 0.9);
+  color: #ffffff;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.gym-playback-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.gym-progress-track {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.gym-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #6366f1, #38bdf8);
+  border-radius: 4px;
+  transition: width 0.05s linear;
+}
+
+/* Post-Mortem Card */
+.gym-postmortem-container {
+  background: rgba(99, 102, 241, 0.06);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  border-radius: 12px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.gym-postmortem-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.gym-postmortem-header h4 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.gym-elo-delta-badge {
+  font-family: var(--font-mono);
+  font-size: 0.84rem;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 8px;
+}
+
+.gym-elo-delta-badge.gain {
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #34d399;
+}
+
+.gym-elo-delta-badge.loss {
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #f87171;
+}
+
+.gym-postmortem-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.gym-postmortem-card {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--color-border-line);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gym-pm-label {
+  font-size: 0.78rem;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: #a5b4fc;
+}
+
+.gym-postmortem-card p {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+.gym-postmortem-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--color-text-primary);
+}
+
+/* Code Editor Block in Bug Hunt */
+.gym-code-editor-box {
+  background: #090d16;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.gym-code-header {
+  background: rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.76rem;
+  font-family: var(--font-mono);
+}
+
+.gym-code-lang {
+  font-weight: 700;
+  color: #38bdf8;
+}
+
+.gym-bug-warning {
+  color: #fbbf24;
+}
+
+.gym-code-pre {
+  margin: 0;
+  padding: 16px;
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: #f1f5f9;
+  overflow-x: auto;
 }
 
 /* Embed Mode Styling */
@@ -11083,33 +11557,52 @@ input[type="range"] {
   border-color: #38bdf8 !important;
 }
 
-/* Light Theme Overrides for Phase 4 */
-:root[data-theme='light'] .quiz-card {
+/* Light Theme Overrides for AlgoGym */
+:root[data-theme='light'] .gym-card {
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
   border-color: rgba(14, 165, 233, 0.2) !important;
   box-shadow: 0 12px 32px rgba(14, 165, 233, 0.08) !important;
 }
 
-:root[data-theme='light'] .quiz-code-block {
-  background: #0f172a !important;
-  color: #f1f5f9 !important;
-}
-
-:root[data-theme='light'] .quiz-explanation-box {
-  background: rgba(14, 165, 233, 0.06) !important;
-  border-color: rgba(14, 165, 233, 0.25) !important;
-}
-
-:root[data-theme='light'] .quiz-hud-chip {
+:root[data-theme='light'] .gym-hud-stat-box {
   background: #ffffff !important;
   border-color: rgba(14, 165, 233, 0.2) !important;
 }
 
-:root[data-theme='light'] .quiz-completion-card {
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
-  border-color: rgba(14, 165, 233, 0.25) !important;
-  box-shadow: 0 24px 64px rgba(14, 165, 233, 0.12) !important;
+:root[data-theme='light'] .gym-contender-card {
+  background: #ffffff !important;
+  border-color: rgba(14, 165, 233, 0.15) !important;
 }
+
+:root[data-theme='light'] .gym-option-btn {
+  background: #ffffff !important;
+  border-color: rgba(14, 165, 233, 0.2) !important;
+}
+
+:root[data-theme='light'] .gym-showdown-live-arena {
+  background: rgba(14, 165, 233, 0.04) !important;
+  border-color: rgba(14, 165, 233, 0.25) !important;
+}
+
+:root[data-theme='light'] .gym-lane-card {
+  background: #ffffff !important;
+  border-color: rgba(14, 165, 233, 0.2) !important;
+}
+
+:root[data-theme='light'] .gym-postmortem-container {
+  background: rgba(14, 165, 233, 0.06) !important;
+  border-color: rgba(14, 165, 233, 0.25) !important;
+}
+
+:root[data-theme='light'] .gym-postmortem-card {
+  background: #ffffff !important;
+  border-color: rgba(14, 165, 233, 0.2) !important;
+}
+
+:root[data-theme='light'] .gym-code-editor-box {
+  background: #0f172a !important;
+}
+
 
 
 
