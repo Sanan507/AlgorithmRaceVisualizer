@@ -44,13 +44,12 @@ export const GymShowdownCanvas: React.FC<GymShowdownCanvasProps> = ({
     finishNotifiedRef.current = false;
 
     workerSimulationService
-      .simulate({
+      .runSimulation({
         type: 'sorting',
         algorithms,
-        dataset: [...dataset],
-        speed: 8,
+        array: [...dataset],
       })
-      .then((resp) => {
+      .then((resp: RaceResponse) => {
         if (isCancelled) return;
         setSimulationData(resp);
         setLoading(false);
@@ -58,7 +57,7 @@ export const GymShowdownCanvas: React.FC<GymShowdownCanvasProps> = ({
           setIsPlaying(true);
         }
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         if (isCancelled) return;
         console.warn('Gym worker simulation fallback:', err);
         setLoading(false);
@@ -144,9 +143,8 @@ export const GymShowdownCanvas: React.FC<GymShowdownCanvasProps> = ({
       const currentFrameIndex = Math.min(frameIndex, lane.frames.length - 1);
       const frame: SimulationFrame | undefined = lane.frames[currentFrameIndex];
       const arr = frame?.array || dataset;
-      const highlights = frame?.highlights || [];
-      const isComparing = frame?.operationType === 'COMPARE';
-      const isSwapping = frame?.operationType === 'SWAP';
+      const highlight = frame?.highlight || [];
+      const isDone = frame?.done || false;
 
       const n = arr.length;
       const barWidth = Math.max(1, (width - (n - 1) * 1) / n);
@@ -158,11 +156,13 @@ export const GymShowdownCanvas: React.FC<GymShowdownCanvasProps> = ({
         const y = height - barHeight;
 
         let fillStyle = '#38bdf8'; // Default cyan
-        if (highlights.includes(i)) {
-          if (isComparing) fillStyle = '#f59e0b'; // Amber compare
-          else if (isSwapping) fillStyle = '#ef4444'; // Red swap
-          else fillStyle = '#a855f7'; // Purple highlight
-        } else if (winnerName && winnerName === lane.name) {
+        if (isDone) {
+          fillStyle = '#10b981'; // Emerald done
+        } else if (frame?.pivotIndex !== undefined && frame.pivotIndex >= 0 && i === frame.pivotIndex) {
+          fillStyle = '#f72585'; // Pivot
+        } else if (highlight.includes(i)) {
+          fillStyle = '#f59e0b'; // Amber compare/highlight
+        } else if (winnerName && winnerName === lane.name && frameIndex >= maxFrames - 1) {
           fillStyle = '#10b981'; // Emerald winner
         }
 
