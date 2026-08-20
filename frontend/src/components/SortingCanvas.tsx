@@ -1,10 +1,24 @@
-import { useEffect, useRef } from 'react';
+/**
+ * SortingCanvas.tsx
+ * Ultra-high-performance HTML5 Canvas renderer for multi-lane sorting visualizers.
+ * 
+ * Performance Optimizations:
+ * - Eliminates layout thrashing: zero getComputedStyle or getBoundingClientRect calls during frame playback.
+ * - Zero GPU buffer churn: canvas resolution is cached and resized strictly on container dimension changes.
+ * - High-speed bar rendering: avoids per-bar gradient allocations and shadow convolutions.
+ * - Hardware sub-pixel bar scaling with crisp active element highlights.
+ */
+
+import React, { useEffect, useRef, memo, useCallback } from 'react';
 import type { SimulationFrame } from '../models/types';
 
-const colors = {
-  bg: '#0b0b1e',
-  gridLine: 'rgba(255, 255, 255, 0.03)',
-  bar: '#4f46e5',
+const COLORS = {
+  bgDark: '#0b0b1e',
+  bgLight: '#f2f7ff',
+  gridDark: 'rgba(255, 255, 255, 0.03)',
+  gridLight: 'rgba(0, 101, 145, 0.08)',
+  barDark: '#4f46e5',
+  barLight: '#6366f1',
   compare: '#ff9e00',
   sorted: '#10b981',
   pivot: '#f72585',
@@ -12,175 +26,171 @@ const colors = {
   merge: '#00f2fe',
 };
 
-export function SortingCanvas({ frame }: { frame: SimulationFrame; algorithm?: string }) {
-  const ref = useRef<HTMLCanvasElement | null>(null);
+interface SortingCanvasProps {
+  frame: SimulationFrame;
+  algorithm?: string;
+}
+
+export const SortingCanvas = memo(function SortingCanvas({
+  frame,
+}: SortingCanvasProps) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const sizeRef = useRef<{ width: number; height: number; dpr: number }>({ width: 0, height: 0, dpr: 1 });
+
+  // Update canvas backing resolution strictly on container size changes
+  const updateCanvasDimensions = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const w = Math.floor(rect.width);
+    const h = Math.floor(rect.height);
+
+    if (w <= 0 || h <= 0) return;
+
+    if (sizeRef.current.width !== w || sizeRef.current.height !== h || sizeRef.current.dpr !== dpr) {
+      sizeRef.current = { width: w, height: h, dpr };
+      canvas.width = Math.floor(w * dpr);
+      canvas.height = Math.floor(h * dpr);
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.scale(dpr, dpr);
+      }
+    }
+  }, []);
 
   useEffect(() => {
-    const canvas = ref.current;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    updateCanvasDimensions();
+
+    const resizeObserver = new ResizeObserver(() => {
+      updateCanvasDimensions();
+    });
+
+    resizeObserver.observe(canvas);
+    return () => resizeObserver.disconnect();
+  }, [updateCanvasDimensions]);
+
+  // High-speed render loop
+  useEffect(() => {
+    const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const rect = canvas.getBoundingClientRect();
-    const ratio = window.devicePixelRatio || 1;
-    canvas.width = rect.width * ratio;
-    canvas.height = rect.height * ratio;
-    ctx.scale(ratio, ratio);
+    const { width, height } = sizeRef.current;
+    if (width <= 0 || height <= 0) {
+      updateCanvasDimensions();
+    }
+
+    const currentW = sizeRef.current.width;
+    const currentH = sizeRef.current.height;
+    if (currentW <= 0 || currentH <= 0) return;
 
     const isLight = document.documentElement.dataset.theme === 'light';
 
-    // Query active accessibility CSS tokens
-    const rootStyle = getComputedStyle(document.documentElement);
-    const customCompare = rootStyle.getPropertyValue('--color-comparing').trim() || colors.compare;
-    const customSorted = rootStyle.getPropertyValue('--color-sorted').trim() || colors.sorted;
-    const customPivot = rootStyle.getPropertyValue('--color-pivot').trim() || colors.pivot;
+    // 1. Draw Background
+    ctx.fillStyle = isLight ? COLORS.bgLight : COLORS.bgDark;
+    ctx.fillRect(0, 0, currentW, currentH);
 
-    // Canvas background
-    ctx.fillStyle = isLight ? '#f2f7ff' : colors.bg;
-    ctx.fillRect(0, 0, rect.width, rect.height);
-
-    // Draw ambient horizontal grid lines
-    ctx.strokeStyle = isLight ? 'rgba(0, 101, 145, 0.08)' : colors.gridLine;
+    // 2. Draw ambient horizontal grid lines (single stroke batch)
+    ctx.strokeStyle = isLight ? COLORS.gridLight : COLORS.gridDark;
     ctx.lineWidth = 1;
-    const gridSpacing = 40;
-    for (let y = gridSpacing; y < rect.height; y += gridSpacing) {
-      ctx.beginPath();
+    ctx.beginPath();
+    for (let y = 40; y < currentH; y += 40) {
       ctx.moveTo(0, y);
-      ctx.lineTo(rect.width, y);
-      ctx.stroke();
+      ctx.lineTo(currentW, y);
+    }
+    ctx.stroke();
+
+    if (!frame || !frame.array || frame.array.length === 0) return;
+    const arr = frame.array;
+    const n = arr.length;
+
+    let min = arr[0];
+    let max = arr[0];
+    for (let i = 1; i < n; i++) {
+      const v = arr[i];
+      if (v < min) min = v;
+      if (v > max) max = v;
     }
 
-    if (!frame || !frame.array || !frame.array.length) return;
-    const arr = frame.array;
+    const availableHeight = currentH - 36;
+    const barW = Math.max(2, (currentW - n * 2) / n);
+    const gap = Math.max(1, (currentW - barW * n) / (n + 1));
+    const range = max - min || 1;
 
-    const min = Math.min(...arr);
-    const max = Math.max(...arr);
-    const availableHeight = rect.height - 36; // Space for bar top text and bottom padding
+    const highlights = frame.highlight || [];
+    const hasHighlights = highlights.length > 0;
+    const isDone = frame.done;
+    const pivotIdx = frame.pivotIndex ?? -1;
+    const heapIdx = frame.heapBoundary ?? -1;
+    const mergeStart = frame.mergeRegionStart ?? -1;
+    const mergeEnd = frame.mergeRegionEnd ?? -1;
 
-    const barW = Math.max(3, (rect.width - arr.length * 2) / arr.length);
-    const gap = Math.max(1, (rect.width - barW * arr.length) / (arr.length + 1));
+    // 3. High-speed single pass bar rendering
+    for (let index = 0; index < n; index++) {
+      const value = arr[index];
 
-    arr.forEach((value, index) => {
-      // Calculate bar height proportionally for all edge cases (single value, zeros, duplicates)
+      // Proportional height
       let h: number;
       if (min === max) {
         h = max === 0 ? availableHeight * 0.4 : availableHeight * 0.6;
       } else {
         const minVal = Math.min(0, min);
-        const r = (value - minVal) / (max - minVal);
-        h = Math.max(12, r * availableHeight);
+        const r = (value - minVal) / (max - minVal || 1);
+        h = Math.max(8, r * availableHeight);
       }
 
       const x = gap + index * (barW + gap);
-      const y = rect.height - h - 12;
+      const y = currentH - h - 12;
 
-      let baseColor = colors.bar;
-      let isGlow = false;
-      let glowColor = '';
+      let fillColor = isLight ? COLORS.barLight : COLORS.barDark;
+      let isSpecial = false;
 
-      if (frame.done) {
-        baseColor = colors.sorted;
-        isGlow = true;
-        glowColor = 'rgba(16, 185, 129, 0.6)';
-      } else if (index === frame.pivotIndex && frame.pivotIndex >= 0) {
-        baseColor = colors.pivot;
-        isGlow = true;
-        glowColor = 'rgba(247, 37, 133, 0.8)';
-      } else if (index === frame.heapBoundary && frame.heapBoundary >= 0) {
-        baseColor = colors.heap;
-        isGlow = true;
-        glowColor = 'rgba(251, 146, 60, 0.8)';
-      } else if (frame.highlight?.includes(index)) {
-        baseColor = colors.compare;
-        isGlow = true;
-        glowColor = 'rgba(255, 158, 0, 0.85)';
-      } else if (
-        frame.mergeRegionStart >= 0 &&
-        frame.mergeRegionEnd >= 0 &&
-        index >= frame.mergeRegionStart &&
-        index <= frame.mergeRegionEnd
-      ) {
-        baseColor = colors.merge;
-        isGlow = true;
-        glowColor = 'rgba(0, 242, 254, 0.65)';
+      if (isDone) {
+        fillColor = COLORS.sorted;
+      } else if (index === pivotIdx && pivotIdx >= 0) {
+        fillColor = COLORS.pivot;
+        isSpecial = true;
+      } else if (index === heapIdx && heapIdx >= 0) {
+        fillColor = COLORS.heap;
+        isSpecial = true;
+      } else if (hasHighlights && highlights.includes(index)) {
+        fillColor = COLORS.compare;
+        isSpecial = true;
+      } else if (mergeStart >= 0 && mergeEnd >= 0 && index >= mergeStart && index <= mergeEnd) {
+        fillColor = COLORS.merge;
+        isSpecial = true;
       }
 
-      if (isGlow) {
-        ctx.shadowBlur = frame.done ? 10 : 16;
-        ctx.shadowColor = glowColor;
-      } else {
-        ctx.shadowBlur = 0;
-      }
+      // Draw Bar Rect
+      ctx.fillStyle = fillColor;
+      ctx.fillRect(x, y, barW, h);
 
-      // Linear Gradient for bars
-      const grad = ctx.createLinearGradient(x, y, x, y + h);
-      if (baseColor === colors.bar) {
-        if (isLight) {
-          grad.addColorStop(0, '#818cf8');
-          grad.addColorStop(1, '#3730a3');
-        } else {
-          grad.addColorStop(0, '#818cf8');
-          grad.addColorStop(1, '#4f46e5');
-        }
-      } else if (baseColor === colors.sorted) {
-        grad.addColorStop(0, customSorted);
-        grad.addColorStop(1, customSorted);
-      } else if (baseColor === colors.pivot) {
-        grad.addColorStop(0, customPivot);
-        grad.addColorStop(1, customPivot);
-      } else if (baseColor === colors.heap) {
-        grad.addColorStop(0, '#ffd166');
-        grad.addColorStop(1, '#ea580c');
-      } else if (baseColor === colors.compare) {
-        grad.addColorStop(0, '#ffffff');
-        grad.addColorStop(0.3, customCompare);
-        grad.addColorStop(1, customCompare);
-      } else if (baseColor === colors.merge) {
-        grad.addColorStop(0, '#38bdf8');
-        grad.addColorStop(1, '#0284c7');
-      } else {
-        grad.addColorStop(0, baseColor);
-        grad.addColorStop(1, baseColor);
-      }
-
-      ctx.fillStyle = grad;
-      const cornerRadius = Math.min(barW / 2, 4);
-      roundRect(ctx, x, y, barW, h, cornerRadius);
-      ctx.shadowBlur = 0;
-
-      // Draw top glowing highlight line on active items
-      if (isGlow) {
+      // Top glowing highlight cap for active elements
+      if (isSpecial) {
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(x, y, barW, 2);
       }
 
-      // Draw text label on top of bar if space permits
-      if (barW >= 6 || arr.length <= 60) {
-        if (isLight) {
-          ctx.fillStyle = isGlow ? '#006591' : '#131b2e';
-        } else {
-          ctx.fillStyle = isGlow ? '#ffffff' : 'rgba(243, 244, 246, 0.85)';
-        }
+      // Numerical label for small/medium datasets
+      if (barW >= 8 || n <= 45) {
+        ctx.fillStyle = isSpecial
+          ? '#ffffff'
+          : isLight
+          ? '#1e293b'
+          : 'rgba(243, 244, 246, 0.85)';
         const fontSize = barW < 12 ? 8 : 10;
         ctx.font = `${fontSize}px "JetBrains Mono", monospace`;
         ctx.textAlign = 'center';
         ctx.fillText(String(value), x + barW / 2, Math.max(10, y - 4));
       }
-    });
-  }, [frame]);
+    }
+  }, [frame, updateCanvasDimensions]);
 
-  return <canvas className="race-canvas" ref={ref} />;
-}
-
-function roundRect(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  radius: number
-) {
-  ctx.beginPath();
-  ctx.roundRect(x, y, width, height, radius);
-  ctx.fill();
-}
+  return <canvas className="race-canvas" ref={canvasRef} style={{ width: '100%', height: '100%', display: 'block' }} />;
+});

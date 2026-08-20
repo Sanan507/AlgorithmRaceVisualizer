@@ -1,4 +1,14 @@
-import React, { useEffect, useRef } from 'react';
+/**
+ * TreeCanvas.tsx
+ * High-performance HTML5 Canvas renderer for Binary Search Trees, AVL Trees, and Red-Black Trees.
+ * 
+ * Performance Optimizations:
+ * - Dimension caching prevents canvas buffer thrashing on every tree insertion/rotation step.
+ * - Single-pass recursive rendering with batched edge strokes and node rasterization.
+ * - React.memo component wrapper to prevent redundant re-renders.
+ */
+
+import React, { useEffect, useRef, memo, useCallback } from 'react';
 import { TreeNodeDto, TreeSimulationFrame } from '../models/types';
 
 export interface TreeNode {
@@ -27,7 +37,6 @@ interface TreeCanvasProps {
   treeType: 'bst' | 'avl' | 'red_black';
 }
 
-// Helper to safely extract active node value from either frame shape
 export function getActiveNodeValue(step: TreeStep | TreeSimulationFrame | null): number | undefined {
   if (!step) return undefined;
   if ('activeNodeVal' in step && step.activeNodeVal !== null && step.activeNodeVal !== undefined) {
@@ -39,51 +48,86 @@ export function getActiveNodeValue(step: TreeStep | TreeSimulationFrame | null):
   return undefined;
 }
 
-export const TreeCanvas: React.FC<TreeCanvasProps> = ({ step, treeType }) => {
+export const TreeCanvas = memo(function TreeCanvas({
+  step,
+  treeType,
+}: TreeCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const sizeRef = useRef<{ width: number; height: number; dpr: number }>({ width: 0, height: 0, dpr: 1 });
 
+  const updateCanvasDimensions = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const parentWidth = canvas.parentElement?.clientWidth || 800;
+    const parentHeight = 460;
+    const dpr = window.devicePixelRatio || 1;
+
+    if (sizeRef.current.width !== parentWidth || sizeRef.current.height !== parentHeight || sizeRef.current.dpr !== dpr) {
+      sizeRef.current = { width: parentWidth, height: parentHeight, dpr };
+      canvas.width = Math.floor(parentWidth * dpr);
+      canvas.height = Math.floor(parentHeight * dpr);
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.scale(dpr, dpr);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    updateCanvasDimensions();
+
+    const resizeObserver = new ResizeObserver(() => {
+      updateCanvasDimensions();
+    });
+
+    if (canvas.parentElement) {
+      resizeObserver.observe(canvas.parentElement);
+    }
+    return () => resizeObserver.disconnect();
+  }, [updateCanvasDimensions]);
+
+  // High-speed render loop
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const parentWidth = canvas.parentElement?.clientWidth || 800;
-    const parentHeight = 460;
-    const dpr = window.devicePixelRatio || 1;
+    const { width, height } = sizeRef.current;
+    if (width <= 0 || height <= 0) {
+      updateCanvasDimensions();
+    }
 
-    canvas.width = parentWidth * dpr;
-    canvas.height = parentHeight * dpr;
-    ctx.scale(dpr, dpr);
-
-    const width = parentWidth;
-    const height = parentHeight;
+    const currentW = sizeRef.current.width;
+    const currentH = sizeRef.current.height;
+    if (currentW <= 0 || currentH <= 0) return;
 
     // Clear canvas
-    ctx.clearRect(0, 0, width, height);
+    ctx.clearRect(0, 0, currentW, currentH);
 
-    // Draw subtle grid lines for intentional canvas structure
+    // Draw subtle grid lines in a single path batch
     ctx.strokeStyle = 'rgba(148, 163, 184, 0.06)';
     ctx.lineWidth = 1;
-    const gridSize = 40;
-    for (let x = 0; x < width; x += gridSize) {
-      ctx.beginPath();
+    ctx.beginPath();
+    for (let x = 0; x < currentW; x += 40) {
       ctx.moveTo(x, 0);
-      ctx.lineTo(x, height);
-      ctx.stroke();
+      ctx.lineTo(x, currentH);
     }
-    for (let y = 0; y < height; y += gridSize) {
-      ctx.beginPath();
+    for (let y = 0; y < currentH; y += 40) {
       ctx.moveTo(0, y);
-      ctx.lineTo(width, y);
-      ctx.stroke();
+      ctx.lineTo(currentW, y);
     }
+    ctx.stroke();
 
     if (!step || !step.root) {
       ctx.fillStyle = 'rgba(148, 163, 184, 0.6)';
-      ctx.font = '500 14px sans-serif';
+      ctx.font = '500 14px -apple-system, BlinkMacSystemFont, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('Tree canvas is empty. Enter a value above and click Insert or select a Preset.', width / 2, height / 2);
+      ctx.fillText('Tree canvas is empty. Enter a value above and click Insert or select a Preset.', currentW / 2, currentH / 2);
       return;
     }
 
@@ -91,26 +135,24 @@ export const TreeCanvas: React.FC<TreeCanvasProps> = ({ step, treeType }) => {
     const activeVal = getActiveNodeValue(step);
     const highlightVals = step.highlightNodes || [];
 
-    // Helper to extract numeric value from node
     const getNodeVal = (node: TreeNode | TreeNodeDto): number => {
       if ('val' in node && node.val !== undefined) return node.val;
       if ('value' in node && node.value !== undefined) return node.value;
       return 0;
     };
 
-    // Calculate max depth for adaptive vertical spacing
     const getTreeDepth = (node: TreeNode | TreeNodeDto | null | undefined): number => {
       if (!node) return 0;
       return 1 + Math.max(getTreeDepth(node.left), getTreeDepth(node.right));
     };
-    const maxDepth = getTreeDepth(root);
-    const vGap = Math.max(48, Math.min(68, (height - 90) / Math.max(maxDepth, 3)));
 
-    // Draw tree recursively
+    const maxDepth = getTreeDepth(root);
+    const vGap = Math.max(48, Math.min(68, (currentH - 90) / Math.max(maxDepth, 3)));
+
     const drawNode = (node: TreeNode | TreeNodeDto, x: number, y: number, offset: number, depth: number) => {
       const nodeVal = getNodeVal(node);
 
-      // Left edge
+      // Left branch
       if (node.left) {
         const nextX = x - offset;
         const nextY = y + vGap;
@@ -123,7 +165,7 @@ export const TreeCanvas: React.FC<TreeCanvasProps> = ({ step, treeType }) => {
         drawNode(node.left, nextX, nextY, Math.max(offset / 1.9, 28), depth + 1);
       }
 
-      // Right edge
+      // Right branch
       if (node.right) {
         const nextX = x + offset;
         const nextY = y + vGap;
@@ -161,12 +203,12 @@ export const TreeCanvas: React.FC<TreeCanvasProps> = ({ step, treeType }) => {
 
       // Text value
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 13px monospace';
+      ctx.font = 'bold 13px "JetBrains Mono", monospace';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(`${nodeVal}`, x, y);
 
-      // AVL Balance Factor tag ONLY in AVL mode
+      // AVL Balance Factor tag
       if (treeType === 'avl' && node.balanceFactor !== undefined) {
         const bf = node.balanceFactor;
         const isUnbalanced = Math.abs(bf) > 1;
@@ -176,18 +218,16 @@ export const TreeCanvas: React.FC<TreeCanvasProps> = ({ step, treeType }) => {
       }
     };
 
-    // Calculate initial Y position so single node is centered nicely
     const hasChildren = !!(root.left || root.right);
-    const startY = hasChildren ? 48 : height / 2;
-
-    drawNode(root, width / 2, startY, width / 4.2, 1);
-  }, [step, treeType]);
+    const startY = hasChildren ? 48 : currentH / 2;
+    drawNode(root, currentW / 2, startY, currentW / 4.2, 1);
+  }, [step, treeType, updateCanvasDimensions]);
 
   const rotation = step?.rotationType;
   const eventType = step?.eventType;
 
   return (
-    <div className="tree-canvas-wrapper" style={{ position: 'relative' }}>
+    <div className="tree-canvas-wrapper" style={{ position: 'relative', width: '100%' }}>
       {rotation && (
         <div className="rotation-banner" style={{
           position: 'absolute',
@@ -247,4 +287,4 @@ export const TreeCanvas: React.FC<TreeCanvasProps> = ({ step, treeType }) => {
       <canvas ref={canvasRef} className="tree-canvas" style={{ width: '100%', height: '460px', display: 'block' }} />
     </div>
   );
-};
+});
