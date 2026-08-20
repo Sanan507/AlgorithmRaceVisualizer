@@ -796,7 +796,8 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
       <CustomDatasetModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onApply={(generatedArr, formulaTitle) => {
+        currentSize={size}
+        onApplyDataset={(generatedArr: number[], formulaTitle: string) => {
           setIsCustomMode(true);
           setCustomArrayStr(generatedArr.join(', '));
           setDataset(generatedArr);
@@ -810,11 +811,15 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
       <ShareBenchmarkModal
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
-        arena="searching"
-        algorithms={algorithms}
-        size={size}
-        target={target}
-        customArray={isCustomMode ? parsedCustomArray : undefined}
+        config={{
+          arena: 'searching',
+          algorithms,
+          datasetType: isCustomMode ? 'Custom' : datasetType,
+          size: isCustomMode ? parsedCustomArray.length : size,
+          target,
+          customArray: isCustomMode ? parsedCustomArray : (dataset || undefined),
+          speed,
+        }}
       />
     </main>
   );
