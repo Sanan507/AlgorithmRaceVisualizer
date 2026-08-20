@@ -11,7 +11,6 @@ import { useAudio } from '../context/AudioContext';
 import { usePlayback } from '../hooks/usePlayback';
 import type { CatalogResponse, RaceLaneResponse, RaceResponse, SimulationFrame } from '../models/types';
 import { api } from '../services/api';
-import { createSimulationStream } from '../services/sseClient';
 import { StepExplanationCard } from '../components/StepExplanationCard';
 import { Share2, RefreshCw, Sparkles, Palette } from 'lucide-react';
 import { getUrlParams } from '../utils/urlParams';
@@ -178,7 +177,7 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
 
 
       try {
-                const params = {
+        const params = {
           algorithms: useAlgos,
           rows: 18,
           cols: 28,
@@ -191,63 +190,26 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
           endCol: useEnd[1]
         };
 
-        const cancelStream = createSimulationStream('/api/simulations/stream/pathfinding', params,
-          (startData: any) => {
-            if (fetchId !== latestFetchIdRef.current) {
-              cancelStream();
-              return;
-            }
-            setResponse(startData);
-            const resolvedWalls = startData.walls ?? sendWalls ?? Array.from({ length: 18 }, () => Array(28).fill(false));
-            const resolvedWeights = startData.weights ?? sendWeights ?? Array.from({ length: 18 }, () => Array(28).fill(1));
-            setWalls(resolvedWalls);
-            setWeights(resolvedWeights);
-            currentWallsRef.current = resolvedWalls;
-            currentWeightsRef.current = resolvedWeights;
+        const data = await api.pathfinding(params);
+        if (fetchId !== latestFetchIdRef.current) return;
 
-            setHasFreshDataset(true);
-            playback.reset();
-            if (autoplay) {
-              play('start');
-              playback.setPlaying(true);
-              setHasFreshDataset(false);
-            }
-          },
-          (frameEvent: any) => {
-             if (fetchId !== latestFetchIdRef.current) {
-               cancelStream();
-               return;
-             }
-             setResponse((prev) => {
-                if (!prev) return prev;
-                const newLanes = prev.lanes.map(lane => {
-                   if (lane.name === frameEvent.laneName) {
-                      return { ...lane, frames: [...lane.frames, frameEvent.frame] };
-                   }
-                   return lane;
-                });
-                if (!newLanes.find(l => l.name === frameEvent.laneName)) {
-                   newLanes.push({
-                      name: frameEvent.laneName,
-                      complexity: '',
-                      complexityInfo: {} as any,
-                      stats: { comparisons: 0, swaps: 0, steps: 0, timeMs: 0, found: false, foundIndex: null },
-                      frames: [frameEvent.frame]
-                   });
-                }
-                return { ...prev, lanes: newLanes };
-             });
-          },
-          (endData: any) => {
-            if (fetchId !== latestFetchIdRef.current) return;
-            setResponse(prev => prev ? { ...prev, winner: endData.winner } : endData);
-          },
-          (err: any) => {
-            console.error('SSE Error', err);
-          }
-        );
+        setResponse(data);
+        const resolvedWalls = data.walls ?? sendWalls ?? Array.from({ length: 18 }, () => Array(28).fill(false));
+        const resolvedWeights = data.weights ?? sendWeights ?? Array.from({ length: 18 }, () => Array(28).fill(1));
+        setWalls(resolvedWalls);
+        setWeights(resolvedWeights);
+        currentWallsRef.current = resolvedWalls;
+        currentWeightsRef.current = resolvedWeights;
 
-
+        setHasFreshDataset(true);
+        playback.reset();
+        if (autoplay) {
+          play('start');
+          playback.setPlaying(true);
+          setHasFreshDataset(false);
+        }
+      } catch (err) {
+        console.error('Pathfinding simulation error:', err);
       } finally {
         if (fetchId === latestFetchIdRef.current) {
           setLoading(false);
@@ -363,16 +325,18 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
   }
 
   async function startRace() {
-    if (hasFreshDataset && response) {
+    if (response && response.lanes.length > 0) {
       winnerAnnouncedRef.current = false;
       hasStartedPlaybackRef.current = true;
       play('start');
-      playback.reset();
+      if (playback.frameIndex >= playback.maxFrames - 1) {
+        playback.seek(0);
+      }
       playback.setPlaying(true);
       setHasFreshDataset(false);
     } else {
       hasStartedPlaybackRef.current = true;
-      await fetchSimulation(true, true);
+      await fetchSimulation(false, true);
       setHasFreshDataset(false);
     }
   }

@@ -11,7 +11,6 @@ import { useAudio } from '../context/AudioContext';
 import { usePlayback } from '../hooks/usePlayback';
 import type { CatalogResponse, RaceLaneResponse, RaceResponse, SimulationFrame } from '../models/types';
 import { api } from '../services/api';
-import { createSimulationStream } from '../services/sseClient';
 import { parseCustomArrayInput } from '../utils/arrayParser';
 import { StepExplanationCard } from '../components/StepExplanationCard';
 import { CustomDatasetModal } from '../components/CustomDatasetModal';
@@ -28,6 +27,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
   const [algorithms, setAlgorithms] = useState(['Linear Search', 'Binary Search', 'Jump Search']);
   const [target, setTarget] = useState(20);
   const [size, setSize] = useState(42);
+  const [datasetType, setDatasetType] = useState('Random');
   const [isCustomMode, setIsCustomMode] = useState(false);
   const [customArrayStr, setCustomArrayStr] = useState('10, 5, 20, 15, 30');
   const [dataset, setDataset] = useState<number[] | null>(null);
@@ -47,6 +47,13 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
   const requestIdRef = useRef(0);
   const initialized = useRef(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const availableDatasetTypes = useMemo(() => {
+    if (catalog?.datasetTypes && catalog.datasetTypes.length > 0) {
+      return catalog.datasetTypes;
+    }
+    return ['Random', 'Sorted List', 'Nearly Sorted', 'Reversed'];
+  }, [catalog]);
 
   const parsedCustomArray = useMemo(() => parseCustomArrayInput(customArrayStr), [customArrayStr]);
 
@@ -68,10 +75,74 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
       if (response?.dataset && response.dataset.join(',') === parsedCustomArray.join(',')) {
         return response;
       }
-      const previewLanes: RaceLaneResponse[] = algorithms.map((name) => ({
+      const previewLanes: RaceLaneResponse[] = algorithms.map((name) => {
+        const isLinear = name.toLowerCase().includes('linear');
+        const laneArr = isLinear ? [...parsedCustomArray] : [...parsedCustomArray].sort((a, b) => a - b);
+        return {
+          name,
+          complexity: catalog?.complexity[name]?.worst || 'O(log n)',
+          complexityInfo: catalog?.complexity[name] || {
+            best: 'O(1)',
+            average: 'O(log n)',
+            worst: 'O(log n)',
+            space: 'O(1)',
+            theory: '',
+            pseudocode: '',
+          },
+          frames: [
+            {
+              frame: 0,
+              array: laneArr,
+              highlight: [],
+              sortedBoundary: -1,
+              pivotIndex: -1,
+              mergeRegionStart: -1,
+              mergeRegionEnd: -1,
+              heapBoundary: -1,
+              comparisons: 0,
+              swaps: 0,
+              timeMs: 0,
+              done: false,
+              status: 'Ready',
+              foundIndex: null,
+              searchPath: [],
+              grid: null,
+              path: [],
+              steps: 0,
+              pathFound: false,
+            },
+          ],
+          stats: {
+            comparisons: 0,
+            swaps: 0,
+            steps: 0,
+            timeMs: 0,
+            found: false,
+            foundIndex: null,
+          },
+        };
+      });
+      return {
+        type: 'searching',
+        dataset: parsedCustomArray,
+        target,
+        walls: null,
+        weights: null,
+        lanes: previewLanes,
+        winner: null,
+      };
+    }
+
+    if (response && response.dataset?.length === size) return response;
+
+    const baseArr = dataset ?? generateDataset(size, datasetType);
+    const fallbackLanes: RaceLaneResponse[] = algorithms.map((name) => {
+      const isLinear = name.toLowerCase().includes('linear');
+      const laneArr = isLinear ? [...baseArr] : [...baseArr].sort((a, b) => a - b);
+      return {
         name,
-        complexity: catalog?.complexity[name]?.worst || 'O(log n)',
-        complexityInfo: catalog?.complexity[name] || {
+        complexity: catalog?.complexity?.[name]?.worst || 'O(log n)',
+        complexityInfo: catalog?.complexity?.[name] || {
           best: 'O(1)',
           average: 'O(log n)',
           worst: 'O(log n)',
@@ -82,7 +153,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
         frames: [
           {
             frame: 0,
-            array: parsedCustomArray,
+            array: laneArr,
             highlight: [],
             sortedBoundary: -1,
             pivotIndex: -1,
@@ -110,75 +181,19 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
           found: false,
           foundIndex: null,
         },
-      }));
-      return {
-        type: 'searching',
-        dataset: parsedCustomArray,
-        target,
-        walls: null,
-        weights: null,
-        lanes: previewLanes,
-        winner: null,
       };
-    }
-
-    if (response && response.dataset?.length === size) return response;
-
-    const fallbackArr = Array.from({ length: size }, (_, i) => i * 2 + 5);
-    const fallbackLanes: RaceLaneResponse[] = algorithms.map((name) => ({
-      name,
-      complexity: catalog?.complexity?.[name]?.worst || 'O(log n)',
-      complexityInfo: catalog?.complexity?.[name] || {
-        best: 'O(1)',
-        average: 'O(log n)',
-        worst: 'O(log n)',
-        space: 'O(1)',
-        theory: '',
-        pseudocode: '',
-      },
-      frames: [
-        {
-          frame: 0,
-          array: fallbackArr,
-          highlight: [],
-          sortedBoundary: -1,
-          pivotIndex: -1,
-          mergeRegionStart: -1,
-          mergeRegionEnd: -1,
-          heapBoundary: -1,
-          comparisons: 0,
-          swaps: 0,
-          timeMs: 0,
-          done: false,
-          status: 'Ready',
-          foundIndex: null,
-          searchPath: [],
-          grid: null,
-          path: [],
-          steps: 0,
-          pathFound: false,
-        },
-      ],
-      stats: {
-        comparisons: 0,
-        swaps: 0,
-        steps: 0,
-        timeMs: 0,
-        found: false,
-        foundIndex: null,
-      },
-    }));
+    });
 
     return {
       type: 'searching',
-      dataset: fallbackArr,
+      dataset: baseArr,
       target,
       walls: null,
       weights: null,
       lanes: fallbackLanes,
       winner: null,
     };
-  }, [isCustomMode, parsedCustomArray, response, algorithms, target, catalog, size]);
+  }, [isCustomMode, parsedCustomArray, response, algorithms, target, catalog, size, dataset, datasetType]);
 
   const onFrame = useCallback((event: 'compare' | 'swap' | 'hit' | 'miss' | 'step') => {
     // Audio is now handled centrally in usePlayback hook
@@ -193,7 +208,8 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
       customTarget?: number,
       customAlgos?: string[],
       customSize?: number,
-      overrideDataset?: number[]
+      overrideDataset?: number[],
+      customDatasetType?: string
     ) => {
       const requestId = ++requestIdRef.current;
       setLoading(true);
@@ -205,6 +221,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
       }
       const useTarget = customTarget ?? target;
       const useAlgos = customAlgos ?? algorithms;
+      const useType = customDatasetType ?? (isCustomMode ? 'Custom' : datasetType);
 
       let useDataset: number[] | undefined;
       if (isCustomMode) {
@@ -212,7 +229,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
       } else if (!newDataset && dataset) {
         useDataset = overrideDataset ?? dataset;
       } else {
-        useDataset = overrideDataset ?? undefined;
+        useDataset = overrideDataset ?? (newDataset ? generateDataset(customSize ?? size, useType) : (dataset ?? undefined));
       }
 
       const useSize = customSize ?? (isCustomMode && useDataset ? Math.max(1, useDataset.length) : size);
@@ -226,7 +243,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
         if (useDataset && useDataset.length > 0) {
           arrayToSimulate = useDataset;
         } else {
-          arrayToSimulate = generateDataset(useSize, 'Sorted');
+          arrayToSimulate = generateDataset(useSize, useType);
         }
 
         try {
@@ -257,7 +274,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
           }
           return;
         } catch (workerErr) {
-          console.warn('Worker offloading warning for search, falling back to SSE stream:', workerErr);
+          console.warn('Worker offloading warning for search, falling back to API:', workerErr);
         } finally {
           if (requestId === requestIdRef.current) {
             setIsWorkerActive(false);
@@ -267,21 +284,38 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
       }
 
       try {
-        const params = {
+        const sendArray = useDataset ?? generateDataset(useSize, useType);
+        const data = await api.searching({
           algorithms: useAlgos,
           size: useSize,
           target: useTarget,
-          dataset: useDataset ?? undefined,
-        };
+          dataset: sendArray,
+        });
 
-        const cancelStream = createSimulationStream('/api/simulations/stream/searching', params,
-          (startData: any) => {
-            if (requestId !== requestIdRef.current) {
-              cancelStream();
-              return;
-            }
-            setDataset(startData.dataset);
-            setResponse(startData);
+        if (requestId === requestIdRef.current) {
+          setDataset(data.dataset ?? sendArray);
+          setResponse(data);
+          setHasFreshDataset(true);
+          playback.reset();
+          if (autoplay) {
+            play('start');
+            playback.setPlaying(true);
+            setHasFreshDataset(false);
+          }
+        }
+      } catch (err) {
+        console.warn('API error for searching, running Web Worker fallback:', err);
+        let arrayFallback = useDataset || dataset || generateDataset(useSize, useType);
+        try {
+          const fallbackRes = await workerSimulationService.runSimulation({
+            type: 'searching',
+            algorithms: useAlgos,
+            array: arrayFallback,
+            target: useTarget,
+          });
+          if (requestId === requestIdRef.current) {
+            setResponse(fallbackRes);
+            setDataset(fallbackRes.dataset);
             setHasFreshDataset(true);
             playback.reset();
             if (autoplay) {
@@ -289,61 +323,17 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
               playback.setPlaying(true);
               setHasFreshDataset(false);
             }
-          },
-          (frameEvent: any) => {
-             if (requestId !== requestIdRef.current) {
-                cancelStream();
-                return;
-             }
-             setResponse((prev) => {
-                if (!prev) return prev;
-                const newLanes = prev.lanes.map(lane => {
-                   if (lane.name === frameEvent.laneName) {
-                      return { ...lane, frames: [...lane.frames, frameEvent.frame] };
-                   }
-                   return lane;
-                });
-                if (!newLanes.find(l => l.name === frameEvent.laneName)) {
-                   newLanes.push({
-                      name: frameEvent.laneName,
-                      complexity: '',
-                      complexityInfo: {} as any,
-                      stats: { comparisons: 0, swaps: 0, steps: 0, timeMs: 0, found: false, foundIndex: null },
-                      frames: [frameEvent.frame]
-                   });
-                }
-                return { ...prev, lanes: newLanes };
-             });
-          },
-          (endData: any) => {
-            if (requestId !== requestIdRef.current) return;
-            setResponse(prev => prev ? { ...prev, winner: endData.winner } : endData);
-          },
-          (err: any) => {
-            console.error('SSE Error, running Web Worker fallback:', err);
-            const arrayFallback = useDataset || dataset || generateDataset(useSize, 'Sorted');
-            workerSimulationService.runSimulation({
-              type: 'searching',
-              algorithms: useAlgos,
-              array: arrayFallback,
-              target: useTarget,
-            }).then((fallbackRes) => {
-              if (requestId === requestIdRef.current) {
-                setResponse(fallbackRes);
-                setDataset(fallbackRes.dataset);
-                setHasFreshDataset(true);
-                playback.reset();
-              }
-            }).catch(console.error);
           }
-        );
+        } catch (workerErr) {
+          console.error('Worker simulation also failed:', workerErr);
+        }
       } finally {
         if (requestId === requestIdRef.current) {
           setLoading(false);
         }
       }
     },
-    [algorithms, isCustomMode, size, target, dataset, play, playback]
+    [algorithms, isCustomMode, size, target, dataset, datasetType, play, playback, parsedCustomArray]
   );
 
   useEffect(() => {
@@ -427,16 +417,18 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
 
     setValidationError(null);
 
-    if (hasFreshDataset && activeResponse) {
+    if (response && response.lanes.length > 0) {
       winnerAnnouncedRef.current = false;
       hasStartedPlaybackRef.current = true;
       play('start');
-      playback.reset();
+      if (playback.frameIndex >= playback.maxFrames - 1) {
+        playback.seek(0);
+      }
       playback.setPlaying(true);
       setHasFreshDataset(false);
     } else {
       hasStartedPlaybackRef.current = true;
-      await fetchSimulation(true, true);
+      await fetchSimulation(false, true);
       setHasFreshDataset(false);
     }
   }
@@ -456,15 +448,14 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
     setValidationError(null);
 
     if (dataset) {
-      const requestId = ++requestIdRef.current;
-      api
-        .searching({ algorithms, size: dataset.length, target: newTarget, dataset })
-        .then((data) => {
-          if (requestId !== requestIdRef.current) return;
-          setResponse(data);
-          playback.reset();
-        });
+      fetchSimulation(false, false, newTarget, algorithms, dataset.length, dataset);
     }
+  }
+
+  function handleDatasetTypeChange(nextType: string) {
+    setDatasetType(nextType);
+    setDataset(null);
+    fetchSimulation(true, false, target, algorithms, size, undefined, nextType);
   }
 
   function handleSizeChange(newSize: number) {
@@ -517,17 +508,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
   function handleAlgorithmChange(index: number, nextAlgo: string) {
     const nextAlgos = algorithms.map((item, i) => (i === index ? nextAlgo : item));
     setAlgorithms(nextAlgos);
-
-    if (dataset) {
-      const requestId = ++requestIdRef.current;
-      api
-        .searching({ algorithms: nextAlgos, size: dataset.length, target, dataset })
-        .then((data) => {
-          if (requestId !== requestIdRef.current) return;
-          setResponse(data);
-          playback.reset();
-        });
-    }
+    fetchSimulation(false, false, target, nextAlgos, size, dataset ?? undefined);
   }
 
   const activeFrames = useMemo(
@@ -574,7 +555,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
         arenaType: 'searching',
         winner: activeResponse.winner || 'Tie',
         datasetSize: size,
-        datasetType: isCustomMode ? 'Custom' : 'Sorted List',
+        datasetType: isCustomMode ? 'Custom' : datasetType,
         targetValue: target,
         replayParams: {
           page: 'searching',
@@ -598,7 +579,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
         setTimeout(() => play('raceComplete'), 120);
       }
     }
-  }, [isCompleted, activeResponse, play, size, isCustomMode, target, algorithms]);
+  }, [isCompleted, activeResponse, play, size, isCustomMode, datasetType, target, algorithms]);
 
   return (
     <main className="page">
@@ -730,16 +711,24 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
             </div>
           </div>
         ) : (
-          <label className="field">
-            <span>Array Size</span>
-            <input
-              type="number"
-              min={1}
-              max={160}
-              value={size}
-              onChange={(event) => handleSizeChange(Number(event.target.value))}
+          <>
+            <SelectField
+              label="Dataset Distribution"
+              value={datasetType}
+              options={availableDatasetTypes}
+              onChange={handleDatasetTypeChange}
             />
-          </label>
+            <label className="field">
+              <span>Array Size</span>
+              <input
+                type="number"
+                min={5}
+                max={160}
+                value={size}
+                onChange={(event) => handleSizeChange(Number(event.target.value))}
+              />
+            </label>
+          </>
         )}
       </section>
 
@@ -759,10 +748,10 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
       />
 
       <section className="lane-grid">
-        {activeResponse?.lanes.map((lane, index) => {
+        {activeResponse.lanes.map((lane, index) => {
           const frame = activeFrames?.[index] ?? lane.frames[0];
           let laneState: LaneState;
-          if (!activeResponse) laneState = 'ready';
+          if (!response) laneState = 'ready';
           else if (isCompleted || (frame && frame.done)) laneState = 'finished';
           else if (!playback.playing && playback.frameIndex > 0) laneState = 'paused';
           else if (playback.playing) laneState = 'running';
@@ -776,7 +765,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
       </section>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginTop: '24px' }}>
-        {activeResponse?.lanes && activeResponse.lanes.length > 0 && (
+        {activeResponse.lanes && activeResponse.lanes.length > 0 && (
           <StepExplanationCard
             lanes={activeResponse.lanes}
             activeFrames={activeFrames}
@@ -791,7 +780,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
           isCompleted={isCompleted}
           catalog={catalog}
           playing={playback.playing}
-          datasetType={isCustomMode ? 'Custom' : 'Random'}
+          datasetType={isCustomMode ? 'Custom' : datasetType}
         />
         <AlgorithmComparisonCenter
           algorithms={catalog.searchingAlgorithms}
@@ -807,30 +796,25 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
       <CustomDatasetModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        currentSize={size}
-        onApplyDataset={(parsedArray, label) => {
+        onApply={(generatedArr, formulaTitle) => {
           setIsCustomMode(true);
-          setCustomArrayStr(parsedArray.join(', '));
-          setSize(parsedArray.length);
-          setDataset(parsedArray);
-          fetchSimulation(true, false, target, algorithms, parsedArray.length, parsedArray);
-          setToastMessage(`Applied ${label} dataset (${parsedArray.length} elements)!`);
-          setTimeout(() => setToastMessage(null), 3500);
+          setCustomArrayStr(generatedArr.join(', '));
+          setDataset(generatedArr);
+          setSize(generatedArr.length);
+          fetchSimulation(true, false, target, algorithms, generatedArr.length, generatedArr);
+          setToastMessage(`⚡ Applied Preset: ${formulaTitle} (${generatedArr.length} elements)`);
+          setTimeout(() => setToastMessage(null), 3000);
         }}
       />
 
       <ShareBenchmarkModal
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
-        config={{
-          arena: 'searching',
-          algorithms,
-          datasetType: isCustomMode ? 'Custom' : 'Random',
-          size: isCustomMode ? parsedCustomArray.length : size,
-          customArray: isCustomMode ? parsedCustomArray : (dataset || undefined),
-          target,
-          speed,
-        }}
+        arena="searching"
+        algorithms={algorithms}
+        size={size}
+        target={target}
+        customArray={isCustomMode ? parsedCustomArray : undefined}
       />
     </main>
   );

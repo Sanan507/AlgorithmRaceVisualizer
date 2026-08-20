@@ -499,9 +499,11 @@ function runSearchingWorkerSimulation(
 
 function simulateSingleSearchingAlgorithm(
   algo: string,
-  arr: number[],
+  rawArr: number[],
   target: number
 ): WorkerLaneResult {
+  const requiresSorted = algo.includes('Binary') || algo.includes('Jump') || algo.includes('Interpolation') || algo.includes('Exponential') || algo.includes('Ternary');
+  const arr = requiresSorted ? [...rawArr].sort((a, b) => a - b) : [...rawArr];
   const frames: WorkerFrame[] = [];
   let comparisons = 0;
   let steps = 0;
