@@ -72,7 +72,6 @@ class WorkerSimulationService {
                 stats: l.stats,
               })),
               winner: response.winner,
-              totalTimeMs: response.totalTimeMs,
             };
 
             handler.resolve(raceResponse);

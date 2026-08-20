@@ -1,7 +1,4 @@
 {
     "java.compile.nullAnalysis.mode": "automatic",
-    "java.configuration.updateBuildConfiguration": "interactive",
-    "mcp.servers.data-agent-kit.enabled": false,
-    "mcp.servers.notebooks.enabled": false,
-    "mcp.servers.visualization.enabled": false
+    "java.configuration.updateBuildConfiguration": "interactive"
 }

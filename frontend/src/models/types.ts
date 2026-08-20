@@ -67,7 +67,6 @@ export type RaceResponse = {
   weights?: number[][] | null;
   lanes: RaceLaneResponse[];
   winner: string | null;
-  totalTimeMs?: number;
 };
 
 export type TreeNodeDto = {
