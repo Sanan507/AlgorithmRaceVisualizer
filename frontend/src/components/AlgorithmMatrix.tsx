@@ -4,7 +4,7 @@ import { Play, Search, ShieldCheck, Sparkles } from 'lucide-react';
 export interface AlgorithmItem {
   id: string;
   name: string;
-  category: 'sorting' | 'searching' | 'pathfinding';
+  category: 'sorting' | 'searching' | 'pathfinding' | 'dp' | 'trees';
   categoryLabel: string;
   bestTime: string;
   avgTime: string;
@@ -237,14 +237,106 @@ const ALGORITHM_DATA: AlgorithmItem[] = [
     space: 'O(V)',
     description: 'Recursive stack-based exploration traversing deepest branch vertices.',
   },
+
+  // Dynamic Programming
+  {
+    id: 'knapsack',
+    name: '0/1 Knapsack Problem',
+    category: 'dp',
+    categoryLabel: 'DP Arena',
+    bestTime: 'O(n·W)',
+    avgTime: 'O(n·W)',
+    worstTime: 'O(n·W)',
+    space: 'O(n·W)',
+    description: 'Optimal item selection under capacity constraints using 2D subproblem recurrence.',
+  },
+  {
+    id: 'lcs',
+    name: 'Longest Common Subsequence (LCS)',
+    category: 'dp',
+    categoryLabel: 'DP Arena',
+    bestTime: 'O(m·n)',
+    avgTime: 'O(m·n)',
+    worstTime: 'O(m·n)',
+    space: 'O(m·n)',
+    description: 'Finds longest subsequence present in both strings maintaining relative order.',
+  },
+  {
+    id: 'editdistance',
+    name: 'Edit Distance (Levenshtein)',
+    category: 'dp',
+    categoryLabel: 'DP Arena',
+    bestTime: 'O(m·n)',
+    avgTime: 'O(m·n)',
+    worstTime: 'O(m·n)',
+    space: 'O(m·n)',
+    description: 'Computes minimum insert/delete/replace operations transforming string A into string B.',
+  },
+  {
+    id: 'coinchange',
+    name: 'Coin Change Problem',
+    category: 'dp',
+    categoryLabel: 'DP Arena',
+    bestTime: 'O(n·A)',
+    avgTime: 'O(n·A)',
+    worstTime: 'O(n·A)',
+    space: 'O(A)',
+    description: 'Determines fewest coins required to make a target change amount.',
+  },
+
+  // Trees & Graphs
+  {
+    id: 'avl',
+    name: 'AVL Tree Self-Balancing',
+    category: 'trees',
+    categoryLabel: 'Tree Arena',
+    bestTime: 'O(log n)',
+    avgTime: 'O(log n)',
+    worstTime: 'O(log n)',
+    space: 'O(n)',
+    description: 'Strictly height-balanced BST guaranteeing O(log n) lookups via single/double rotations.',
+  },
+  {
+    id: 'bst',
+    name: 'Binary Search Tree (BST)',
+    category: 'trees',
+    categoryLabel: 'Tree Arena',
+    bestTime: 'O(log n)',
+    avgTime: 'O(log n)',
+    worstTime: 'O(n)',
+    space: 'O(n)',
+    description: 'Hierarchical node structure maintaining left-smaller, right-greater ordering property.',
+  },
+  {
+    id: 'redblack',
+    name: 'Red-Black Tree',
+    category: 'trees',
+    categoryLabel: 'Tree Arena',
+    bestTime: 'O(log n)',
+    avgTime: 'O(log n)',
+    worstTime: 'O(log n)',
+    space: 'O(n)',
+    description: 'Balanced BST with color constraints ensuring no path is more than twice as long as another.',
+  },
+  {
+    id: 'trie',
+    name: 'Trie (Prefix Tree)',
+    category: 'trees',
+    categoryLabel: 'Tree Arena',
+    bestTime: 'O(k)',
+    avgTime: 'O(k)',
+    worstTime: 'O(k)',
+    space: 'O(Σ·k)',
+    description: 'Tree search structure optimized for rapid string prefix lookups and autocomplete.',
+  },
 ];
 
 interface Props {
-  onNavigate: (category: 'sorting' | 'searching' | 'pathfinding') => void;
+  onNavigate: (category: 'sorting' | 'searching' | 'pathfinding' | 'dp' | 'trees' | 'quiz' | 'history' | 'settings') => void;
 }
 
 export function AlgorithmMatrix({ onNavigate }: Props) {
-  const [filterCategory, setFilterCategory] = useState<'all' | 'sorting' | 'searching' | 'pathfinding'>('all');
+  const [filterCategory, setFilterCategory] = useState<'all' | 'sorting' | 'searching' | 'pathfinding' | 'dp' | 'trees'>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredAlgorithms = ALGORITHM_DATA.filter((item) => {
@@ -256,10 +348,10 @@ export function AlgorithmMatrix({ onNavigate }: Props) {
   });
 
   const getComplexityClass = (complexity: string) => {
-    if (complexity.includes('1') || complexity.includes('log n') || complexity.includes('√n')) {
+    if (complexity.includes('1') || complexity.includes('log n') || complexity.includes('√n') || complexity.includes('O(k)')) {
       return 'badge-complexity-optimal';
     }
-    if (complexity.includes('n log n') || complexity.includes('V + E')) {
+    if (complexity.includes('n log n') || complexity.includes('V + E') || complexity.includes('E log V') || complexity.includes('n·A') || complexity.includes('m·n')) {
       return 'badge-complexity-good';
     }
     return 'badge-complexity-heavy';
@@ -279,7 +371,7 @@ export function AlgorithmMatrix({ onNavigate }: Props) {
 
         <div className="matrix-controls">
           <div className="category-filter-pills">
-            {(['all', 'sorting', 'searching', 'pathfinding'] as const).map((cat) => (
+            {(['all', 'sorting', 'searching', 'pathfinding', 'dp', 'trees'] as const).map((cat) => (
               <button
                 key={cat}
                 className={`filter-pill ${filterCategory === cat ? 'active' : ''}`}
@@ -291,7 +383,11 @@ export function AlgorithmMatrix({ onNavigate }: Props) {
                   ? 'Sorting'
                   : cat === 'searching'
                   ? 'Searching'
-                  : 'Pathfinding'}
+                  : cat === 'pathfinding'
+                  ? 'Pathfinding'
+                  : cat === 'dp'
+                  ? 'Dynamic Programming'
+                  : 'Trees & Graphs'}
               </button>
             ))}
           </div>
