@@ -35,79 +35,51 @@ export const SortingCanvas = memo(function SortingCanvas({
   frame,
 }: SortingCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const sizeRef = useRef<{ width: number; height: number; dpr: number }>({ width: 0, height: 0, dpr: 1 });
+  const frameRef = useRef<SimulationFrame | null | undefined>(frame);
+  frameRef.current = frame;
 
-  // Update canvas backing resolution strictly on container size changes
-  const updateCanvasDimensions = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
-    const w = Math.floor(rect.width);
-    const h = Math.floor(rect.height);
-
-    if (w <= 0 || h <= 0) return;
-
-    if (sizeRef.current.width !== w || sizeRef.current.height !== h || sizeRef.current.dpr !== dpr) {
-      sizeRef.current = { width: w, height: h, dpr };
-      canvas.width = Math.floor(w * dpr);
-      canvas.height = Math.floor(h * dpr);
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.scale(dpr, dpr);
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    updateCanvasDimensions();
-
-    const resizeObserver = new ResizeObserver(() => {
-      updateCanvasDimensions();
-    });
-
-    resizeObserver.observe(canvas);
-    return () => resizeObserver.disconnect();
-  }, [updateCanvasDimensions]);
-
-  // High-speed render loop
-  useEffect(() => {
+  const renderCanvas = useCallback((targetFrame?: SimulationFrame | null) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const { width, height } = sizeRef.current;
-    if (width <= 0 || height <= 0) {
-      updateCanvasDimensions();
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const w = Math.floor(rect.width) || canvas.parentElement?.clientWidth || 300;
+    const h = Math.floor(rect.height) || canvas.parentElement?.clientHeight || 180;
+
+    if (w <= 0 || h <= 0) return;
+
+    const targetW = Math.floor(w * dpr);
+    const targetH = Math.floor(h * dpr);
+
+    if (canvas.width !== targetW || canvas.height !== targetH) {
+      canvas.width = targetW;
+      canvas.height = targetH;
     }
 
-    const currentW = sizeRef.current.width;
-    const currentH = sizeRef.current.height;
-    if (currentW <= 0 || currentH <= 0) return;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     const isLight = document.documentElement.dataset.theme === 'light';
 
     // 1. Draw Background
     ctx.fillStyle = isLight ? COLORS.bgLight : COLORS.bgDark;
-    ctx.fillRect(0, 0, currentW, currentH);
+    ctx.fillRect(0, 0, w, h);
 
     // 2. Draw ambient horizontal grid lines (single stroke batch)
     ctx.strokeStyle = isLight ? COLORS.gridLight : COLORS.gridDark;
     ctx.lineWidth = 1;
     ctx.beginPath();
-    for (let y = 40; y < currentH; y += 40) {
+    for (let y = 40; y < h; y += 40) {
       ctx.moveTo(0, y);
-      ctx.lineTo(currentW, y);
+      ctx.lineTo(w, y);
     }
     ctx.stroke();
 
-    if (!frame || !frame.array || frame.array.length === 0) return;
-    const arr = frame.array;
+    const currentFrame = targetFrame ?? frameRef.current;
+    if (!currentFrame || !currentFrame.array || currentFrame.array.length === 0) return;
+    const arr = currentFrame.array;
     const n = arr.length;
 
     let min = arr[0];
@@ -118,35 +90,34 @@ export const SortingCanvas = memo(function SortingCanvas({
       if (v > max) max = v;
     }
 
-    const availableHeight = currentH - 36;
-    const barW = Math.max(2, (currentW - n * 2) / n);
-    const gap = Math.max(1, (currentW - barW * n) / (n + 1));
-    const range = max - min || 1;
+    const availableHeight = h - 36;
+    const barW = Math.max(2, (w - n * 2) / n);
+    const gap = Math.max(1, (w - barW * n) / (n + 1));
 
-    const highlights = frame.highlight || [];
+    const highlights = currentFrame.highlight || [];
     const hasHighlights = highlights.length > 0;
-    const isDone = frame.done;
-    const pivotIdx = frame.pivotIndex ?? -1;
-    const heapIdx = frame.heapBoundary ?? -1;
-    const mergeStart = frame.mergeRegionStart ?? -1;
-    const mergeEnd = frame.mergeRegionEnd ?? -1;
+    const isDone = currentFrame.done;
+    const pivotIdx = currentFrame.pivotIndex ?? -1;
+    const heapIdx = currentFrame.heapBoundary ?? -1;
+    const mergeStart = currentFrame.mergeRegionStart ?? -1;
+    const mergeEnd = currentFrame.mergeRegionEnd ?? -1;
 
     // 3. High-speed single pass bar rendering
     for (let index = 0; index < n; index++) {
       const value = arr[index];
 
       // Proportional height
-      let h: number;
+      let barH: number;
       if (min === max) {
-        h = max === 0 ? availableHeight * 0.4 : availableHeight * 0.6;
+        barH = max === 0 ? availableHeight * 0.4 : availableHeight * 0.6;
       } else {
         const minVal = Math.min(0, min);
         const r = (value - minVal) / (max - minVal || 1);
-        h = Math.max(8, r * availableHeight);
+        barH = Math.max(8, r * availableHeight);
       }
 
       const x = gap + index * (barW + gap);
-      const y = currentH - h - 12;
+      const y = h - barH - 12;
 
       let fillColor = isLight ? COLORS.barLight : COLORS.barDark;
       let isSpecial = false;
@@ -169,7 +140,7 @@ export const SortingCanvas = memo(function SortingCanvas({
 
       // Draw Bar Rect
       ctx.fillStyle = fillColor;
-      ctx.fillRect(x, y, barW, h);
+      ctx.fillRect(x, y, barW, barH);
 
       // Top glowing highlight cap for active elements
       if (isSpecial) {
@@ -190,7 +161,44 @@ export const SortingCanvas = memo(function SortingCanvas({
         ctx.fillText(String(value), x + barW / 2, Math.max(10, y - 4));
       }
     }
-  }, [frame, updateCanvasDimensions]);
+  }, []);
+
+  // Render on frame update
+  useEffect(() => {
+    renderCanvas(frame);
+  }, [frame, renderCanvas]);
+
+  // Handle container resizing and theme changes to guarantee crisp rendering without blank flashes
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    renderCanvas(frameRef.current);
+
+    const resizeObserver = new ResizeObserver(() => {
+      requestAnimationFrame(() => {
+        renderCanvas(frameRef.current);
+      });
+    });
+
+    resizeObserver.observe(canvas);
+    if (canvas.parentElement) {
+      resizeObserver.observe(canvas.parentElement);
+    }
+
+    const mutationObserver = new MutationObserver(() => {
+      renderCanvas(frameRef.current);
+    });
+    mutationObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme', 'class'],
+    });
+
+    return () => {
+      resizeObserver.disconnect();
+      mutationObserver.disconnect();
+    };
+  }, [renderCanvas]);
 
   return <canvas className="race-canvas" ref={canvasRef} style={{ width: '100%', height: '100%', display: 'block' }} />;
 });

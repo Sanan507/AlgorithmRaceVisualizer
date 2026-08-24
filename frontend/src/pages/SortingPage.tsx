@@ -128,10 +128,12 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
       };
     }
 
-    if (response && response.dataset?.length === size) return response;
+    if (response && response.dataset?.length === size && response.lanes && response.lanes.length === algorithms.length) return response;
 
     // Guaranteed Non-Null Fallback so screen never goes blank during API fetch
-    const fallbackArr = Array.from({ length: size }, (_, i) => Math.floor(Math.abs(Math.sin(i + 1)) * 80) + 10);
+    const fallbackArr = response?.dataset && response.dataset.length === size
+      ? response.dataset
+      : Array.from({ length: size }, (_, i) => Math.floor(Math.abs(Math.sin(i + 1)) * 80) + 10);
     const fallbackLanes: RaceLaneResponse[] = algorithms.map((name) => ({
       name,
       complexity: catalog?.complexity?.[name]?.worst || 'O(n log n)',
@@ -284,7 +286,54 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
               cancelStream();
               return;
             }
-            setResponse(startData);
+            const initialLanes: RaceLaneResponse[] = useAlgos.map((name) => ({
+              name,
+              complexity: catalog?.complexity?.[name]?.worst || 'O(n log n)',
+              complexityInfo: catalog?.complexity?.[name] || {
+                best: 'O(n)',
+                average: 'O(n log n)',
+                worst: 'O(n²)',
+                space: 'O(1)',
+                theory: '',
+                pseudocode: '',
+              },
+              frames: [
+                {
+                  frame: 0,
+                  array: startData.dataset || [],
+                  highlight: [],
+                  sortedBoundary: -1,
+                  pivotIndex: -1,
+                  mergeRegionStart: -1,
+                  mergeRegionEnd: -1,
+                  heapBoundary: -1,
+                  comparisons: 0,
+                  swaps: 0,
+                  timeMs: 0,
+                  done: false,
+                  status: 'Ready',
+                  foundIndex: null,
+                  searchPath: [],
+                  grid: null,
+                  path: [],
+                  steps: 0,
+                  pathFound: false,
+                },
+              ],
+              stats: {
+                comparisons: 0,
+                swaps: 0,
+                steps: 0,
+                timeMs: 0,
+                found: false,
+                foundIndex: null,
+              },
+            }));
+
+            setResponse({
+              ...startData,
+              lanes: initialLanes,
+            });
             if (startData.dataset) {
               setDataset(startData.dataset);
             }
@@ -303,17 +352,22 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
              }
              setResponse((prev) => {
                 if (!prev) return prev;
+                let foundLane = false;
                 const newLanes = prev.lanes.map(lane => {
                    if (lane.name === frameEvent.laneName) {
+                      foundLane = true;
+                      if (lane.frames.length === 1 && frameEvent.frame.frame === 0) {
+                        return { ...lane, frames: [frameEvent.frame] };
+                      }
                       return { ...lane, frames: [...lane.frames, frameEvent.frame] };
                    }
                    return lane;
                 });
-                if (!newLanes.find(l => l.name === frameEvent.laneName)) {
+                if (!foundLane) {
                    newLanes.push({
                       name: frameEvent.laneName,
-                      complexity: '',
-                      complexityInfo: {} as any,
+                      complexity: catalog?.complexity?.[frameEvent.laneName]?.worst || '',
+                      complexityInfo: catalog?.complexity?.[frameEvent.laneName] || ({} as any),
                       stats: { comparisons: 0, swaps: 0, steps: 0, timeMs: 0, found: false, foundIndex: null },
                       frames: [frameEvent.frame]
                    });

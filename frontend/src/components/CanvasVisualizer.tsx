@@ -26,61 +26,41 @@ export const CanvasVisualizer = memo(function CanvasVisualizer({
   sortedColor = '#10b981',
 }: CanvasVisualizerProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const sizeRef = useRef<{ width: number; height: number; dpr: number }>({ width: 0, height: 0, dpr: 1 });
+  const frameRef = useRef<SimulationFrame | null | undefined>(frame);
+  const arrayRef = useRef<number[]>(array);
+  frameRef.current = frame;
+  arrayRef.current = array;
 
-  const updateCanvasDimensions = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
-    const w = Math.floor(rect.width) || 600;
-    const h = height;
-
-    if (sizeRef.current.width !== w || sizeRef.current.height !== h || sizeRef.current.dpr !== dpr) {
-      sizeRef.current = { width: w, height: h, dpr };
-      canvas.width = Math.floor(w * dpr);
-      canvas.height = Math.floor(h * dpr);
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.scale(dpr, dpr);
-      }
-    }
-  }, [height]);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    updateCanvasDimensions();
-
-    const resizeObserver = new ResizeObserver(() => {
-      updateCanvasDimensions();
-    });
-
-    resizeObserver.observe(canvas);
-    return () => resizeObserver.disconnect();
-  }, [updateCanvasDimensions]);
-
-  useEffect(() => {
+  const renderCanvas = useCallback((targetFrame?: SimulationFrame | null, targetArray?: number[]) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const { width, height: currentHeight } = sizeRef.current;
-    if (width <= 0 || currentHeight <= 0) {
-      updateCanvasDimensions();
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const w = Math.floor(rect.width) || canvas.parentElement?.clientWidth || 600;
+    const h = height;
+
+    if (w <= 0 || h <= 0) return;
+
+    const targetW = Math.floor(w * dpr);
+    const targetH = Math.floor(h * dpr);
+
+    if (canvas.width !== targetW || canvas.height !== targetH) {
+      canvas.width = targetW;
+      canvas.height = targetH;
     }
 
-    const currentW = sizeRef.current.width || 600;
-    const currentH = sizeRef.current.height || height;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     // Clear canvas background
     ctx.fillStyle = '#0b0b1e';
-    ctx.fillRect(0, 0, currentW, currentH);
+    ctx.fillRect(0, 0, w, h);
 
-    const values = frame?.array && frame.array.length > 0 ? frame.array : array;
+    const currentF = targetFrame ?? frameRef.current;
+    const currentA = targetArray ?? arrayRef.current;
+    const values = currentF?.array && currentF.array.length > 0 ? currentF.array : currentA;
     if (!values || values.length === 0) return;
 
     const count = values.length;
@@ -91,17 +71,17 @@ export const CanvasVisualizer = memo(function CanvasVisualizer({
     maxVal = Math.max(maxVal, 100);
 
     const padding = 1;
-    const barWidth = Math.max(1, (currentW - padding * (count + 1)) / count);
+    const barWidth = Math.max(1, (w - padding * (count + 1)) / count);
 
-    const activeHighlight = frame?.highlight || frame?.comparing || [];
-    const isDone = frame?.done ?? false;
-    const hasSwaps = (frame?.swaps ?? 0) > 0;
+    const activeHighlight = currentF?.highlight || currentF?.comparing || [];
+    const isDone = currentF?.done ?? false;
+    const hasSwaps = (currentF?.swaps ?? 0) > 0;
 
     for (let i = 0; i < count; i++) {
       const val = values[i];
-      const barHeight = (val / maxVal) * (currentH - 20);
+      const barHeight = (val / maxVal) * (h - 20);
       const x = padding + i * (barWidth + padding);
-      const y = currentH - barHeight - 10;
+      const y = h - barHeight - 10;
 
       let color = barColor;
       if (isDone) {
@@ -113,7 +93,33 @@ export const CanvasVisualizer = memo(function CanvasVisualizer({
       ctx.fillStyle = color;
       ctx.fillRect(x, y, barWidth, barHeight);
     }
-  }, [array, frame, height, barColor, compareColor, swapColor, sortedColor, updateCanvasDimensions]);
+  }, [height, barColor, compareColor, swapColor, sortedColor]);
+
+  // Render on frame or array update
+  useEffect(() => {
+    renderCanvas(frame, array);
+  }, [frame, array, renderCanvas]);
+
+  // Handle container resizing and theme changes
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    renderCanvas(frameRef.current, arrayRef.current);
+
+    const resizeObserver = new ResizeObserver(() => {
+      requestAnimationFrame(() => {
+        renderCanvas(frameRef.current, arrayRef.current);
+      });
+    });
+
+    resizeObserver.observe(canvas);
+    if (canvas.parentElement) {
+      resizeObserver.observe(canvas.parentElement);
+    }
+
+    return () => resizeObserver.disconnect();
+  }, [renderCanvas]);
 
   return (
     <div style={{ width: '100%', height: `${height}px`, overflow: 'hidden', borderRadius: '8px' }}>

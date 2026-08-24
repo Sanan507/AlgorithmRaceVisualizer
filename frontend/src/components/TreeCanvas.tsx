@@ -53,58 +53,34 @@ export const TreeCanvas = memo(function TreeCanvas({
   treeType,
 }: TreeCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const sizeRef = useRef<{ width: number; height: number; dpr: number }>({ width: 0, height: 0, dpr: 1 });
+  const stepRef = useRef<TreeSimulationFrame | null | undefined>(step);
+  const treeTypeRef = useRef<string | undefined>(treeType);
+  stepRef.current = step;
+  treeTypeRef.current = treeType;
 
-  const updateCanvasDimensions = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const parentWidth = canvas.parentElement?.clientWidth || 800;
-    const parentHeight = 460;
-    const dpr = window.devicePixelRatio || 1;
-
-    if (sizeRef.current.width !== parentWidth || sizeRef.current.height !== parentHeight || sizeRef.current.dpr !== dpr) {
-      sizeRef.current = { width: parentWidth, height: parentHeight, dpr };
-      canvas.width = Math.floor(parentWidth * dpr);
-      canvas.height = Math.floor(parentHeight * dpr);
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.scale(dpr, dpr);
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    updateCanvasDimensions();
-
-    const resizeObserver = new ResizeObserver(() => {
-      updateCanvasDimensions();
-    });
-
-    if (canvas.parentElement) {
-      resizeObserver.observe(canvas.parentElement);
-    }
-    return () => resizeObserver.disconnect();
-  }, [updateCanvasDimensions]);
-
-  // High-speed render loop
-  useEffect(() => {
+  const renderCanvas = useCallback((targetStep?: TreeSimulationFrame | null, targetTreeType?: string) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const { width, height } = sizeRef.current;
-    if (width <= 0 || height <= 0) {
-      updateCanvasDimensions();
+    const rect = canvas.getBoundingClientRect();
+    const parentWidth = Math.floor(rect.width) || canvas.parentElement?.clientWidth || 800;
+    const parentHeight = 460;
+    const dpr = window.devicePixelRatio || 1;
+
+    const targetW = Math.floor(parentWidth * dpr);
+    const targetH = Math.floor(parentHeight * dpr);
+
+    if (canvas.width !== targetW || canvas.height !== targetH) {
+      canvas.width = targetW;
+      canvas.height = targetH;
     }
 
-    const currentW = sizeRef.current.width;
-    const currentH = sizeRef.current.height;
-    if (currentW <= 0 || currentH <= 0) return;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const currentW = parentWidth;
+    const currentH = parentHeight;
 
     // Clear canvas
     ctx.clearRect(0, 0, currentW, currentH);
@@ -221,7 +197,44 @@ export const TreeCanvas = memo(function TreeCanvas({
     const hasChildren = !!(root.left || root.right);
     const startY = hasChildren ? 48 : currentH / 2;
     drawNode(root, currentW / 2, startY, currentW / 4.2, 1);
-  }, [step, treeType, updateCanvasDimensions]);
+  }, []);
+
+  // Render on step or treeType update
+  useEffect(() => {
+    renderCanvas(step, treeType);
+  }, [step, treeType, renderCanvas]);
+
+  // Handle container resizing and theme changes
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    renderCanvas(stepRef.current, treeTypeRef.current);
+
+    const resizeObserver = new ResizeObserver(() => {
+      requestAnimationFrame(() => {
+        renderCanvas(stepRef.current, treeTypeRef.current);
+      });
+    });
+
+    resizeObserver.observe(canvas);
+    if (canvas.parentElement) {
+      resizeObserver.observe(canvas.parentElement);
+    }
+
+    const mutationObserver = new MutationObserver(() => {
+      renderCanvas(stepRef.current, treeTypeRef.current);
+    });
+    mutationObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme', 'class'],
+    });
+
+    return () => {
+      resizeObserver.disconnect();
+      mutationObserver.disconnect();
+    };
+  }, [renderCanvas]);
 
   const rotation = step?.rotationType;
   const eventType = step?.eventType;

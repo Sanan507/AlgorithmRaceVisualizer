@@ -61,80 +61,71 @@ export const PathCanvas = memo(function PathCanvas({
   onGridClick,
 }: PathCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const sizeRef = useRef<{ width: number; height: number; dpr: number }>({ width: 0, height: 0, dpr: 1 });
+  const frameRef = useRef<SimulationFrame | null | undefined>(frame);
+  const weightsRef = useRef<number[][] | null | undefined>(weights);
+  frameRef.current = frame;
+  weightsRef.current = weights;
+
   const drawingRef = useRef(false);
   const activePointerIdRef = useRef<number | null>(null);
   const lastDrawnCellRef = useRef<string | null>(null);
 
-  // Measure and resize canvas only when physical dimensions change
-  const updateCanvasDimensions = useCallback(() => {
+  const renderCanvas = useCallback((targetFrame?: SimulationFrame | null, targetWeights?: number[][] | null) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
-    const w = Math.floor(rect.width);
-    const h = Math.floor(rect.height);
-
-    if (w <= 0 || h <= 0) return;
-
-    if (sizeRef.current.width !== w || sizeRef.current.height !== h || sizeRef.current.dpr !== dpr) {
-      sizeRef.current = { width: w, height: h, dpr };
-      canvas.width = Math.floor(w * dpr);
-      canvas.height = Math.floor(h * dpr);
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.scale(dpr, dpr);
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    updateCanvasDimensions();
-
-    const resizeObserver = new ResizeObserver(() => {
-      updateCanvasDimensions();
-    });
-
-    resizeObserver.observe(canvas);
-    return () => resizeObserver.disconnect();
-  }, [updateCanvasDimensions]);
-
-  // High-performance render loop
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || !frame || !frame.grid) return;
+    const currentFrame = targetFrame ?? frameRef.current;
+    if (!currentFrame || !currentFrame.grid) return;
+    const currentWeights = targetWeights ?? weightsRef.current;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const { width, height, dpr } = sizeRef.current;
-    if (width <= 0 || height <= 0) {
-      updateCanvasDimensions();
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const w = Math.floor(rect.width) || canvas.parentElement?.clientWidth || 300;
+    const h = Math.floor(rect.height) || canvas.parentElement?.clientHeight || 200;
+
+    if (w <= 0 || h <= 0) return;
+
+    const targetW = Math.floor(w * dpr);
+    const targetH = Math.floor(h * dpr);
+
+    if (canvas.width !== targetW || canvas.height !== targetH) {
+      canvas.width = targetW;
+      canvas.height = targetH;
     }
 
-    const currentW = sizeRef.current.width;
-    const currentH = sizeRef.current.height;
-    if (currentW <= 0 || currentH <= 0) return;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     const isLight = document.documentElement.dataset.theme === 'light';
     const stateColors = isLight ? LIGHT_STATE_COLORS : DARK_STATE_COLORS;
 
     // Clear background
     ctx.fillStyle = isLight ? '#f2f7ff' : '#0b0b1e';
-    ctx.fillRect(0, 0, currentW, currentH);
+    ctx.fillRect(0, 0, w, h);
 
-    const rows = frame.grid.length;
-    const cols = frame.grid[0]?.length ?? 0;
+    const rows = currentFrame.grid.length;
+    const cols = currentFrame.grid[0]?.length ?? 0;
     if (rows === 0 || cols === 0) return;
 
-    const cellW = currentW / cols;
-    const cellH = currentH / rows;
+    const cellW = w / cols;
+    const cellH = h / rows;
     const pad = Math.max(1, Math.min(cellW, cellH) * 0.08);
     const innerW = Math.max(1, cellW - pad * 2);
     const innerH = Math.max(1, cellH - pad * 2);
+
+    // 2. Draw subtle ambient cell grid outlines
+    ctx.strokeStyle = isLight ? 'rgba(0, 101, 145, 0.08)' : 'rgba(255, 255, 255, 0.035)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let c = 0; c <= cols; c++) {
+      ctx.moveTo(c * cellW, 0);
+      ctx.lineTo(c * cellW, h);
+    }
+    for (let r = 0; r <= rows; r++) {
+      ctx.moveTo(0, r * cellH);
+      ctx.lineTo(w, r * cellH);
+    }
+    ctx.stroke();
 
     // Group cells for high-speed batched rendering
     const specialCells: { r: number; c: number; state: string; weight: number }[] = [];
@@ -142,8 +133,8 @@ export const PathCanvas = memo(function PathCanvas({
 
     // Categorized state batches for instant draw call grouping
     for (let r = 0; r < rows; r++) {
-      const row = frame.grid[r];
-      const weightRow = weights?.[r];
+      const row = currentFrame.grid[r];
+      const weightRow = currentWeights?.[r];
 
       for (let c = 0; c < cols; c++) {
         const state = row[c];
@@ -157,8 +148,6 @@ export const PathCanvas = memo(function PathCanvas({
         if (state === 'EMPTY') {
           if (cellWeight > 1) {
             weightedEmptyCells.push({ r, c, weight: cellWeight });
-          } else {
-            // Default empty cell background is already drawn
           }
           continue;
         }
@@ -243,16 +232,17 @@ export const PathCanvas = memo(function PathCanvas({
     }
 
     // Batched weight labels pass (only when cell dimensions are large enough)
-    if (weights && cellW >= 14 && cellH >= 14) {
+    const activeWeights = currentWeights;
+    if (activeWeights && cellW >= 14 && cellH >= 14) {
       ctx.fillStyle = '#ffffff';
       ctx.font = 'bold 9px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
       for (let r = 0; r < rows; r++) {
-        const weightRow = weights[r];
+        const weightRow = activeWeights[r];
         if (!weightRow) continue;
-        const gridRow = frame.grid[r];
+        const gridRow = currentFrame.grid[r];
 
         for (let c = 0; c < cols; c++) {
           const w = weightRow[c];
@@ -263,7 +253,44 @@ export const PathCanvas = memo(function PathCanvas({
         }
       }
     }
-  }, [frame, weights, updateCanvasDimensions]);
+  }, []);
+
+  // Render on frame or weights update
+  useEffect(() => {
+    renderCanvas(frame, weights);
+  }, [frame, weights, renderCanvas]);
+
+  // Handle container resizing and theme changes
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    renderCanvas(frameRef.current, weightsRef.current);
+
+    const resizeObserver = new ResizeObserver(() => {
+      requestAnimationFrame(() => {
+        renderCanvas(frameRef.current, weightsRef.current);
+      });
+    });
+
+    resizeObserver.observe(canvas);
+    if (canvas.parentElement) {
+      resizeObserver.observe(canvas.parentElement);
+    }
+
+    const mutationObserver = new MutationObserver(() => {
+      renderCanvas(frameRef.current, weightsRef.current);
+    });
+    mutationObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme', 'class'],
+    });
+
+    return () => {
+      resizeObserver.disconnect();
+      mutationObserver.disconnect();
+    };
+  }, [renderCanvas]);
 
   // Interactive mouse/touch painting
   const getGridPos = useCallback((clientX: number, clientY: number) => {
