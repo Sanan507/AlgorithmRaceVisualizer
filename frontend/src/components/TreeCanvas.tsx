@@ -53,12 +53,12 @@ export const TreeCanvas = memo(function TreeCanvas({
   treeType,
 }: TreeCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const stepRef = useRef<TreeSimulationFrame | null | undefined>(step);
+  const stepRef = useRef<TreeStep | TreeSimulationFrame | null | undefined>(step);
   const treeTypeRef = useRef<string | undefined>(treeType);
   stepRef.current = step;
   treeTypeRef.current = treeType;
 
-  const renderCanvas = useCallback((targetStep?: TreeSimulationFrame | null, targetTreeType?: string) => {
+  const renderCanvas = useCallback((targetStep?: TreeStep | TreeSimulationFrame | null, targetTreeType?: string) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -99,7 +99,10 @@ export const TreeCanvas = memo(function TreeCanvas({
     }
     ctx.stroke();
 
-    if (!step || !step.root) {
+    const currentStep = targetStep ?? stepRef.current;
+    const currentTreeType = targetTreeType ?? treeTypeRef.current ?? treeType;
+
+    if (!currentStep || !currentStep.root) {
       ctx.fillStyle = 'rgba(148, 163, 184, 0.6)';
       ctx.font = '500 14px -apple-system, BlinkMacSystemFont, sans-serif';
       ctx.textAlign = 'center';
@@ -107,9 +110,9 @@ export const TreeCanvas = memo(function TreeCanvas({
       return;
     }
 
-    const root = step.root;
-    const activeVal = getActiveNodeValue(step);
-    const highlightVals = step.highlightNodes || [];
+    const root = currentStep.root;
+    const activeVal = getActiveNodeValue(currentStep);
+    const highlightVals = currentStep.highlightNodes || [];
 
     const getNodeVal = (node: TreeNode | TreeNodeDto): number => {
       if ('val' in node && node.val !== undefined) return node.val;
@@ -161,7 +164,7 @@ export const TreeCanvas = memo(function TreeCanvas({
       ctx.beginPath();
       ctx.arc(x, y, 21, 0, 2 * Math.PI);
 
-      if (treeType === 'red_black') {
+      if (currentTreeType === 'red_black') {
         const isRed = node.color === 'RED';
         ctx.fillStyle = isRed ? '#ef4444' : '#1e293b';
         ctx.strokeStyle = isActive ? '#fbbf24' : isHighlighted ? '#3b82f6' : isRed ? '#f87171' : '#64748b';
@@ -185,7 +188,7 @@ export const TreeCanvas = memo(function TreeCanvas({
       ctx.fillText(`${nodeVal}`, x, y);
 
       // AVL Balance Factor tag
-      if (treeType === 'avl' && node.balanceFactor !== undefined) {
+      if (currentTreeType === 'avl' && node.balanceFactor !== undefined) {
         const bf = node.balanceFactor;
         const isUnbalanced = Math.abs(bf) > 1;
         ctx.fillStyle = isUnbalanced ? '#ef4444' : '#10b981';
@@ -197,7 +200,7 @@ export const TreeCanvas = memo(function TreeCanvas({
     const hasChildren = !!(root.left || root.right);
     const startY = hasChildren ? 48 : currentH / 2;
     drawNode(root, currentW / 2, startY, currentW / 4.2, 1);
-  }, []);
+  }, [treeType]);
 
   // Render on step or treeType update
   useEffect(() => {
