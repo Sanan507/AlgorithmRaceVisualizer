@@ -10,6 +10,7 @@
 
 import React, { useEffect, useRef, memo, useCallback } from 'react';
 import { TreeNodeDto, TreeSimulationFrame } from '../models/types';
+import { getCanvasScale } from '../utils/canvasScale';
 
 export interface TreeNode {
   val?: number;
@@ -67,7 +68,7 @@ export const TreeCanvas = memo(function TreeCanvas({
     const rect = canvas.getBoundingClientRect();
     const parentWidth = Math.floor(rect.width) || canvas.parentElement?.clientWidth || 800;
     const parentHeight = 460;
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = getCanvasScale();
 
     const targetW = Math.floor(parentWidth * dpr);
     const targetH = Math.floor(parentHeight * dpr);

@@ -510,44 +510,27 @@ button, input, select {
 }
 
 .logo-symbol-wrapper {
-  transition: transform 0.25s ease, filter 0.25s ease;
+  transition: transform 0.25s ease;
 }
 
-.logo-animated:hover {
-  filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.35));
+/* Bars lift to full strength together on hover. Opacity and transform only —
+   no drop-shadow or filter animation, so this never triggers a repaint of the
+   surrounding header. */
+.logo-animated .logo-bar {
+  transition: opacity 0.28s ease, transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: 50% 100%;
 }
 
-.logo-animated .logo-plate {
-  transition: stroke 0.3s ease, fill 0.3s ease;
+.logo-animated:hover .logo-bar {
+  opacity: 1;
 }
 
-.logo-animated:hover .logo-plate {
-  stroke-opacity: 1;
+.logo-animated:hover .logo-bar--1 {
+  transform: scaleY(1.28);
 }
 
-.logo-animated:hover .logo-track-alpha,
-.logo-animated:hover .logo-track-beta {
-  animation: logoTrackGlow 1.4s ease-in-out infinite alternate;
-}
-
-.logo-animated:hover .logo-apex-node {
-  animation: logoApexPulse 1.2s ease-in-out infinite alternate;
-}
-
-@keyframes logoTrackGlow {
-  0% { filter: drop-shadow(0 0 2px rgba(56, 189, 248, 0.5)); }
-  100% { filter: drop-shadow(0 0 7px rgba(168, 85, 247, 0.8)); }
-}
-
-@keyframes logoApexPulse {
-  0% { transform: scale(1); transform-origin: 24px 10px; }
-  100% { transform: scale(1.15); transform-origin: 24px 10px; filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.9)); }
-}
-
-:root[data-theme='light'] .logo-plate {
-  fill: #ffffff !important;
-  stroke: rgba(14, 165, 233, 0.3) !important;
-  filter: drop-shadow(0 1px 3px rgba(14, 165, 233, 0.08));
+.logo-animated:hover .logo-bar--2 {
+  transform: scaleY(1.14);
 }
 
 :root[data-theme='light'] .logo-brand-title {

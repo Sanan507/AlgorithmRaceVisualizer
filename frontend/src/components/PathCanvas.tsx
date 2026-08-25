@@ -11,6 +11,7 @@
 
 import React, { useEffect, useRef, memo, useCallback } from 'react';
 import type { SimulationFrame } from '../models/types';
+import { getCanvasScale } from '../utils/canvasScale';
 
 const DARK_STATE_COLORS: Record<string, string> = {
   EMPTY: '#0b0b1e',
@@ -80,7 +81,7 @@ export const PathCanvas = memo(function PathCanvas({
     if (!ctx) return;
 
     const rect = canvas.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = getCanvasScale();
     const w = Math.floor(rect.width) || canvas.parentElement?.clientWidth || 300;
     const h = Math.floor(rect.height) || canvas.parentElement?.clientHeight || 200;
 

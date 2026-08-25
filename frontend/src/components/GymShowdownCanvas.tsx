@@ -7,6 +7,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { workerSimulationService } from '../services/workerSimulationService';
 import { RaceResponse, SimulationFrame } from '../models/types';
 import { Trophy, Play, RotateCcw } from 'lucide-react';
+import { getCanvasScale } from '../utils/canvasScale';
 
 interface GymShowdownCanvasProps {
   algorithms: string[];
@@ -126,7 +127,7 @@ export const GymShowdownCanvas: React.FC<GymShowdownCanvasProps> = ({
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
-      const dpr = window.devicePixelRatio || 1;
+      const dpr = getCanvasScale();
       const width = canvas.clientWidth;
       const height = canvas.clientHeight;
 

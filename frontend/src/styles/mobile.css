@@ -1,0 +1,242 @@
+/**
+ * Mobile responsiveness + paint-cost reductions.
+ *
+ * Loaded after styles.css so these rules win at equal specificity.
+ *
+ * Why this file exists: on a phone the app was dropping frames badly. A live
+ * audit at 375x812 found the cost was not JavaScript but *compositing* —
+ * a dozen simultaneous `backdrop-filter: blur()` layers, 20-30 multi-layer box
+ * shadows, and decorative animations running forever off-screen. Each blur
+ * layer forces the GPU to re-sample everything painted underneath it on every
+ * frame, and phones have a fraction of a desktop's fill rate.
+ *
+ * (The other half of the fix is in utils/canvasScale.ts, which caps the canvas
+ * backing store at 1.5x on phones instead of the raw devicePixelRatio.)
+ *
+ * The rules below are grouped:
+ *   1. Paint cost   - blur, shadows, perpetual animations
+ *   2. Touch input  - hit-target sizes, hover states that never resolve
+ *   3. Layout       - scroll affordances, spacing, no-zoom inputs
+ *
+ * 768px matches the dominant breakpoint already used in styles.css and the
+ * MOBILE_BREAKPOINT constant in utils/canvasScale.ts.
+ */
+
+/* ============================================================
+   1. PAINT COST
+   ============================================================ */
+
+@media (max-width: 768px) {
+  /* Backdrop blur is the single most expensive thing on this page. Drop it
+     everywhere and pay back the lost legibility with opaque backgrounds on
+     the surfaces that were relying on the blur to separate from content.
+     These use the existing theme tokens, so dark / light / high-contrast all
+     stay correct without a per-theme override block. */
+  * {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .mobile-header-bar,
+  .sidebar {
+    background: var(--color-bg-primary);
+  }
+
+  .control-strip,
+  .cv-card {
+    background: var(--color-bg-panel);
+  }
+
+  /* The light theme sets these four surfaces to translucent white (0.55-0.95
+     alpha) at a specificity a bare class cannot reach, and its --color-bg-panel
+     token is itself translucent. With the blur gone that would let page content
+     read through them, so they need explicit opaque values. Loading after
+     styles.css is what makes these win at equal specificity. */
+  :root[data-theme='light'] .mobile-header-bar,
+  :root[data-theme='light'] .sidebar,
+  :root[data-theme='light'] .control-strip,
+  :root[data-theme='light'] .cv-card {
+    background: #ffffff;
+  }
+
+  /* Collapse layered glow shadows to a single cheap one. These elements repeat
+     many times per screen (9 chart fills, 6 legend boxes, 3-4 panels/cards). */
+  .panel,
+  .lane-card,
+  .algobot-card,
+  .cv-card,
+  .control-strip,
+  .nav-item {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
+  }
+
+  .chart-fill,
+  .legend-color-box,
+  .nav-item-glow,
+  .btn,
+  .cv-lang-btn {
+    box-shadow: none;
+  }
+
+  /* Decorative animations that never stop. Each one keeps the compositor awake
+     and drains battery even when scrolled out of view.
+     Deliberately NOT disabled: the loading spinner, skeleton shimmer, progress
+     bar, loading dots and .status-badge--running, which all communicate real
+     state. */
+  .brand-mark,
+  .winner-banner,
+  .winner-highlight-card,
+  .ticker-track,
+  .pulse-dot {
+    animation: none !important;
+  }
+
+  /* The ticker still needs to not overflow now that it no longer scrolls. */
+  .ticker-track {
+    transform: none;
+  }
+}
+
+/* Touch devices of any width: hover states never resolve, so a hover transform
+   leaves elements stuck in their raised state after a tap. */
+@media (hover: none) {
+  .lane-card:hover,
+  .panel:hover,
+  .nav-item:hover,
+  .algorace-brand-logo:hover,
+  .logo-symbol-wrapper:hover {
+    transform: none;
+  }
+
+  .speed-slider::-webkit-slider-thumb:hover,
+  .timeline-slider::-webkit-slider-thumb:hover,
+  .settings-slider::-webkit-slider-thumb:hover {
+    transform: none;
+  }
+}
+
+/* ============================================================
+   2. TOUCH INPUT
+   ============================================================ */
+
+@media (max-width: 768px) {
+  /* Removes the 300ms tap delay and the grey flash on tap. */
+  button,
+  a,
+  [role='button'],
+  input[type='range'],
+  select {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Measured at 27-38px; 40px is the practical floor for a fingertip. */
+  .algobot-action-btn,
+  .algo-tab-btn,
+  .algobot-lane-btn,
+  .cv-lang-btn,
+  .cv-action-btn,
+  .kbd-pill,
+  .mode-btn {
+    min-height: 40px;
+    padding-block: 8px;
+  }
+
+  /* The sliders were 6px tall, so the whole hit area was 6px. Keep the 6px
+     painted track but grow the element itself to 36px so there is something to
+     grab. Two fights to win here:
+       - `input[type="range"] { padding: 0 !important }` in styles.css outranks a
+         bare class, so the selector has to carry the attribute too.
+       - the components set `background` inline as a shorthand, which resets
+         background-clip, so confining the paint to the 6px content box needs
+         !important. Without it the track would render 36px tall. */
+  input[type='range'].speed-slider,
+  input[type='range'].timeline-slider,
+  input[type='range'].settings-slider {
+    box-sizing: border-box;
+    height: 36px;
+    padding-block: 15px !important;
+    background-clip: content-box !important;
+  }
+
+  .speed-slider::-webkit-slider-thumb,
+  .timeline-slider::-webkit-slider-thumb,
+  .settings-slider::-webkit-slider-thumb {
+    width: 22px;
+    height: 22px;
+    box-shadow: none;
+  }
+
+  .speed-slider::-moz-range-thumb,
+  .timeline-slider::-moz-range-thumb,
+  .settings-slider::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    box-shadow: none;
+  }
+
+  .timeline-slider {
+    width: 100%;
+  }
+}
+
+/* ============================================================
+   3. LAYOUT
+   ============================================================ */
+
+@media (max-width: 768px) {
+  html {
+    /* Stops iOS inflating body text in landscape. */
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* iOS zooms the viewport when focusing an input under 16px. */
+  input[type='text'],
+  input[type='number'],
+  input[type='search'],
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  /* Wide tables and tab rows already live in scroll wrappers; give them
+     momentum scrolling and stop the swipe from chaining to the page. */
+  .complexity-table-wrapper,
+  .matrix-table-wrapper,
+  .algo-tab-strip,
+  .cv-lang-tabs {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
+
+  .complexity-table-wrapper > table,
+  .matrix-table-wrapper > table {
+    font-size: 0.78rem;
+  }
+
+  /* One lane per screen instead of a 320px minimum that forces a 320px column
+     inside a 343px content box. */
+  .lane-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  /* Long control rows wrap rather than squeezing every child. */
+  .control-strip {
+    flex-wrap: wrap;
+    gap: 10px;
+    row-gap: 12px;
+  }
+}
+
+/* Very small phones: reclaim horizontal padding. */
+@media (max-width: 420px) {
+  .panel,
+  .lane-card {
+    padding-inline: 12px;
+  }
+
+  .lane-grid {
+    gap: 12px;
+  }
+}

@@ -5,6 +5,7 @@
 
 import React, { useEffect, useRef, memo, useCallback } from 'react';
 import type { SimulationFrame } from '../models/types';
+import { getCanvasScale } from '../utils/canvasScale';
 
 export interface CanvasVisualizerProps {
   array?: number[];
@@ -38,7 +39,7 @@ export const CanvasVisualizer = memo(function CanvasVisualizer({
     if (!ctx) return;
 
     const rect = canvas.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = getCanvasScale();
     const w = Math.floor(rect.width) || canvas.parentElement?.clientWidth || 600;
     const h = height;
 
