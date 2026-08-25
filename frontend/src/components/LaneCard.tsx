@@ -12,6 +12,7 @@ import React, { useState, useMemo, memo, type ReactNode } from 'react';
 import type { RaceLaneResponse, SimulationFrame } from '../models/types';
 import { Clock, Activity, RotateCw, CheckCircle2, AlertCircle, Percent, Code, ChevronDown, ChevronUp } from 'lucide-react';
 import { PseudocodeViewer } from './PseudocodeViewer';
+import { LaneSkeleton } from './LaneSkeleton';
 
 export type LaneState = 'ready' | 'running' | 'paused' | 'finished';
 export type ArenaType = 'sorting' | 'searching' | 'pathfinding';
@@ -22,6 +23,12 @@ interface LaneCardProps {
   laneState?: LaneState;
   arenaType: ArenaType;
   weights?: number[][] | null;
+  /**
+   * True while this lane holds placeholder data rather than a real simulation.
+   * Shows a shimmer instead of the canvas and blanks the metrics, so a synthesized
+   * frame is never mistaken for a measurement.
+   */
+  skeleton?: boolean;
   children: ReactNode;
 }
 
@@ -45,6 +52,7 @@ export const LaneCard = memo(function LaneCard({
   laneState = 'ready',
   arenaType,
   weights,
+  skeleton = false,
   children,
 }: LaneCardProps) {
   const [showCode, setShowCode] = useState(false);
@@ -66,9 +74,11 @@ export const LaneCard = memo(function LaneCard({
     badgeState = 'running';
   }
 
-  const badgeLabel = arenaType === 'sorting'
-    ? SORTING_STATUS_LABELS[badgeState]
-    : DEFAULT_STATUS_LABELS[badgeState];
+  const badgeLabel = skeleton
+    ? 'LOADING'
+    : arenaType === 'sorting'
+      ? SORTING_STATUS_LABELS[badgeState]
+      : DEFAULT_STATUS_LABELS[badgeState];
 
   const isPathfinding = arenaType === 'pathfinding';
   const isSearching = arenaType === 'searching';
@@ -128,14 +138,14 @@ export const LaneCard = memo(function LaneCard({
   const pseudocodeText = lane.complexityInfo?.pseudocode ?? '';
 
   return (
-    <article className={`lane-card ${badgeState === 'finished' ? 'done' : ''}`}>
+    <article className={`lane-card ${badgeState === 'finished' && !skeleton ? 'done' : ''} ${skeleton ? 'is-skeleton' : ''}`}>
       <header className="lane-header">
         <div>
           <strong>{lane.name}</strong>
           <span>{lane.complexity}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {pseudocodeText && (
+          {pseudocodeText && !skeleton && (
             <button
               className="btn ghost icon-btn"
               onClick={() => setShowCode((prev) => !prev)}
@@ -145,24 +155,24 @@ export const LaneCard = memo(function LaneCard({
               <Code size={13} /> {showCode ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
             </button>
           )}
-          <em className={`status-badge status-badge--${badgeState}`}>
+          <em className={`status-badge ${skeleton ? 'status-badge--loading' : `status-badge--${badgeState}`}`}>
             {badgeLabel}
           </em>
         </div>
       </header>
 
       <div className="lane-canvas-container">
-        {children}
+        {skeleton ? <LaneSkeleton variant={isPathfinding ? 'grid' : 'bars'} /> : children}
       </div>
 
-      <div className="lane-progress-container" title={`Progress: ${progress}%`}>
+      <div className="lane-progress-container" title={skeleton ? 'Waiting for simulation data' : `Progress: ${progress}%`}>
         <div
-          className={`lane-progress-bar ${badgeState === 'running' ? 'lane-progress-bar--animated' : ''}`}
-          style={{ width: `${progress}%` }}
+          className={`lane-progress-bar ${badgeState === 'running' && !skeleton ? 'lane-progress-bar--animated' : ''}`}
+          style={{ width: skeleton ? '0%' : `${progress}%` }}
         />
       </div>
 
-      {showCode && pseudocodeText && (
+      {showCode && pseudocodeText && !skeleton && (
         <div style={{ margin: '8px 0' }}>
           <PseudocodeViewer
             algorithmName={lane.name}
@@ -178,27 +188,27 @@ export const LaneCard = memo(function LaneCard({
           <span className="metric-label">
             <Clock size={12} /> Time
           </span>
-          <strong className="metric-value tabular-nums">{frame.timeMs} ms</strong>
+          <strong className="metric-value tabular-nums">{skeleton ? '—' : `${frame.timeMs} ms`}</strong>
         </div>
         <div className="metric-card">
           <span className="metric-label">
             <Activity size={12} /> {opLabel}
           </span>
-          <strong className="metric-value tabular-nums">{opValue.toLocaleString()}</strong>
+          <strong className="metric-value tabular-nums">{skeleton ? '—' : opValue.toLocaleString()}</strong>
         </div>
         <div className="metric-card">
           <span className="metric-label">
             <ActionIcon size={12} /> {actionLabel}
           </span>
           <strong className="metric-value tabular-nums" style={{ fontSize: '0.8rem' }}>
-            {actionValue}
+            {skeleton ? '—' : actionValue}
           </strong>
         </div>
         <div className="metric-card">
           <span className="metric-label">
             <Percent size={12} /> Progress
           </span>
-          <strong className="metric-value tabular-nums">{progress}%</strong>
+          <strong className="metric-value tabular-nums">{skeleton ? '—' : `${progress}%`}</strong>
         </div>
       </footer>
     </article>

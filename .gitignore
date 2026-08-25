@@ -11,7 +11,7 @@ dist/
 .DS_Store
 docx_render_oop/
 docx_render_oop_final/
-
+.claude/
 # Eclipse & IDE metadata
 .classpath
 .project

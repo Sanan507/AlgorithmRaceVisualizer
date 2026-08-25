@@ -9,8 +9,11 @@ import { SearchCanvas } from '../components/SearchCanvas';
 import { SelectField } from '../components/SelectField';
 import { useAudio } from '../context/AudioContext';
 import { usePlayback } from '../hooks/usePlayback';
+import { useArenaLoadState } from '../hooks/useArenaLoadState';
+import { useDebouncedCallback } from '../hooks/useDebouncedCallback';
+import { ArenaLoadingOverlay } from '../components/ArenaLoadingOverlay';
 import type { CatalogResponse, RaceLaneResponse, RaceResponse, SimulationFrame } from '../models/types';
-import { api } from '../services/api';
+import { api, ApiTimeoutError } from '../services/api';
 import { parseCustomArrayInput } from '../utils/arrayParser';
 import { StepExplanationCard } from '../components/StepExplanationCard';
 import { CustomDatasetModal } from '../components/CustomDatasetModal';
@@ -23,6 +26,15 @@ import { workerSimulationService } from '../services/workerSimulationService';
 import { generateDataset } from '../utils/datasetGenerator';
 import { appendHistory } from '../utils/historyStorage';
 
+/**
+ * Shown whenever a run was produced by the in-browser worker rather than the
+ * backend. The worker does not implement every catalog algorithm — Exponential,
+ * Interpolation and Ternary Search all render as Linear Search — so a local
+ * result must never be presented as an authoritative benchmark.
+ */
+const APPROXIMATION_NOTICE =
+  'Computed in your browser instead of on the server. Timings are approximate, and a few algorithms fall back to a similar one.';
+
 export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
   const [algorithms, setAlgorithms] = useState(['Linear Search', 'Binary Search', 'Jump Search']);
   const [target, setTarget] = useState(20);
@@ -34,12 +46,13 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
   const [hasFreshDataset, setHasFreshDataset] = useState(true);
   const [response, setResponse] = useState<RaceResponse | null>(null);
   const [speed, setSpeed] = useState(6);
-  const [loading, setLoading] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [isWorkerActive, setIsWorkerActive] = useState(false);
-  const [workerProgress, setWorkerProgress] = useState(0);
+  /** Set when a result came from the local worker instead of the backend. */
+  const [fallbackNotice, setFallbackNotice] = useState<string | null>(null);
+
+  const load = useArenaLoadState();
 
   const { play } = useAudio();
   const winnerAnnouncedRef = useRef(false);
@@ -69,11 +82,13 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
   const hasInvalidTokens = invalidCustomTokens.length > 0;
   const isTargetInvalid = Number.isNaN(target);
 
-  // Instant 0ms Preview & Fallback Response Generator
-  const activeResponse: RaceResponse = useMemo(() => {
+  // Instant 0ms Preview & Fallback Response Generator.
+  // Also reports whether what we are about to render is synthesized rather than
+  // measured, so the lanes can show a skeleton instead of convincing fake bars.
+  const activeView: { response: RaceResponse; isPlaceholder: boolean } = useMemo(() => {
     if (isCustomMode && parsedCustomArray.length > 0) {
       if (response?.dataset && response.dataset.join(',') === parsedCustomArray.join(',')) {
-        return response;
+        return { response, isPlaceholder: false };
       }
       const previewLanes: RaceLaneResponse[] = algorithms.map((name) => {
         const isLinear = name.toLowerCase().includes('linear');
@@ -122,18 +137,22 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
           },
         };
       });
+      // Not a placeholder: frame 0 holds the numbers the user actually typed.
       return {
-        type: 'searching',
-        dataset: parsedCustomArray,
-        target,
-        walls: null,
-        weights: null,
-        lanes: previewLanes,
-        winner: null,
+        response: {
+          type: 'searching',
+          dataset: parsedCustomArray,
+          target,
+          walls: null,
+          weights: null,
+          lanes: previewLanes,
+          winner: null,
+        },
+        isPlaceholder: false,
       };
     }
 
-    if (response && response.dataset?.length === size) return response;
+    if (response && response.dataset?.length === size) return { response, isPlaceholder: false };
 
     const baseArr = dataset ?? generateDataset(size, datasetType);
     const fallbackLanes: RaceLaneResponse[] = algorithms.map((name) => {
@@ -184,16 +203,23 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
       };
     });
 
+    // Nothing measured yet — the lanes render a skeleton over this.
     return {
-      type: 'searching',
-      dataset: baseArr,
-      target,
-      walls: null,
-      weights: null,
-      lanes: fallbackLanes,
-      winner: null,
+      response: {
+        type: 'searching',
+        dataset: baseArr,
+        target,
+        walls: null,
+        weights: null,
+        lanes: fallbackLanes,
+        winner: null,
+      },
+      isPlaceholder: true,
     };
   }, [isCustomMode, parsedCustomArray, response, algorithms, target, catalog, size, dataset, datasetType]);
+
+  const activeResponse = activeView.response;
+  const isPlaceholder = activeView.isPlaceholder;
 
   const onFrame = useCallback((event: 'compare' | 'swap' | 'hit' | 'miss' | 'step') => {
     // Audio is now handled centrally in usePlayback hook
@@ -212,7 +238,9 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
       customDatasetType?: string
     ) => {
       const requestId = ++requestIdRef.current;
-      setLoading(true);
+      const isCurrent = () => requestId === requestIdRef.current;
+      load.markWaiting('Preparing simulation…', 'Asking the backend for a fresh dataset.');
+      setFallbackNotice(null);
       winnerAnnouncedRef.current = false;
       if (autoplay) {
         hasStartedPlaybackRef.current = true;
@@ -236,8 +264,8 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
 
       // Web Worker Simulation Offloading for N >= 1,000
       if (useSize >= 1000 && workerSimulationService.isWorkerAvailable()) {
-        setIsWorkerActive(true);
-        setWorkerProgress(0);
+        const workerDetail = `N = ${useSize.toLocaleString()} — computed in a background worker so the page stays responsive.`;
+        load.markComputing('Simulating locally…', 0, workerDetail);
 
         let arrayToSimulate: number[];
         if (useDataset && useDataset.length > 0) {
@@ -255,17 +283,19 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
               target: useTarget,
             },
             (percent) => {
-              if (requestId === requestIdRef.current) {
-                setWorkerProgress(percent);
+              if (isCurrent()) {
+                load.markComputing('Simulating locally…', percent, workerDetail);
               }
             }
           );
 
-          if (requestId === requestIdRef.current) {
+          if (isCurrent()) {
             setResponse(workerRes);
             setDataset(workerRes.dataset);
             setHasFreshDataset(true);
             playback.reset();
+            load.markReady();
+            setFallbackNotice(APPROXIMATION_NOTICE);
             if (autoplay) {
               play('start');
               playback.setPlaying(true);
@@ -275,10 +305,9 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
           return;
         } catch (workerErr) {
           console.warn('Worker offloading warning for search, falling back to API:', workerErr);
-        } finally {
-          if (requestId === requestIdRef.current) {
-            setIsWorkerActive(false);
-            setLoading(false);
+          // Fall through to the backend call below, which owns the load state now.
+          if (isCurrent()) {
+            load.markWaiting('Asking the backend instead…', 'The local worker could not finish this run.');
           }
         }
       }
@@ -292,11 +321,12 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
           dataset: sendArray,
         });
 
-        if (requestId === requestIdRef.current) {
+        if (isCurrent()) {
           setDataset(data.dataset ?? sendArray);
           setResponse(data);
           setHasFreshDataset(true);
           playback.reset();
+          load.markReady();
           if (autoplay) {
             play('start');
             playback.setPlaying(true);
@@ -305,19 +335,46 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
         }
       } catch (err) {
         console.warn('API error for searching, running Web Worker fallback:', err);
+        const timedOut = err instanceof ApiTimeoutError;
+
+        if (!isCurrent()) return;
+
+        if (!workerSimulationService.isWorkerAvailable()) {
+          load.markError(
+            timedOut ? 'The backend did not respond in time' : 'Could not reach the backend',
+            'Your browser cannot run the local fallback either. Check the connection and retry.'
+          );
+          return;
+        }
+
+        load.markComputing(
+          'Simulating locally…',
+          0,
+          timedOut
+            ? 'The backend did not respond in time, so this run is being computed in your browser.'
+            : 'The backend is unreachable, so this run is being computed in your browser.'
+        );
+
         let arrayFallback = useDataset || dataset || generateDataset(useSize, useType);
         try {
-          const fallbackRes = await workerSimulationService.runSimulation({
-            type: 'searching',
-            algorithms: useAlgos,
-            array: arrayFallback,
-            target: useTarget,
-          });
-          if (requestId === requestIdRef.current) {
+          const fallbackRes = await workerSimulationService.runSimulation(
+            {
+              type: 'searching',
+              algorithms: useAlgos,
+              array: arrayFallback,
+              target: useTarget,
+            },
+            (percent) => {
+              if (isCurrent()) load.markComputing('Simulating locally…', percent);
+            }
+          );
+          if (isCurrent()) {
             setResponse(fallbackRes);
             setDataset(fallbackRes.dataset);
             setHasFreshDataset(true);
             playback.reset();
+            load.markReady();
+            setFallbackNotice(APPROXIMATION_NOTICE);
             if (autoplay) {
               play('start');
               playback.setPlaying(true);
@@ -326,14 +383,33 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
           }
         } catch (workerErr) {
           console.error('Worker simulation also failed:', workerErr);
-        }
-      } finally {
-        if (requestId === requestIdRef.current) {
-          setLoading(false);
+          if (isCurrent()) {
+            load.markError(
+              timedOut ? 'The backend did not respond in time' : 'Could not reach the backend',
+              'The local fallback failed too. Check that the backend is running, then retry.'
+            );
+          }
         }
       }
     },
-    [algorithms, isCustomMode, size, target, dataset, datasetType, play, playback, parsedCustomArray]
+    [algorithms, isCustomMode, size, target, dataset, datasetType, play, playback, parsedCustomArray, load]
+  );
+
+  // Only the request is debounced; the callers update local state immediately so
+  // typing and the number steppers stay responsive.
+  const debouncedFetch = useDebouncedCallback(
+    (
+      newDataset: boolean,
+      autoplay: boolean,
+      customTarget?: number,
+      customAlgos?: string[],
+      customSize?: number,
+      overrideDataset?: number[],
+      customDatasetType?: string
+    ) => {
+      void fetchSimulation(newDataset, autoplay, customTarget, customAlgos, customSize, overrideDataset, customDatasetType);
+    },
+    350
   );
 
   useEffect(() => {
@@ -417,6 +493,16 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
 
     setValidationError(null);
 
+    // A queued debounce, or a placeholder on screen, both mean the visible lanes
+    // do not match the current inputs. Race real data instead.
+    if (debouncedFetch.isPending() || isPlaceholder) {
+      debouncedFetch.cancel();
+      hasStartedPlaybackRef.current = true;
+      await fetchSimulation(true, true);
+      setHasFreshDataset(false);
+      return;
+    }
+
     if (response && response.lanes.length > 0) {
       winnerAnnouncedRef.current = false;
       hasStartedPlaybackRef.current = true;
@@ -435,6 +521,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
 
   async function handleReset() {
     setValidationError(null);
+    debouncedFetch.cancel();
     await fetchSimulation(true, false);
     setHasFreshDataset(true);
   }
@@ -443,18 +530,23 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
     setTarget(newTarget);
     if (Number.isNaN(newTarget)) {
       setValidationError('Please enter a valid target integer.');
+      debouncedFetch.cancel();
       return;
     }
     setValidationError(null);
 
     if (dataset) {
-      fetchSimulation(false, false, newTarget, algorithms, dataset.length, dataset);
+      // Held arrow keys on the target stepper used to fire one simulation per step.
+      load.markQueued('Waiting for you to finish…');
+      debouncedFetch.run(false, false, newTarget, algorithms, dataset.length, dataset);
     }
   }
 
   function handleDatasetTypeChange(nextType: string) {
     setDatasetType(nextType);
     setDataset(null);
+    // Discrete choice — no reason to make the user wait out a debounce.
+    debouncedFetch.cancel();
     fetchSimulation(true, false, target, algorithms, size, undefined, nextType);
   }
 
@@ -462,13 +554,15 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
     setSize(newSize);
     setIsCustomMode(false);
     setValidationError(null);
-    fetchSimulation(true, false, target, algorithms, newSize, undefined);
+    load.markQueued('Waiting for you to finish…');
+    debouncedFetch.run(true, false, target, algorithms, newSize, undefined);
   }
 
   function handleToggleCustomMode() {
     const nextMode = !isCustomMode;
     setIsCustomMode(nextMode);
     setValidationError(null);
+    debouncedFetch.cancel();
 
     if (nextMode) {
       const parsed = parseCustomArrayInput(customArrayStr);
@@ -495,19 +589,24 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
 
     if (invalid.length > 0) {
       setValidationError(`Invalid entry "${invalid[0]}". Please enter integers only.`);
+      debouncedFetch.cancel();
     } else if (parsed.length === 0) {
       setValidationError('Custom Array is empty. Please enter comma-separated numbers.');
+      debouncedFetch.cancel();
     } else {
       setValidationError(null);
       setDataset(parsed);
       setSize(parsed.length);
-      fetchSimulation(true, false, target, algorithms, parsed.length, parsed);
+      // One simulation per keystroke was the single worst source of lag here.
+      load.markQueued('Waiting for you to finish typing…');
+      debouncedFetch.run(true, false, target, algorithms, parsed.length, parsed);
     }
   }
 
   function handleAlgorithmChange(index: number, nextAlgo: string) {
     const nextAlgos = algorithms.map((item, i) => (i === index ? nextAlgo : item));
     setAlgorithms(nextAlgos);
+    debouncedFetch.cancel();
     fetchSimulation(false, false, target, nextAlgos, size, dataset ?? undefined);
   }
 
@@ -597,10 +696,13 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
           <p>Real-time comparative search benchmarking</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          {isWorkerActive && (
-            <div className="worker-progress-pill">
+          {load.showPill && (
+            <div className="arena-status-pill" role="status" aria-live="polite">
               <span className="worker-pulse-dot" />
-              <span>Worker Computing: {workerProgress}%</span>
+              <span>
+                {load.state.label}
+                {typeof load.state.progress === 'number' ? ` ${Math.round(load.state.progress)}%` : ''}
+              </span>
             </div>
           )}
           {activeResponse?.target !== undefined && activeResponse?.target !== null && (
@@ -644,6 +746,35 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
           <span className="alert-icon">⚠️</span>
           <span>{validationError}</span>
           <button type="button" className="close-banner-btn" onClick={() => setValidationError(null)} aria-label="Dismiss error message">
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* Backend unreachable and no local fallback available */}
+      {load.hasError && (
+        <div className="validation-alert-banner">
+          <span className="alert-icon">⚠️</span>
+          <span>
+            <strong>{load.state.label}.</strong> {load.state.detail}
+          </span>
+          <button type="button" className="btn btn-secondary arena-retry-btn" onClick={handleReset}>
+            Retry
+          </button>
+        </div>
+      )}
+
+      {/* Result came from the browser, not the server — say so. */}
+      {fallbackNotice && (
+        <div className="arena-notice-banner" role="status">
+          <Cpu size={16} className="arena-notice-icon" />
+          <span>{fallbackNotice}</span>
+          <button
+            type="button"
+            className="arena-notice-close"
+            onClick={() => setFallbackNotice(null)}
+            aria-label="Dismiss notice"
+          >
             ✕
           </button>
         </div>
@@ -734,7 +865,8 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
 
       <Controls
         playing={playback.playing}
-        disabled={loading || (isCustomMode && (isCustomEmpty || hasInvalidTokens)) || isTargetInvalid}
+        // Only lock the controls while there is genuinely nothing to play.
+        disabled={load.showOverlay || (isCustomMode && (isCustomEmpty || hasInvalidTokens)) || isTargetInvalid}
         onStart={startRace}
         onToggle={() => playback.setPlaying(!playback.playing)}
         onReset={handleReset}
@@ -748,6 +880,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
       />
 
       <section className="lane-grid">
+        <ArenaLoadingOverlay visible={load.showOverlay} state={load.state} />
         {activeResponse.lanes.map((lane, index) => {
           const frame = activeFrames?.[index] ?? lane.frames[0];
           let laneState: LaneState;
@@ -757,7 +890,14 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
           else if (playback.playing) laneState = 'running';
           else laneState = 'ready';
           return (
-            <LaneCard key={lane.name} lane={lane} frame={frame} laneState={laneState} arenaType="searching">
+            <LaneCard
+              key={lane.name}
+              lane={lane}
+              frame={frame}
+              laneState={laneState}
+              arenaType="searching"
+              skeleton={isPlaceholder}
+            >
               <SearchCanvas frame={frame} algorithm={lane.name} />
             </LaneCard>
           );
@@ -765,7 +905,9 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
       </section>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginTop: '24px' }}>
-        {activeResponse.lanes && activeResponse.lanes.length > 0 && (
+        {/* Suppressed while placeholder data is on screen: these panels would
+            otherwise chart a synthesized array as if it were a benchmark. */}
+        {!isPlaceholder && activeResponse.lanes && activeResponse.lanes.length > 0 && (
           <StepExplanationCard
             lanes={activeResponse.lanes}
             activeFrames={activeFrames}
@@ -773,15 +915,17 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
             totalFrames={playback.maxFrames}
           />
         )}
-        <PerformanceComparison
-          response={activeResponse}
-          activeFrames={activeFrames}
-          type="searching"
-          isCompleted={isCompleted}
-          catalog={catalog}
-          playing={playback.playing}
-          datasetType={isCustomMode ? 'Custom' : datasetType}
-        />
+        {!isPlaceholder && (
+          <PerformanceComparison
+            response={activeResponse}
+            activeFrames={activeFrames}
+            type="searching"
+            isCompleted={isCompleted}
+            catalog={catalog}
+            playing={playback.playing}
+            datasetType={isCustomMode ? 'Custom' : datasetType}
+          />
+        )}
         <AlgorithmComparisonCenter
           algorithms={catalog.searchingAlgorithms}
           type="searching"
@@ -802,6 +946,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
           setCustomArrayStr(generatedArr.join(', '));
           setDataset(generatedArr);
           setSize(generatedArr.length);
+          debouncedFetch.cancel();
           fetchSimulation(true, false, target, algorithms, generatedArr.length, generatedArr);
           setToastMessage(`⚡ Applied Preset: ${formulaTitle} (${generatedArr.length} elements)`);
           setTimeout(() => setToastMessage(null), 3000);

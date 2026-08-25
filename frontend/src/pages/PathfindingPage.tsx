@@ -9,8 +9,11 @@ import { PerformanceComparison } from '../components/PerformanceComparison';
 import { VisualizationLegend } from '../components/VisualizationLegend';
 import { useAudio } from '../context/AudioContext';
 import { usePlayback } from '../hooks/usePlayback';
+import { useArenaLoadState } from '../hooks/useArenaLoadState';
+import { useDebouncedCallback } from '../hooks/useDebouncedCallback';
+import { ArenaLoadingOverlay } from '../components/ArenaLoadingOverlay';
 import type { CatalogResponse, RaceLaneResponse, RaceResponse, SimulationFrame } from '../models/types';
-import { api } from '../services/api';
+import { api, ApiTimeoutError } from '../services/api';
 import { StepExplanationCard } from '../components/StepExplanationCard';
 import { Share2, RefreshCw, Sparkles, Palette } from 'lucide-react';
 import { getUrlParams } from '../utils/urlParams';
@@ -41,7 +44,14 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
   const [hasFreshDataset, setHasFreshDataset] = useState(true);
   const [response, setResponse] = useState<RaceResponse | null>(null);
   const [speed, setSpeed] = useState(6);
-  const [loading, setLoading] = useState(false);
+  /**
+   * True between a grid edit and the simulation that reflects it. While set, the
+   * lanes render the user's own walls/weights/endpoints instead of the previous
+   * response, so a drawn wall shows up instantly rather than after a round trip.
+   */
+  const [hasUnsimulatedEdits, setHasUnsimulatedEdits] = useState(false);
+
+  const load = useArenaLoadState();
 
   const { play } = useAudio();
   const winnerAnnouncedRef = useRef(false);
@@ -59,8 +69,8 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
     return defaultMazeTypes;
   }, [catalog]);
 
-  const activeResponse: RaceResponse = useMemo(() => {
-    if (response) return response;
+  const activeView: { response: RaceResponse; isPlaceholder: boolean } = useMemo(() => {
+    if (response && !hasUnsimulatedEdits) return { response, isPlaceholder: false };
 
     const useWalls = walls ?? currentWallsRef.current ?? Array.from({ length: 18 }, () => Array(28).fill(false));
     const useWeights = weights ?? currentWeightsRef.current ?? Array.from({ length: 18 }, () => Array(28).fill(1));
@@ -118,15 +128,23 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
     }));
 
     return {
-      type: 'pathfinding',
-      dataset: null,
-      target: null,
-      walls: useWalls,
-      weights: useWeights,
-      lanes: fallbackLanes,
-      winner: null,
+      response: {
+        type: 'pathfinding',
+        dataset: null,
+        target: null,
+        walls: useWalls,
+        weights: useWeights,
+        lanes: fallbackLanes,
+        winner: null,
+      },
+      // After an edit this grid is the user's real input, not filler — only the
+      // very first load (before any response at all) deserves a skeleton.
+      isPlaceholder: !response,
     };
-  }, [response, algorithms, catalog, walls, weights, startNode, endNode]);
+  }, [response, hasUnsimulatedEdits, algorithms, catalog, walls, weights, startNode, endNode]);
+
+  const activeResponse = activeView.response;
+  const isPlaceholder = activeView.isPlaceholder;
 
   const onFrame = useCallback((event: 'compare' | 'swap' | 'hit' | 'miss' | 'step') => {
     // Audio is now handled centrally in usePlayback hook
@@ -145,10 +163,20 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
         weights?: number[][];
         start?: [number, number];
         end?: [number, number];
-      }
+      },
+      /**
+       * `quiet` keeps the blocking overlay off. Used for grid edits: the user's
+       * own walls are already on screen and they must stay free to keep drawing.
+       */
+      options?: { quiet?: boolean }
     ) => {
       const fetchId = ++latestFetchIdRef.current;
-      setLoading(true);
+      const isCurrent = () => fetchId === latestFetchIdRef.current;
+      if (options?.quiet) {
+        load.markStreaming('Re-running with your edits…');
+      } else {
+        load.markWaiting('Exploring the grid…', 'Running every lane on the server.');
+      }
       winnerAnnouncedRef.current = false;
       if (autoplay) {
         hasStartedPlaybackRef.current = true;
@@ -191,7 +219,7 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
         };
 
         const data = await api.pathfinding(params);
-        if (fetchId !== latestFetchIdRef.current) return;
+        if (!isCurrent()) return;
 
         setResponse(data);
         const resolvedWalls = data.walls ?? sendWalls ?? Array.from({ length: 18 }, () => Array(28).fill(false));
@@ -202,7 +230,9 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
         currentWeightsRef.current = resolvedWeights;
 
         setHasFreshDataset(true);
+        setHasUnsimulatedEdits(false);
         playback.reset();
+        load.markReady();
         if (autoplay) {
           play('start');
           playback.setPlaying(true);
@@ -210,13 +240,39 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
         }
       } catch (err) {
         console.error('Pathfinding simulation error:', err);
-      } finally {
-        if (fetchId === latestFetchIdRef.current) {
-          setLoading(false);
-        }
+        if (!isCurrent()) return;
+        // Unlike Sorting and Searching, this arena has no in-browser fallback —
+        // the Web Worker only implements sorting and searching. Say so plainly
+        // instead of leaving the user staring at a stale grid.
+        load.markError(
+          err instanceof ApiTimeoutError ? 'The backend did not respond in time' : 'Could not reach the backend',
+          'Pathfinding runs on the server only, so there is nothing to fall back to. Check that the backend is running, then retry.'
+        );
       }
     },
-    [algorithms, mazeType, walls, weights, startNode, endNode, play, playback]
+    [algorithms, mazeType, walls, weights, startNode, endNode, play, playback, load]
+  );
+
+  // Drag-drawing a wall used to fire one full simulation per cell touched — a
+  // single stroke could launch dozens of competing requests. The local grid
+  // updates immediately (see `hasUnsimulatedEdits`); only the request waits.
+  const debouncedFetch = useDebouncedCallback(
+    (
+      newMaze: boolean,
+      autoplay: boolean,
+      customParams?: {
+        algos?: string[];
+        mType?: string;
+        walls?: boolean[][];
+        weights?: number[][];
+        start?: [number, number];
+        end?: [number, number];
+      },
+      options?: { quiet?: boolean }
+    ) => {
+      void fetchSimulation(newMaze, autoplay, customParams, options);
+    },
+    350
   );
 
   useEffect(() => {
@@ -325,6 +381,15 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
   }
 
   async function startRace() {
+    // A queued edit means the grid on screen has not been simulated yet.
+    if (debouncedFetch.isPending() || hasUnsimulatedEdits) {
+      debouncedFetch.cancel();
+      hasStartedPlaybackRef.current = true;
+      await fetchSimulation(false, true);
+      setHasFreshDataset(false);
+      return;
+    }
+
     if (response && response.lanes.length > 0) {
       winnerAnnouncedRef.current = false;
       hasStartedPlaybackRef.current = true;
@@ -342,6 +407,7 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
   }
 
   async function handleReset() {
+    debouncedFetch.cancel();
     await fetchSimulation(true, false);
     setHasFreshDataset(true);
   }
@@ -349,12 +415,31 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
   function handleAlgorithmChange(index: number, nextAlgo: string) {
     const nextAlgos = algorithms.map((item, i) => (i === index ? nextAlgo : item));
     setAlgorithms(nextAlgos);
+    // Discrete choice — no reason to make the user wait out a debounce.
+    debouncedFetch.cancel();
     fetchSimulation(false, false, { algos: nextAlgos });
   }
 
   function handleMazeTypeChange(nextMazeType: string) {
     setMazeType(nextMazeType);
+    debouncedFetch.cancel();
     fetchSimulation(true, false, { mType: nextMazeType });
+  }
+
+  /** Show the edit at once, then queue a single simulation for the whole stroke. */
+  function queueGridSimulation(customParams: {
+    walls?: boolean[][];
+    weights?: number[][];
+    start?: [number, number];
+    end?: [number, number];
+  }) {
+    if (!hasUnsimulatedEdits) {
+      setHasUnsimulatedEdits(true);
+      // The previous exploration no longer describes this grid.
+      playback.reset();
+    }
+    load.markQueued('Grid changed — re-running shortly…');
+    debouncedFetch.run(false, false, customParams, { quiet: true });
   }
 
   function handleGridClick(r: number, c: number) {
@@ -366,13 +451,13 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
       );
       currentWallsRef.current = nextGrid;
       setWalls(nextGrid);
-      fetchSimulation(false, false, { walls: nextGrid });
+      queueGridSimulation({ walls: nextGrid });
     } else if (drawMode === 'START') {
       setStartNode([r, c]);
-      fetchSimulation(false, false, { start: [r, c] });
+      queueGridSimulation({ start: [r, c] });
     } else if (drawMode === 'TARGET') {
       setEndNode([r, c]);
-      fetchSimulation(false, false, { end: [r, c] });
+      queueGridSimulation({ end: [r, c] });
     } else if (drawMode === 'WEIGHT') {
       const currentWeights = weights ?? currentWeightsRef.current ?? Array.from({ length: 18 }, () => Array(28).fill(1));
       const nextWeights = currentWeights.map((rowArr, rowIdx) =>
@@ -385,18 +470,18 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
       );
       currentWeightsRef.current = nextWeights;
       setWeights(nextWeights);
-      fetchSimulation(false, false, { weights: nextWeights });
+      queueGridSimulation({ weights: nextWeights });
     }
   }
 
   const activeFrames = useMemo(
     () =>
-      response?.lanes.map((lane) => {
+      activeResponse.lanes.map((lane) => {
         if (!lane.frames || lane.frames.length === 0) return undefined;
         const safeIdx = Math.max(0, Math.min(playback.frameIndex, lane.frames.length - 1));
         return lane.frames[safeIdx];
       }),
-    [response, playback.frameIndex]
+    [activeResponse, playback.frameIndex]
   );
 
   const activeFramesMap = useMemo(() => {
@@ -417,7 +502,14 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
     return map;
   }, [activeResponse, playback.frameIndex]);
 
-  const isCompleted = !!(response && playback.frameIndex === playback.maxFrames - 1 && playback.maxFrames > 0);
+  // A pending grid edit resets playback to a single-frame preview, which would
+  // otherwise read as "finished" and resurrect the previous winner banner.
+  const isCompleted = !!(
+    response &&
+    !hasUnsimulatedEdits &&
+    playback.frameIndex === playback.maxFrames - 1 &&
+    playback.maxFrames > 0
+  );
   const winnerLane = response?.lanes.find((l) => l.name === response.winner);
 
   const winnerPathCost = useMemo(() => {
@@ -495,10 +587,34 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
           <h1>Pathfinding Arena</h1>
           <p>Real-time benchmarking of pathfinding algorithms (Click/drag grid to edit walls & terrain weights)</p>
         </div>
-        <button className="btn btn-secondary" onClick={handleShareRun} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Share2 size={16} /> Share Run
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {load.showPill && (
+            <div className="arena-status-pill" role="status" aria-live="polite">
+              <span className="worker-pulse-dot" />
+              <span>
+                {load.state.label}
+                {typeof load.state.progress === 'number' ? ` ${Math.round(load.state.progress)}%` : ''}
+              </span>
+            </div>
+          )}
+          <button className="btn btn-secondary" onClick={handleShareRun} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Share2 size={16} /> Share Run
+          </button>
+        </div>
       </header>
+
+      {/* No in-browser fallback exists for pathfinding — surface the failure. */}
+      {load.hasError && (
+        <div className="validation-alert-banner">
+          <span className="alert-icon">⚠️</span>
+          <span>
+            <strong>{load.state.label}.</strong> {load.state.detail}
+          </span>
+          <button type="button" className="btn btn-secondary arena-retry-btn" onClick={handleReset}>
+            Retry
+          </button>
+        </div>
+      )}
 
       {toastMessage && (
         <div className="toast-notification">
@@ -561,7 +677,10 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
               <button
                 type="button"
                 className="btn layout-gen-btn"
-                onClick={() => fetchSimulation(true, false)}
+                onClick={() => {
+                  debouncedFetch.cancel();
+                  fetchSimulation(true, false);
+                }}
                 title="Generate new layout from selected algorithm"
               >
                 <RefreshCw size={15} />
@@ -647,7 +766,8 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
 
       <Controls
         playing={playback.playing}
-        disabled={loading}
+        // Only lock the controls while there is genuinely nothing to play.
+        disabled={load.showOverlay}
         onStart={startRace}
         onToggle={() => playback.setPlaying(!playback.playing)}
         onReset={handleReset}
@@ -661,6 +781,7 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
       />
 
       <section className="lane-grid">
+        <ArenaLoadingOverlay visible={load.showOverlay} state={load.state} />
         {activeResponse.lanes.map((lane, index) => {
           const frame = activeFrames?.[index] ?? lane.frames[0];
           let laneState: LaneState;
@@ -670,7 +791,15 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
           else if (playback.playing) laneState = 'running';
           else laneState = 'ready';
           return (
-            <LaneCard key={lane.name} lane={lane} frame={frame} laneState={laneState} arenaType="pathfinding" weights={activeResponse.weights ?? weights}>
+            <LaneCard
+              key={lane.name}
+              lane={lane}
+              frame={frame}
+              laneState={laneState}
+              arenaType="pathfinding"
+              weights={activeResponse.weights ?? weights}
+              skeleton={isPlaceholder}
+            >
               <PathCanvas
                 frame={frame}
                 weights={activeResponse.weights ?? weights}
@@ -683,7 +812,9 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
       </section>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginTop: '24px' }}>
-        {activeResponse.lanes && activeResponse.lanes.length > 0 && (
+        {/* Suppressed while placeholder data is on screen: these panels would
+            otherwise chart an empty grid as if it were a benchmark. */}
+        {!isPlaceholder && activeResponse.lanes && activeResponse.lanes.length > 0 && (
           <StepExplanationCard
             lanes={activeResponse.lanes}
             activeFrames={activeFrames}
@@ -691,16 +822,18 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
             totalFrames={playback.maxFrames}
           />
         )}
-        <PerformanceComparison
-          response={activeResponse}
-          activeFrames={activeFrames}
-          type="pathfinding"
-          isCompleted={isCompleted}
-          catalog={catalog}
-          playing={playback.playing}
-          datasetType={mazeType}
-          weights={weights}
-        />
+        {!isPlaceholder && (
+          <PerformanceComparison
+            response={activeResponse}
+            activeFrames={activeFrames}
+            type="pathfinding"
+            isCompleted={isCompleted}
+            catalog={catalog}
+            playing={playback.playing}
+            datasetType={mazeType}
+            weights={weights}
+          />
+        )}
         <AlgorithmComparisonCenter
           algorithms={catalog.pathfindingAlgorithms}
           type="pathfinding"

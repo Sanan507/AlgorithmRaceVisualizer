@@ -1068,12 +1068,16 @@ select:focus-visible,
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 20px;
+  /* Anchor for .arena-loading-overlay */
+  position: relative;
 }
 
 .path-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
   gap: 20px;
+  /* Anchor for .arena-loading-overlay */
+  position: relative;
 }
 
 .lane-card {
