@@ -1,4 +1,5 @@
 import { useState, lazy, Suspense } from 'react';
+import { AlgoRaceLogo } from '../components/AlgoRaceLogo';
 import {
   BarChart3,
   Binary,
@@ -60,13 +61,7 @@ export function LandingPage({ onNavigate, darkMode, setDarkMode }: Props) {
       {/* Top Header / Sticky Nav */}
       <header className="landing-navbar">
         <div className="landing-nav-brand" onClick={() => scrollToSection('top')} style={{ cursor: 'pointer' }}>
-          <div className="brand-logo-icon">
-            <Zap size={20} className="text-emerald-400" />
-          </div>
-          <div className="brand-title-group">
-            <span className="brand-name">AlgoRace</span>
-            <span className="brand-badge">v2.0</span>
-          </div>
+          <AlgoRaceLogo size={32} showText={true} />
         </div>
 
         <button
@@ -560,7 +555,7 @@ export function LandingPage({ onNavigate, darkMode, setDarkMode }: Props) {
           <div className="comparison-card algorace-card">
             <div className="comp-card-glow" />
             <div className="comparison-card-header">
-              <span className="comp-badge badge-algorace">AlgoRace v2.0</span>
+              <span className="comp-badge badge-algorace">AlgoRace</span>
               <h3 className="comp-title">Multi-Lane Benchmarking Engine</h3>
               <p className="comp-desc">Engineered for parallel multi-lane racing with microsecond telemetry.</p>
             </div>
@@ -773,14 +768,8 @@ export function LandingPage({ onNavigate, darkMode, setDarkMode }: Props) {
       <footer className="landing-footer">
         <div className="footer-grid-container">
           <div className="footer-col footer-col-brand">
-            <div className="landing-nav-brand">
-              <div className="brand-logo-icon">
-                <Zap size={20} className="text-emerald-400" />
-              </div>
-              <div className="brand-title-group">
-                <span className="brand-name">AlgoRace</span>
-                <span className="brand-badge">v2.0</span>
-              </div>
+            <div className="landing-nav-brand" onClick={() => scrollToSection('top')} style={{ cursor: 'pointer' }}>
+              <AlgoRaceLogo size={30} showText={true} />
             </div>
             <p className="footer-mission-text">
               High-performance interactive algorithm benchmarking and visual exploration engine designed for computer scientists, developers, and students.

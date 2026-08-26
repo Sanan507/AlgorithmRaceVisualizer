@@ -227,7 +227,7 @@ export default function App() {
             {/* Mobile Header Bar */}
             <div className="mobile-header-bar">
               <div className="mobile-brand" onClick={() => setActive('landing')} style={{ cursor: 'pointer' }}>
-                <AlgoRaceLogo size={26} showText={true} badge="v2.0" />
+                <AlgoRaceLogo size={26} showText={true} />
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <button

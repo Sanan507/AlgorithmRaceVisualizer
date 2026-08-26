@@ -71,7 +71,6 @@ export function Sidebar({
                 size={collapsed ? 36 : 38}
                 showText={!collapsed}
                 tagline="Benchmark Engine"
-                badge="v2.0"
               />
             </div>
             {mobileOpen && onMobileClose && (
@@ -129,7 +128,7 @@ export function Sidebar({
           </button>
 
           <div className="sidebar-footer">
-            <span className="footer-brand">AlgoRace v2.0</span>
+            <span className="footer-brand">AlgoRace</span>
             <span>React · Spring Boot · 60 FPS</span>
           </div>
         </div>
