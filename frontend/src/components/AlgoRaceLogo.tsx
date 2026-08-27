@@ -25,7 +25,7 @@ export const AlgoRaceLogo: React.FC<LogoProps> = ({
   showText = false,
   animated = true,
   tagline,
-  badge,
+  badge = 'v2.0',
 }) => {
   const gradientId = React.useId().replace(/:/g, '-');
 
