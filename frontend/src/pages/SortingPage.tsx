@@ -229,7 +229,7 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
     async (
       newDataset: boolean,
       autoplay = false,
-      customParams?: { algos?: string[]; dType?: string; sz?: number; cArray?: string }
+      customParams?: { algos?: string[]; dType?: string; sz?: number | ''; cArray?: string }
     ) => {
       const requestId = ++requestIdRef.current;
       const isCurrent = () => requestId === requestIdRef.current;
@@ -253,7 +253,8 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
       }
 
       const currentNumericSize = typeof size === 'number' ? size : 30;
-      const useSize = customParams?.sz ?? (useType === 'Custom' && sendCustomArray ? Math.max(1, sendCustomArray.length) : currentNumericSize);
+      const customNumericSize = typeof customParams?.sz === 'number' ? customParams.sz : undefined;
+      const useSize = customNumericSize ?? (useType === 'Custom' && sendCustomArray ? Math.max(1, sendCustomArray.length) : currentNumericSize);
 
       // Web Worker Offloading for Massive Datasets (N >= 1,000) or client offloading
       if (useSize >= 1000 && workerSimulationService.isWorkerAvailable()) {
@@ -484,7 +485,7 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
     (
       newDataset: boolean,
       autoplay: boolean,
-      customParams?: { algos?: string[]; dType?: string; sz?: number; cArray?: string }
+      customParams?: { algos?: string[]; dType?: string; sz?: number | ''; cArray?: string }
     ) => {
       void fetchSimulation(newDataset, autoplay, customParams);
     },
