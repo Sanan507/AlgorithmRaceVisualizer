@@ -39,7 +39,7 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
   const [algorithms, setAlgorithms] = useState(['Bubble Sort', 'Quick Sort', 'Merge Sort']);
   const [datasetType, setDatasetType] = useState('Random');
   const [isCustomMode, setIsCustomMode] = useState(false);
-  const [size, setSize] = useState(30);
+  const [size, setSize] = useState<number | ''>(30);
   const [customArrayStr, setCustomArrayStr] = useState('5, 3, 8, 1, 9, 2');
   const [dataset, setDataset] = useState<number[] | null>(null);
   const [hasFreshDataset, setHasFreshDataset] = useState(true);
@@ -146,14 +146,16 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
       };
     }
 
-    if (response && response.dataset?.length === size && response.lanes && response.lanes.length === algorithms.length) {
+    const effectiveSize = typeof size === 'number' ? size : (response?.dataset?.length || 30);
+
+    if (response && response.dataset?.length === effectiveSize && response.lanes && response.lanes.length === algorithms.length) {
       return { response, isPlaceholder: false };
     }
 
     // Guaranteed Non-Null Fallback so screen never goes blank during API fetch
-    const fallbackArr = response?.dataset && response.dataset.length === size
+    const fallbackArr = response?.dataset && response.dataset.length === effectiveSize
       ? response.dataset
-      : Array.from({ length: size }, (_, i) => Math.floor(Math.abs(Math.sin(i + 1)) * 80) + 10);
+      : Array.from({ length: effectiveSize }, (_, i) => Math.floor(Math.abs(Math.sin(i + 1)) * 80) + 10);
     const fallbackLanes: RaceLaneResponse[] = algorithms.map((name) => ({
       name,
       complexity: catalog?.complexity?.[name]?.worst || 'O(n log n)',
@@ -250,7 +252,8 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
         sendCustomArray = dataset;
       }
 
-      const useSize = customParams?.sz ?? (useType === 'Custom' && sendCustomArray ? Math.max(1, sendCustomArray.length) : size);
+      const currentNumericSize = typeof size === 'number' ? size : 30;
+      const useSize = customParams?.sz ?? (useType === 'Custom' && sendCustomArray ? Math.max(1, sendCustomArray.length) : currentNumericSize);
 
       // Web Worker Offloading for Massive Datasets (N >= 1,000) or client offloading
       if (useSize >= 1000 && workerSimulationService.isWorkerAvailable()) {
@@ -713,14 +716,14 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
         date: new Date().toISOString(),
         arenaType: 'sorting',
         winner: activeResponse.winner || 'Tie',
-        datasetSize: size,
+        datasetSize: typeof size === 'number' ? size : (activeResponse.dataset?.length || 30),
         datasetType: isCustomMode ? 'Custom' : datasetType,
         replayParams: {
           page: 'sorting',
           algos: algorithms.join(','),
           mode: 'Custom',
           cArray: datasetArrayStr || '',
-          size: (activeResponse.dataset?.length || size).toString()
+          size: (activeResponse.dataset?.length || (typeof size === 'number' ? size : 30)).toString()
         },
         lanes: activeResponse.lanes.map(l => ({
           name: l.name,
@@ -744,7 +747,7 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <h1>Sorting Arena</h1>
-            {size >= 1000 && (
+            {typeof size === 'number' && size >= 1000 && (
               <span className="worker-pill-badge" title="Simulations for N >= 1,000 are computed in a background Web Worker">
                 <Cpu size={13} className="text-cyan-400" />
                 <span>Web Worker Isolated</span>
@@ -895,7 +898,29 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
               min={1}
               max={160}
               value={size}
-              onChange={(event) => handleSizeChange(Number(event.target.value))}
+              onChange={(event) => {
+                const raw = event.target.value;
+                if (raw === '') {
+                  setSize('');
+                  debouncedFetch.cancel();
+                  return;
+                }
+                const parsed = parseInt(raw, 10);
+                if (!Number.isNaN(parsed)) {
+                  handleSizeChange(parsed);
+                }
+              }}
+              onBlur={() => {
+                if (size === '' || size < 1) {
+                  const fallback = 30;
+                  setSize(fallback);
+                  handleSizeChange(fallback);
+                } else if (size > 160) {
+                  const clamped = 160;
+                  setSize(clamped);
+                  handleSizeChange(clamped);
+                }
+              }}
             />
           </label>
         )}
@@ -979,7 +1004,7 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
       <CustomDatasetModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        currentSize={size}
+        currentSize={typeof size === 'number' ? size : 30}
         onApplyDataset={(parsedArray, label) => {
           setIsCustomMode(true);
           setCustomArrayStr(parsedArray.join(', '));
@@ -999,7 +1024,7 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
           arena: 'sorting',
           algorithms,
           datasetType: isCustomMode ? 'Custom' : datasetType,
-          size: isCustomMode ? parsedCustomArray.length : size,
+          size: isCustomMode ? parsedCustomArray.length : (typeof size === 'number' ? size : 30),
           customArray: isCustomMode ? parsedCustomArray : (dataset || undefined),
           speed,
         }}

@@ -37,8 +37,8 @@ const APPROXIMATION_NOTICE =
 
 export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
   const [algorithms, setAlgorithms] = useState(['Linear Search', 'Binary Search', 'Jump Search']);
-  const [target, setTarget] = useState(20);
-  const [size, setSize] = useState(42);
+  const [target, setTarget] = useState<number | ''>(20);
+  const [size, setSize] = useState<number | ''>(42);
   const [datasetType, setDatasetType] = useState('Random');
   const [isCustomMode, setIsCustomMode] = useState(false);
   const [customArrayStr, setCustomArrayStr] = useState('10, 5, 20, 15, 30');
@@ -80,12 +80,15 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
 
   const isCustomEmpty = isCustomMode && parsedCustomArray.length === 0;
   const hasInvalidTokens = invalidCustomTokens.length > 0;
-  const isTargetInvalid = Number.isNaN(target);
+  const isTargetInvalid = target === '';
 
   // Instant 0ms Preview & Fallback Response Generator.
   // Also reports whether what we are about to render is synthesized rather than
   // measured, so the lanes can show a skeleton instead of convincing fake bars.
   const activeView: { response: RaceResponse; isPlaceholder: boolean } = useMemo(() => {
+    const effectiveSize = typeof size === 'number' ? size : (response?.dataset?.length || 42);
+    const effectiveTarget = typeof target === 'number' ? target : 20;
+
     if (isCustomMode && parsedCustomArray.length > 0) {
       if (response?.dataset && response.dataset.join(',') === parsedCustomArray.join(',')) {
         return { response, isPlaceholder: false };
@@ -95,8 +98,8 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
         const laneArr = isLinear ? [...parsedCustomArray] : [...parsedCustomArray].sort((a, b) => a - b);
         return {
           name,
-          complexity: catalog?.complexity[name]?.worst || 'O(log n)',
-          complexityInfo: catalog?.complexity[name] || {
+          complexity: catalog?.complexity?.[name]?.worst || 'O(log n)',
+          complexityInfo: catalog?.complexity?.[name] || {
             best: 'O(1)',
             average: 'O(log n)',
             worst: 'O(log n)',
@@ -142,7 +145,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
         response: {
           type: 'searching',
           dataset: parsedCustomArray,
-          target,
+          target: effectiveTarget,
           walls: null,
           weights: null,
           lanes: previewLanes,
@@ -152,9 +155,9 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
       };
     }
 
-    if (response && response.dataset?.length === size) return { response, isPlaceholder: false };
+    if (response && response.dataset?.length === effectiveSize) return { response, isPlaceholder: false };
 
-    const baseArr = dataset ?? generateDataset(size, datasetType);
+    const baseArr = dataset ?? generateDataset(effectiveSize, datasetType);
     const fallbackLanes: RaceLaneResponse[] = algorithms.map((name) => {
       const isLinear = name.toLowerCase().includes('linear');
       const laneArr = isLinear ? [...baseArr] : [...baseArr].sort((a, b) => a - b);
@@ -208,7 +211,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
       response: {
         type: 'searching',
         dataset: baseArr,
-        target,
+        target: effectiveTarget,
         walls: null,
         weights: null,
         lanes: fallbackLanes,
@@ -231,9 +234,9 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
     async (
       newDataset: boolean,
       autoplay = false,
-      customTarget?: number,
+      customTarget?: number | '',
       customAlgos?: string[],
-      customSize?: number,
+      customSize?: number | '',
       overrideDataset?: number[],
       customDatasetType?: string
     ) => {
@@ -247,9 +250,13 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
       } else {
         hasStartedPlaybackRef.current = false;
       }
-      const useTarget = customTarget ?? target;
+      const currentTarget = typeof target === 'number' ? target : 20;
+      const currentNumericSize = typeof size === 'number' ? size : 42;
+      const useTarget = typeof customTarget === 'number' ? customTarget : currentTarget;
       const useAlgos = customAlgos ?? algorithms;
       const useType = customDatasetType ?? (isCustomMode ? 'Custom' : datasetType);
+
+      const effectiveSize = typeof customSize === 'number' ? customSize : currentNumericSize;
 
       let useDataset: number[] | undefined;
       if (isCustomMode) {
@@ -257,10 +264,12 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
       } else if (!newDataset && dataset) {
         useDataset = overrideDataset ?? dataset;
       } else {
-        useDataset = overrideDataset ?? (newDataset ? generateDataset(customSize ?? size, useType) : (dataset ?? undefined));
+        useDataset = overrideDataset ?? (newDataset ? generateDataset(effectiveSize, useType) : (dataset ?? undefined));
       }
 
-      const useSize = customSize ?? (isCustomMode && useDataset ? Math.max(1, useDataset.length) : size);
+      const useSize = typeof customSize === 'number'
+        ? customSize
+        : (isCustomMode && useDataset ? Math.max(1, useDataset.length) : currentNumericSize);
 
       // Web Worker Simulation Offloading for N >= 1,000
       if (useSize >= 1000 && workerSimulationService.isWorkerAvailable()) {
@@ -401,9 +410,9 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
     (
       newDataset: boolean,
       autoplay: boolean,
-      customTarget?: number,
+      customTarget?: number | '',
       customAlgos?: string[],
-      customSize?: number,
+      customSize?: number | '',
       overrideDataset?: number[],
       customDatasetType?: string
     ) => {
@@ -547,7 +556,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
     setDataset(null);
     // Discrete choice — no reason to make the user wait out a debounce.
     debouncedFetch.cancel();
-    fetchSimulation(true, false, target, algorithms, size, undefined, nextType);
+    fetchSimulation(true, false, typeof target === 'number' ? target : 20, algorithms, typeof size === 'number' ? size : 42, undefined, nextType);
   }
 
   function handleSizeChange(newSize: number) {
@@ -653,16 +662,16 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
         date: new Date().toISOString(),
         arenaType: 'searching',
         winner: activeResponse.winner || 'Tie',
-        datasetSize: size,
+        datasetSize: typeof size === 'number' ? size : (activeResponse.dataset?.length || 42),
         datasetType: isCustomMode ? 'Custom' : datasetType,
-        targetValue: target,
+        targetValue: typeof target === 'number' ? target : (activeResponse.target ?? 20),
         replayParams: {
           page: 'searching',
           algos: algorithms.join(','),
           mode: 'Custom',
           cArray: datasetArrayStr || '',
-          target: target.toString(),
-          size: (activeResponse.dataset?.length || size).toString()
+          target: (typeof target === 'number' ? target : (activeResponse.target ?? 20)).toString(),
+          size: (activeResponse.dataset?.length || (typeof size === 'number' ? size : 42)).toString()
         },
         lanes: activeResponse.lanes.map(l => ({
           name: l.name,
@@ -686,7 +695,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <h1>Search Arena</h1>
-            {size >= 1000 && (
+            {typeof size === 'number' && size >= 1000 && (
               <span className="worker-pill-badge" title="Simulations for N >= 1,000 are computed in a background Web Worker">
                 <Cpu size={13} className="text-cyan-400" />
                 <span>Web Worker Isolated</span>
@@ -797,8 +806,26 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
           <input
             type="number"
             className={isTargetInvalid ? 'input-error' : ''}
-            value={Number.isNaN(target) ? '' : target}
-            onChange={(event) => handleTargetChange(Number(event.target.value))}
+            value={target}
+            onChange={(event) => {
+              const raw = event.target.value;
+              if (raw === '') {
+                setTarget('');
+                debouncedFetch.cancel();
+                return;
+              }
+              const parsed = parseInt(raw, 10);
+              if (!Number.isNaN(parsed)) {
+                handleTargetChange(parsed);
+              }
+            }}
+            onBlur={() => {
+              if (target === '' || Number.isNaN(target)) {
+                const fallback = dataset && dataset.length > 0 ? dataset[0] : 20;
+                setTarget(fallback);
+                handleTargetChange(fallback);
+              }
+            }}
           />
         </label>
 
@@ -856,7 +883,29 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
                 min={5}
                 max={160}
                 value={size}
-                onChange={(event) => handleSizeChange(Number(event.target.value))}
+                onChange={(event) => {
+                  const raw = event.target.value;
+                  if (raw === '') {
+                    setSize('');
+                    debouncedFetch.cancel();
+                    return;
+                  }
+                  const parsed = parseInt(raw, 10);
+                  if (!Number.isNaN(parsed)) {
+                    handleSizeChange(parsed);
+                  }
+                }}
+                onBlur={() => {
+                  if (size === '' || size < 5) {
+                    const fallback = 42;
+                    setSize(fallback);
+                    handleSizeChange(fallback);
+                  } else if (size > 160) {
+                    const clamped = 160;
+                    setSize(clamped);
+                    handleSizeChange(clamped);
+                  }
+                }}
               />
             </label>
           </>
@@ -940,14 +989,14 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
       <CustomDatasetModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        currentSize={size}
+        currentSize={typeof size === 'number' ? size : 42}
         onApplyDataset={(generatedArr: number[], formulaTitle: string) => {
           setIsCustomMode(true);
           setCustomArrayStr(generatedArr.join(', '));
           setDataset(generatedArr);
           setSize(generatedArr.length);
           debouncedFetch.cancel();
-          fetchSimulation(true, false, target, algorithms, generatedArr.length, generatedArr);
+          fetchSimulation(true, false, typeof target === 'number' ? target : 20, algorithms, generatedArr.length, generatedArr);
           setToastMessage(`⚡ Applied Preset: ${formulaTitle} (${generatedArr.length} elements)`);
           setTimeout(() => setToastMessage(null), 3000);
         }}
@@ -960,8 +1009,8 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
           arena: 'searching',
           algorithms,
           datasetType: isCustomMode ? 'Custom' : datasetType,
-          size: isCustomMode ? parsedCustomArray.length : size,
-          target,
+          size: isCustomMode ? parsedCustomArray.length : (typeof size === 'number' ? size : 42),
+          target: typeof target === 'number' ? target : 20,
           customArray: isCustomMode ? parsedCustomArray : (dataset || undefined),
           speed,
         }}
