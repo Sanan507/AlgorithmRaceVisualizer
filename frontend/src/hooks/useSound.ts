@@ -153,12 +153,13 @@ function playChord(
   // Exponential decay to simulate vibraphone resonance
   gainNode.gain.exponentialRampToValueAtTime(0.0001, startTime + durationSec);
 
-  for (const note of chord.notes) {
+  for (let i = 0; i < chord.notes.length; i++) {
+    const note = chord.notes[i];
     const osc = ctx.createOscillator();
     osc.type = chord.type;
     osc.frequency.setValueAtTime(midiToHz(note), startTime);
     // Slight detune per note for vibraphone width
-    osc.detune.setValueAtTime((chord.notes.indexOf(note) - 1) * 2, startTime);
+    osc.detune.setValueAtTime((i - 1) * 2, startTime);
     osc.connect(gainNode);
     osc.start(startTime);
     osc.stop(startTime + durationSec + 0.05);
