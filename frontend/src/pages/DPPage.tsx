@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Layers, Plus, Trash2, CheckCircle2, ListOrdered, FileText, Info, ShieldCheck } from 'lucide-react';
+import { Layers, Plus, Trash2, CheckCircle2, Info, ShieldCheck } from 'lucide-react';
 import { DPCanvas, DPStep } from '../components/DPCanvas';
 import { CodeViewer } from '../components/CodeViewer';
 import { Controls } from '../components/Controls';

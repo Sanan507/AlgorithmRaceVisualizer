@@ -1,11 +1,14 @@
 package com.algorithmrace.visualizer;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
@@ -31,8 +34,11 @@ public class RateLimitFilter implements Filter {
   private static final int DEFAULT_LIMIT = 60;
   private static final long WINDOW_MS = 60_000L;
 
-  // Stores: clientIP -> bucket -> [timestamps]
-  private final Map<String, Map<String, SlidingWindow>> clients = new ConcurrentHashMap<>();
+  // Stores: clientIP -> bucket -> SlidingWindow
+  // Cache auto-evicts entire SlidingWindow objects 1 minute after their last access,
+  // preventing unbounded memory growth (OOM DoS) from many unique IPs or buckets.
+  private final Cache<String, Map<String, SlidingWindow>> clients =
+      Caffeine.newBuilder().expireAfterAccess(1, TimeUnit.MINUTES).maximumSize(100_000).build();
 
   @Override
   public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
@@ -55,10 +61,8 @@ public class RateLimitFilter implements Filter {
     String bucket = resolveBucket(path);
     int limit = resolveLimit(path);
 
-    SlidingWindow window =
-        clients
-            .computeIfAbsent(clientIp, k -> new ConcurrentHashMap<>())
-            .computeIfAbsent(bucket, k -> new SlidingWindow());
+    Map<String, SlidingWindow> userBuckets = clients.get(clientIp, k -> new ConcurrentHashMap<>());
+    SlidingWindow window = userBuckets.computeIfAbsent(bucket, k -> new SlidingWindow());
 
     if (!window.tryAcquire(limit)) {
       log.warn("Rate limit exceeded for IP={} bucket={}", clientIp, bucket);
