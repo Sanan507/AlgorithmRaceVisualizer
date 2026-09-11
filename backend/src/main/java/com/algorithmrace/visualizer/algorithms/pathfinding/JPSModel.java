@@ -2,13 +2,16 @@ package com.algorithmrace.visualizer.algorithms.pathfinding;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.PriorityQueue;
+import java.util.Set;
 
 public class JPSModel extends PathfindingModel {
 
   private final PriorityQueue<GridCell> openSet =
       new PriorityQueue<>(Comparator.comparingDouble(GridCell::fCost));
+  private final Set<GridCell> openSetContains = new HashSet<>();
 
   public JPSModel() {
     super("Jump Point Search");
@@ -27,6 +30,7 @@ public class JPSModel extends PathfindingModel {
       return;
     }
     GridCell current = openSet.poll();
+    openSetContains.remove(current);
     if (current == end) {
       reconstructPath(end);
       markDone();
@@ -49,8 +53,9 @@ public class JPSModel extends PathfindingModel {
         if (nb.state == CellState.EMPTY || nb.state == CellState.VISITED) {
           nb.state = CellState.FRONTIER;
         }
-        if (!openSet.contains(nb)) {
+        if (!openSetContains.contains(nb)) {
           openSet.add(nb);
+          openSetContains.add(nb);
         }
       }
     }
@@ -232,10 +237,12 @@ public class JPSModel extends PathfindingModel {
   @Override
   public void reset() {
     openSet.clear();
+    openSetContains.clear();
     resetStats();
     if (start != null) {
       start.gCost = 0;
       openSet.add(start);
+      openSetContains.add(start);
     }
   }
 }
