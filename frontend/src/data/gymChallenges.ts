@@ -343,7 +343,7 @@ export const BUG_HUNT_CHALLENGES: BugHuntChallenge[] = [
     const val = values[i];
 
     // ⚠️ Bug below: Iterating forward allows using same item multiple times!
-    for (let w = wt; w <= W; w++) {
+    for (let w = W; w >= wt; w--) {
       dp[w] = Math.max(dp[w], dp[w - wt] + val);
     }
   }
