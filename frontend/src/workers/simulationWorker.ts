@@ -227,7 +227,7 @@ function simulateSingleSortingAlgorithm(
     // MergeSort
     function mergeSort(l: number, r: number) {
       if (l < r) {
-        const m = Math.floor((l + r) / 2);
+        const m = l + Math.floor((r - l) / 2);
         mergeSort(l, m);
         mergeSort(m + 1, r);
         merge(l, m, r);
@@ -535,7 +535,7 @@ function simulateSingleSearchingAlgorithm(
     let right = arr.length - 1;
 
     while (left <= right) {
-      const mid = Math.floor((left + right) / 2);
+      const mid = left + Math.floor((right - left) / 2);
       comparisons++;
       steps++;
 
