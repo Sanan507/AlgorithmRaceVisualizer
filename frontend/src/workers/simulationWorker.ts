@@ -535,7 +535,7 @@ function simulateSingleSearchingAlgorithm(
     let right = arr.length - 1;
 
     while (left <= right) {
-      const mid = Math.floor((left + right) / 2);
+      const mid = left + Math.floor((right - left) / 2);
       comparisons++;
       steps++;
 

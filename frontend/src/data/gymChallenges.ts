@@ -286,7 +286,7 @@ export const BUG_HUNT_CHALLENGES: BugHuntChallenge[] = [
 
   while (low <= high) {
     // ⚠️ Bug line below:
-    const mid = Math.floor((low + high) / 2);
+    const mid = low + Math.floor((high - low) / 2);
 
     if (arr[mid] === target) {
       return mid;
