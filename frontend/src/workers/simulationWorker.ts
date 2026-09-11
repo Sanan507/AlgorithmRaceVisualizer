@@ -227,7 +227,7 @@ function simulateSingleSortingAlgorithm(
     // MergeSort
     function mergeSort(l: number, r: number) {
       if (l < r) {
-        const m = Math.floor((l + r) / 2);
+        const m = l + Math.floor((r - l) / 2);
         mergeSort(l, m);
         mergeSort(m + 1, r);
         merge(l, m, r);
