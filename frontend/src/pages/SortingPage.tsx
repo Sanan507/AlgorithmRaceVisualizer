@@ -19,7 +19,7 @@ import { StepExplanationCard } from '../components/StepExplanationCard';
 import { CustomDatasetModal } from '../components/CustomDatasetModal';
 import { ShareBenchmarkModal } from '../components/ShareBenchmarkModal';
 import { CsvUploader } from '../components/CsvUploader';
-import { Share2, Cpu, Zap, Sparkles } from 'lucide-react';
+import { Share2, Cpu } from 'lucide-react';
 import { getUrlParams } from '../utils/urlParams';
 import { parseCurrentShareableConfig } from '../utils/shareableBenchmark';
 import { workerSimulationService } from '../services/workerSimulationService';
