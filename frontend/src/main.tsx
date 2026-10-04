@@ -4,6 +4,7 @@ import App from './App';
 import './styles.css';
 import './styles/arenaLoading.css';
 import './styles/landing.css';
+import './styles/arenaCodeInspector.css';
 import './styles/mobile.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

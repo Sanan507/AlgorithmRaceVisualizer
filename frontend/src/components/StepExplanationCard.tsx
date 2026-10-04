@@ -11,6 +11,7 @@ export interface StepExplanationCardProps {
   totalFrames: number;
   algorithmName?: string;
   frame?: Partial<SimulationFrame> | null;
+  onOpenCodeInspector?: (algoName?: string) => void;
 }
 
 type DetailMode = 'none' | 'why' | 'complexity';
@@ -55,6 +56,7 @@ export function StepExplanationCard({
   totalFrames,
   algorithmName,
   frame,
+  onOpenCodeInspector,
 }: StepExplanationCardProps) {
   const [selectedLane, setSelectedLane] = useState(0);
   const [activeDetail, setActiveDetail] = useState<DetailMode>('none');
@@ -156,9 +158,12 @@ export function StepExplanationCard({
     return `Each step reduces the remaining problem space or updates system invariants toward the target solution.`;
   }, [activeFrameObj]);
 
-  // Smooth scroll to existing CodeViewer component on the page
+  // Smooth scroll to existing CodeViewer or open docked inspector
   const scrollToCodeViewer = () => {
-    const codeEl = document.querySelector('.cv-card, .pseudocode-viewer-card');
+    if (onOpenCodeInspector) {
+      onOpenCodeInspector(currentAlgoName);
+    }
+    const codeEl = document.querySelector('.arena-code-inspector, .cv-card, .pseudocode-viewer-card');
     if (codeEl) {
       codeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }

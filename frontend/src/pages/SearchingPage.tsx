@@ -7,6 +7,7 @@ import { PerformanceComparison } from '../components/PerformanceComparison';
 import { VisualizationLegend } from '../components/VisualizationLegend';
 import { SearchCanvas } from '../components/SearchCanvas';
 import { SelectField } from '../components/SelectField';
+import { ArenaCodeInspector } from '../components/ArenaCodeInspector';
 import { useAudio } from '../context/AudioContext';
 import { usePlayback } from '../hooks/usePlayback';
 import { useArenaLoadState } from '../hooks/useArenaLoadState';
@@ -51,6 +52,18 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   /** Set when a result came from the local worker instead of the backend. */
   const [fallbackNotice, setFallbackNotice] = useState<string | null>(null);
+  const [isCodeInspectorOpen, setIsCodeInspectorOpen] = useState(false);
+  const [inspectorSelectedAlgo, setInspectorSelectedAlgo] = useState<string | null>(null);
+
+  const handleToggleCode = useCallback((algoName: string) => {
+    setIsCodeInspectorOpen((prev) => {
+      if (prev && inspectorSelectedAlgo === algoName) {
+        return false;
+      }
+      setInspectorSelectedAlgo(algoName);
+      return true;
+    });
+  }, [inspectorSelectedAlgo]);
 
   const load = useArenaLoadState();
 
@@ -946,12 +959,26 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
               laneState={laneState}
               arenaType="searching"
               skeleton={isPlaceholder}
+              onToggleCode={handleToggleCode}
+              isCodeOpen={isCodeInspectorOpen && inspectorSelectedAlgo === lane.name}
             >
               <SearchCanvas frame={frame} algorithm={lane.name} />
             </LaneCard>
           );
         })}
       </section>
+
+      {/* Docked DevTools/LeetCode style Arena Code Inspector */}
+      <ArenaCodeInspector
+        isOpen={isCodeInspectorOpen}
+        onClose={() => setIsCodeInspectorOpen(false)}
+        lanes={activeResponse.lanes ?? []}
+        activeFrames={activeFrames}
+        totalFrames={playback.maxFrames}
+        initialAlgorithm={inspectorSelectedAlgo}
+        onSelectAlgorithm={(name) => setInspectorSelectedAlgo(name)}
+        arenaType="searching"
+      />
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginTop: '24px' }}>
         {/* Suppressed while placeholder data is on screen: these panels would
@@ -962,6 +989,10 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
             activeFrames={activeFrames}
             frameIndex={playback.frameIndex}
             totalFrames={playback.maxFrames}
+            onOpenCodeInspector={(algo) => {
+              setIsCodeInspectorOpen(true);
+              if (algo) setInspectorSelectedAlgo(algo);
+            }}
           />
         )}
         {!isPlaceholder && (

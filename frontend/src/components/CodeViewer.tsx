@@ -36,6 +36,10 @@ export interface CodeViewerProps {
   className?: string;
   fallbackPseudocode?: string;
   readOnly?: boolean;
+  language?: SupportedLanguage;
+  onLanguageChange?: (lang: SupportedLanguage) => void;
+  hideHeader?: boolean;
+  hideTabs?: boolean;
 }
 
 interface Token {
@@ -250,10 +254,19 @@ export function CodeViewer({
   className = '',
   fallbackPseudocode = '',
   readOnly = false,
+  language: controlledLanguage,
+  onLanguageChange,
+  hideHeader = false,
+  hideTabs = false,
 }: CodeViewerProps) {
   const [internalCollapsed, setInternalCollapsed] = useState(collapsed);
   const [copied, setCopied] = useState(false);
-  const [language, setLanguage] = useState<SupportedLanguage>('java');
+  const [internalLanguage, setInternalLanguage] = useState<SupportedLanguage>('java');
+  const language = controlledLanguage !== undefined ? controlledLanguage : internalLanguage;
+  const setLanguage = useCallback((newLang: SupportedLanguage) => {
+    if (onLanguageChange) onLanguageChange(newLang);
+    setInternalLanguage(newLang);
+  }, [onLanguageChange]);
 
   const codeBodyRef = useRef<HTMLDivElement | null>(null);
   const activeLineElementRef = useRef<HTMLDivElement | null>(null);
@@ -345,89 +358,93 @@ export function CodeViewer({
 
   return (
     <div
-      className={`cv-card ${isCollapsed ? 'cv-card--collapsed' : ''} ${className}`}
+      className={`cv-card ${isCollapsed ? 'cv-card--collapsed' : ''} ${hideHeader ? 'cv-card--no-header' : ''} ${className}`}
       role="region"
       aria-label={`${algorithmName} Code Execution Viewer`}
     >
       {/* ─── Header ──────────────────────────────────────── */}
-      <div
-        className="cv-header"
-        onClick={toggleCollapse}
-        role="button"
-        tabIndex={0}
-        aria-expanded={!isCollapsed}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            toggleCollapse();
-          }
-        }}
-      >
-        <div className="cv-header-left">
-          <Code size={15} className="cv-icon" aria-hidden="true" />
-          <span className="cv-title">{algorithmName}</span>
+      {!hideHeader && (
+        <div
+          className="cv-header"
+          onClick={toggleCollapse}
+          role="button"
+          tabIndex={0}
+          aria-expanded={!isCollapsed}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              toggleCollapse();
+            }
+          }}
+        >
+          <div className="cv-header-left">
+            <Code size={15} className="cv-icon" aria-hidden="true" />
+            <span className="cv-title">{algorithmName}</span>
 
-          {/* Language Tabs */}
-          <div
-            className="cv-lang-tabs"
-            onClick={(e) => e.stopPropagation()}
-            role="tablist"
-            aria-label="Target Programming Language"
-          >
-            {LANGUAGES.map((lang) => (
-              <button
-                key={lang.id}
-                type="button"
-                role="tab"
-                aria-selected={language === lang.id}
-                className={`cv-lang-btn ${language === lang.id ? 'cv-lang-btn--active' : ''}`}
-                onClick={() => setLanguage(lang.id)}
+            {/* Language Tabs */}
+            {!hideTabs && (
+              <div
+                className="cv-lang-tabs"
+                onClick={(e) => e.stopPropagation()}
+                role="tablist"
+                aria-label="Target Programming Language"
               >
-                <span className="cv-lang-icon" aria-hidden="true">{lang.icon}</span>
-                {lang.label}
-              </button>
-            ))}
+                {LANGUAGES.map((lang) => (
+                  <button
+                    key={lang.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={language === lang.id}
+                    className={`cv-lang-btn ${language === lang.id ? 'cv-lang-btn--active' : ''}`}
+                    onClick={() => setLanguage(lang.id)}
+                  >
+                    <span className="cv-lang-icon" aria-hidden="true">{lang.icon}</span>
+                    {lang.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="cv-header-right">
+            {/* Active Operation Live Badge */}
+            {isActive && opLabel && (
+              <span className={`cv-op-badge ${opClass}`}>
+                <span className="cv-op-dot" aria-hidden="true" />
+                {opLabel}
+              </span>
+            )}
+
+            {/* Copy Button */}
+            <button
+              type="button"
+              className="cv-action-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCopy();
+              }}
+              title={copied ? 'Copied to clipboard' : 'Copy code'}
+              aria-label={copied ? 'Copied code to clipboard' : 'Copy code snippet'}
+            >
+              {copied ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+            </button>
+
+            {/* Collapse/Expand Toggle */}
+            <button
+              type="button"
+              className="cv-action-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleCollapse();
+              }}
+              title={isCollapsed ? 'Expand code view' : 'Collapse code view'}
+              aria-label={isCollapsed ? 'Expand code' : 'Collapse code'}
+            >
+              {isCollapsed ? <ChevronDown size={15} /> : <ChevronUp size={15} />}
+            </button>
           </div>
         </div>
-
-        <div className="cv-header-right">
-          {/* Active Operation Live Badge */}
-          {isActive && opLabel && (
-            <span className={`cv-op-badge ${opClass}`}>
-              <span className="cv-op-dot" aria-hidden="true" />
-              {opLabel}
-            </span>
-          )}
-
-          {/* Copy Button */}
-          <button
-            type="button"
-            className="cv-action-btn"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleCopy();
-            }}
-            title={copied ? 'Copied to clipboard' : 'Copy code'}
-            aria-label={copied ? 'Copied code to clipboard' : 'Copy code snippet'}
-          >
-            {copied ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
-          </button>
-
-          {/* Collapse/Expand Toggle */}
-          <button
-            type="button"
-            className="cv-action-btn"
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleCollapse();
-            }}
-            title={isCollapsed ? 'Expand code view' : 'Collapse code view'}
-            aria-label={isCollapsed ? 'Expand code' : 'Collapse code'}
-          >
-            {isCollapsed ? <ChevronDown size={15} /> : <ChevronUp size={15} />}
-          </button>
-        </div>
-      </div>
+      )}
 
       {/* ─── Code Body ───────────────────────────────────── */}
       {!isCollapsed && (

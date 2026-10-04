@@ -30,6 +30,8 @@ interface LaneCardProps {
    */
   skeleton?: boolean;
   children: ReactNode;
+  onToggleCode?: (algoName: string) => void;
+  isCodeOpen?: boolean;
 }
 
 const SORTING_STATUS_LABELS: Record<LaneState, string> = {
@@ -54,8 +56,19 @@ export const LaneCard = memo(function LaneCard({
   weights,
   skeleton = false,
   children,
+  onToggleCode,
+  isCodeOpen = false,
 }: LaneCardProps) {
   const [showCode, setShowCode] = useState(false);
+  const isCodeActive = onToggleCode ? isCodeOpen : showCode;
+
+  const handleToggleCode = () => {
+    if (onToggleCode) {
+      onToggleCode(lane.name);
+    } else {
+      setShowCode((prev) => !prev);
+    }
+  };
 
   const totalFrames = lane?.frames?.length ?? 0;
   const frameNum = frame?.frame ?? 0;
@@ -151,12 +164,13 @@ export const LaneCard = memo(function LaneCard({
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           {pseudocodeText && !skeleton && (
             <button
-              className="btn ghost icon-btn"
-              onClick={() => setShowCode((prev) => !prev)}
-              title={showCode ? 'Hide Code Inspector' : 'Show Code Inspector'}
+              className={`btn ghost icon-btn ${isCodeActive ? 'code-toggle-active' : ''}`}
+              onClick={handleToggleCode}
+              title={isCodeActive ? 'Close Code Inspector' : 'Open in Code Inspector'}
               style={{ padding: '4px 8px', fontSize: '12px' }}
+              aria-label={isCodeActive ? `Close ${lane.name} Code Inspector` : `Open ${lane.name} in Code Inspector`}
             >
-              <Code size={13} /> {showCode ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+              <Code size={13} /> {isCodeActive ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
             </button>
           )}
           <em className={`status-badge ${skeleton ? 'status-badge--loading' : `status-badge--${badgeState}`}`}>
@@ -176,7 +190,7 @@ export const LaneCard = memo(function LaneCard({
         />
       </div>
 
-      {showCode && pseudocodeText && !skeleton && (
+      {!onToggleCode && showCode && pseudocodeText && !skeleton && (
         <div style={{ margin: '8px 0' }}>
           <PseudocodeViewer
             algorithmName={lane.name}

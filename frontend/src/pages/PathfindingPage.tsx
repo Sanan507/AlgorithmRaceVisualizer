@@ -5,6 +5,7 @@ import { AlgorithmComparisonCenter } from '../components/AlgorithmComparisonCent
 import { LaneCard } from '../components/LaneCard';
 import { PathCanvas } from '../components/PathCanvas';
 import { SelectField } from '../components/SelectField';
+import { ArenaCodeInspector } from '../components/ArenaCodeInspector';
 import { PerformanceComparison } from '../components/PerformanceComparison';
 import { VisualizationLegend } from '../components/VisualizationLegend';
 import { useAudio } from '../context/AudioContext';
@@ -52,6 +53,18 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
    */
   const [hasUnsimulatedEdits, setHasUnsimulatedEdits] = useState(false);
   const [fallbackNotice, setFallbackNotice] = useState<string | null>(null);
+  const [isCodeInspectorOpen, setIsCodeInspectorOpen] = useState(false);
+  const [inspectorSelectedAlgo, setInspectorSelectedAlgo] = useState<string | null>(null);
+
+  const handleToggleCode = useCallback((algoName: string) => {
+    setIsCodeInspectorOpen((prev) => {
+      if (prev && inspectorSelectedAlgo === algoName) {
+        return false;
+      }
+      setInspectorSelectedAlgo(algoName);
+      return true;
+    });
+  }, [inspectorSelectedAlgo]);
 
   const load = useArenaLoadState();
 
@@ -858,6 +871,8 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
               arenaType="pathfinding"
               weights={activeResponse.weights ?? weights}
               skeleton={isPlaceholder}
+              onToggleCode={handleToggleCode}
+              isCodeOpen={isCodeInspectorOpen && inspectorSelectedAlgo === lane.name}
             >
               <PathCanvas
                 frame={frame}
@@ -870,6 +885,18 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
         })}
       </section>
 
+      {/* Docked DevTools/LeetCode style Arena Code Inspector */}
+      <ArenaCodeInspector
+        isOpen={isCodeInspectorOpen}
+        onClose={() => setIsCodeInspectorOpen(false)}
+        lanes={activeResponse.lanes ?? []}
+        activeFrames={activeFrames}
+        totalFrames={playback.maxFrames}
+        initialAlgorithm={inspectorSelectedAlgo}
+        onSelectAlgorithm={(name) => setInspectorSelectedAlgo(name)}
+        arenaType="pathfinding"
+      />
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginTop: '24px' }}>
         {/* Suppressed while placeholder data is on screen: these panels would
             otherwise chart an empty grid as if it were a benchmark. */}
@@ -879,6 +906,10 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
             activeFrames={activeFrames}
             frameIndex={playback.frameIndex}
             totalFrames={playback.maxFrames}
+            onOpenCodeInspector={(algo) => {
+              setIsCodeInspectorOpen(true);
+              if (algo) setInspectorSelectedAlgo(algo);
+            }}
           />
         )}
         {!isPlaceholder && (
