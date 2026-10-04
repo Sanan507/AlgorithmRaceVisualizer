@@ -93,8 +93,21 @@
   --color-pivot: #ffffff;
 }
 
-* {
+/* Universal Caret Protection: Eradicate unwanted blinking text insertion carets across ALL pages, arenas, headers, grids, cards */
+*, *::before, *::after {
   box-sizing: border-box;
+  caret-color: transparent !important;
+}
+
+/* Allow text-insertion cursor strictly inside actual editable input fields */
+input, textarea, [contenteditable="true"], [contenteditable="true"] * {
+  caret-color: auto !important;
+}
+
+/* Suppress accidental text caret selection on non-input UI */
+h1, h2, h3, h4, h5, h6, .page-header, .arena-title, .brand-text, .arena-nav, .lane-card, .sidebar, .sidebar-brand, .sidebar-link, .stat-card, .badge, .btn, button, .canvas-container, .grid-container, .arena-container, .benchmark-card {
+  user-select: none;
+  cursor: default;
 }
 
 button, a, input, select, .card, .panel, .btn, .interactive, .sidebar-link, .lane-card {
