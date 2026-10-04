@@ -11,6 +11,7 @@ public class JPSModel extends PathfindingModel {
 
   private final PriorityQueue<GridCell> openSet =
       new PriorityQueue<>(Comparator.comparingDouble(GridCell::fCost));
+  private final Set<GridCell> openSetContains = new HashSet<>();
   private final Set<GridCell> inOpenSet = new HashSet<>();
 
   public JPSModel() {
@@ -30,6 +31,7 @@ public class JPSModel extends PathfindingModel {
       return;
     }
     GridCell current = openSet.poll();
+    openSetContains.remove(current);
     if (current != null) {
       inOpenSet.remove(current);
     }
@@ -55,6 +57,9 @@ public class JPSModel extends PathfindingModel {
         if (nb.state == CellState.EMPTY || nb.state == CellState.VISITED) {
           nb.state = CellState.FRONTIER;
         }
+        if (!openSetContains.contains(nb)) {
+          openSet.add(nb);
+          openSetContains.add(nb);
         if (!inOpenSet.contains(nb)) {
           openSet.add(nb);
           inOpenSet.add(nb);
@@ -239,11 +244,13 @@ public class JPSModel extends PathfindingModel {
   @Override
   public void reset() {
     openSet.clear();
+    openSetContains.clear();
     inOpenSet.clear();
     resetStats();
     if (start != null) {
       start.gCost = 0;
       openSet.add(start);
+      openSetContains.add(start);
       inOpenSet.add(start);
     }
   }

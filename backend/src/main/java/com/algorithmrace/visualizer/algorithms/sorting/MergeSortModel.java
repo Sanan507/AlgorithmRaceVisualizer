@@ -15,7 +15,7 @@ public class MergeSortModel extends AlgorithmModel {
 
   private void buildOps(int l, int r) {
     if (l >= r) return;
-    int m = (l + r) / 2;
+    int m = l + (r - l) / 2;
     buildOps(l, m);
     buildOps(m + 1, r);
     ops.add(new int[] {l, m, r});

@@ -40,15 +40,18 @@ export function CustomArraySection({
       return { validNumbers: [], invalidTokens: [], isArrayEmpty: true };
     }
 
-    const tokens = rawText.split(',').map((t) => t.trim()).filter((t) => t.length > 0);
+    const rawTokens = rawText.split(',');
     const valid: number[] = [];
     const invalid: string[] = [];
 
-    for (const token of tokens) {
-      if (/^-?\d+$/.test(token)) {
-        valid.push(Number(token));
-      } else {
-        invalid.push(token);
+    for (let i = 0; i < rawTokens.length; i++) {
+      const token = rawTokens[i].trim();
+      if (token.length > 0) {
+        if (/^-?\d+$/.test(token)) {
+          valid.push(Number(token));
+        } else {
+          invalid.push(token);
+        }
       }
     }
 

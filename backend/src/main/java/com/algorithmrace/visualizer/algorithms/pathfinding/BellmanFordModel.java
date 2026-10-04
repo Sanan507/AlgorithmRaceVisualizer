@@ -1,17 +1,20 @@
 package com.algorithmrace.visualizer.algorithms.pathfinding;
 
 import java.util.ArrayDeque;
-import java.util.HashSet;
 import java.util.Queue;
-import java.util.Set;
 
 public class BellmanFordModel extends PathfindingModel {
   private final Queue<GridCell> queue = new ArrayDeque<>();
-  // O(1) lookup instead of O(n) queue.contains()
-  private final Set<GridCell> inQueue = new HashSet<>();
+  private boolean[][] inQueue;
 
   public BellmanFordModel() {
     super("Bellman-Ford");
+  }
+
+  @Override
+  public void initGrid(int rows, int cols) {
+    super.initGrid(rows, cols);
+    inQueue = new boolean[rows][cols];
   }
 
   @Override
@@ -25,7 +28,7 @@ public class BellmanFordModel extends PathfindingModel {
     }
 
     GridCell current = queue.poll();
-    inQueue.remove(current);
+    inQueue[current.row][current.col] = false;
 
     if (current == end) {
       reconstructPath(end);
@@ -46,9 +49,9 @@ public class BellmanFordModel extends PathfindingModel {
         if (nb.state == CellState.EMPTY) {
           nb.state = CellState.FRONTIER;
         }
-        if (!inQueue.contains(nb)) {
+        if (!inQueue[nb.row][nb.col]) {
           queue.add(nb);
-          inQueue.add(nb);
+          inQueue[nb.row][nb.col] = true;
         }
       }
     }
@@ -57,12 +60,20 @@ public class BellmanFordModel extends PathfindingModel {
   @Override
   public void reset() {
     queue.clear();
-    inQueue.clear();
+    if (inQueue != null) {
+      for (int r = 0; r < rows; r++) {
+        for (int c = 0; c < cols; c++) {
+          inQueue[r][c] = false;
+        }
+      }
+    }
     resetStats();
     if (start != null) {
       start.gCost = 0;
       queue.add(start);
-      inQueue.add(start);
+      if (inQueue != null) {
+        inQueue[start.row][start.col] = true;
+      }
     }
   }
 }

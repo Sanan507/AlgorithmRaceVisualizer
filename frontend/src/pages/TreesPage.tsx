@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FolderTree, Plus, Trash2, Search, RefreshCw, Info, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { FolderTree, Plus, Trash2, Search, RefreshCw, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { TreeCanvas } from '../components/TreeCanvas';
 import { CodeViewer } from '../components/CodeViewer';
 import { Controls } from '../components/Controls';
