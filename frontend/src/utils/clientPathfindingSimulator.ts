@@ -1,4 +1,4 @@
-import type { CellState, ComplexityInfo, LaneStats, RaceLaneResponse, RaceResponse, SimulationFrame } from '../models/types';
+import type { CellState, ComplexityInfo, LaneStats, PointDto, RaceLaneResponse, RaceResponse, SimulationFrame } from '../models/types';
 
 interface PathfindingParams {
   algorithms: string[];
@@ -196,7 +196,7 @@ function simulateSingleLane(
   let pathFound = false;
   let steps = 0;
   let done = false;
-  let finalPath: { row: number; col: number }[] = [];
+  let finalPath: PointDto[] = [];
 
   if (algo === 'DFS') {
     // Depth-First Search
@@ -354,14 +354,14 @@ function simulateSingleLane(
 
     if (meetingPoint) {
       // Reconstruct bidirectional path
-      const forwardHalf: { row: number; col: number; r: number; c: number }[] = [];
+      const forwardHalf: PointDto[] = [];
       let curr: [number, number] | undefined = meetingPoint;
       while (curr && (curr[0] !== -1 || curr[1] !== -1)) {
         forwardHalf.unshift({ row: curr[0], col: curr[1], r: curr[0], c: curr[1] });
         const p = visitedForward.get(key(curr[0], curr[1]));
         curr = p && p[0] !== -1 ? p : undefined;
       }
-      const backwardHalf: { row: number; col: number; r: number; c: number }[] = [];
+      const backwardHalf: PointDto[] = [];
       let bCurr = visitedBackward.get(key(meetingPoint[0], meetingPoint[1]));
       while (bCurr && (bCurr[0] !== -1 || bCurr[1] !== -1)) {
         backwardHalf.push({ row: bCurr[0], col: bCurr[1], r: bCurr[0], c: bCurr[1] });
@@ -468,8 +468,10 @@ function simulateSingleLane(
   // Paint the shortest path on the final frame
   if (pathFound && finalPath.length > 0) {
     finalPath.forEach((pt) => {
-      if ((pt.row !== sR || pt.col !== sC) && (pt.row !== eR || pt.col !== eC)) {
-        gridState[pt.row][pt.col] = 'PATH';
+      const pr = pt.row ?? pt.r ?? 0;
+      const pc = pt.col ?? pt.c ?? 0;
+      if ((pr !== sR || pc !== sC) && (pr !== eR || pc !== eC)) {
+        gridState[pr][pc] = 'PATH';
       }
     });
   }
