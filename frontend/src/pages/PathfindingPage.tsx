@@ -15,10 +15,11 @@ import { ArenaLoadingOverlay } from '../components/ArenaLoadingOverlay';
 import type { CatalogResponse, RaceLaneResponse, RaceResponse, SimulationFrame } from '../models/types';
 import { api, ApiTimeoutError } from '../services/api';
 import { StepExplanationCard } from '../components/StepExplanationCard';
-import { Share2, RefreshCw, Sparkles, Palette } from 'lucide-react';
+import { Share2, RefreshCw, Sparkles, Palette, Cpu } from 'lucide-react';
 import { getUrlParams } from '../utils/urlParams';
 import { generateClientMaze } from '../utils/clientMazeGenerator';
 import { appendHistory } from '../utils/historyStorage';
+import { simulateClientPathfinding } from '../utils/clientPathfindingSimulator';
 
 const defaultMazeTypes = [
   'Recursive Backtracker',
@@ -50,6 +51,7 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
    * response, so a drawn wall shows up instantly rather than after a round trip.
    */
   const [hasUnsimulatedEdits, setHasUnsimulatedEdits] = useState(false);
+  const [fallbackNotice, setFallbackNotice] = useState<string | null>(null);
 
   const load = useArenaLoadState();
 
@@ -221,6 +223,7 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
         const data = await api.pathfinding(params);
         if (!isCurrent()) return;
 
+        setFallbackNotice(null);
         setResponse(data);
         const resolvedWalls = data.walls ?? sendWalls ?? Array.from({ length: 18 }, () => Array(28).fill(false));
         const resolvedWeights = data.weights ?? sendWeights ?? Array.from({ length: 18 }, () => Array(28).fill(1));
@@ -239,15 +242,50 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
           setHasFreshDataset(false);
         }
       } catch (err) {
-        console.error('Pathfinding simulation error:', err);
+        console.warn('Backend pathfinding unreachable, executing browser simulation fallback:', err);
         if (!isCurrent()) return;
-        // Unlike Sorting and Searching, this arena has no in-browser fallback —
-        // the Web Worker only implements sorting and searching. Say so plainly
-        // instead of leaving the user staring at a stale grid.
-        load.markError(
-          err instanceof ApiTimeoutError ? 'The backend did not respond in time' : 'Could not reach the backend',
-          'Pathfinding runs on the server only, so there is nothing to fall back to. Check that the backend is running, then retry.'
-        );
+        try {
+          const fallbackParams = {
+            algorithms: useAlgos,
+            rows: 18,
+            cols: 28,
+            mazeType: useMazeType,
+            walls: sendWalls,
+            weights: sendWeights,
+            startRow: useStart[0],
+            startCol: useStart[1],
+            endRow: useEnd[0],
+            endCol: useEnd[1],
+          };
+
+          const fallbackData = simulateClientPathfinding(fallbackParams);
+          if (!isCurrent()) return;
+
+          setResponse(fallbackData);
+          const resolvedWalls = fallbackData.walls ?? sendWalls ?? Array.from({ length: 18 }, () => Array(28).fill(false));
+          const resolvedWeights = fallbackData.weights ?? sendWeights ?? Array.from({ length: 18 }, () => Array(28).fill(1));
+          setWalls(resolvedWalls);
+          setWeights(resolvedWeights);
+          currentWallsRef.current = resolvedWalls;
+          currentWeightsRef.current = resolvedWeights;
+
+          setHasFreshDataset(true);
+          setHasUnsimulatedEdits(false);
+          playback.reset();
+          load.markReady();
+          setFallbackNotice('Offline Mode: Simulated locally in your browser (backend unreachable).');
+          if (autoplay) {
+            play('start');
+            playback.setPlaying(true);
+            setHasFreshDataset(false);
+          }
+        } catch (fallbackErr) {
+          console.error('Local fallback simulation error:', fallbackErr);
+          load.markError(
+            err instanceof ApiTimeoutError ? 'The backend did not respond in time' : 'Could not reach the backend',
+            'Could not execute pathfinding simulation. Check that the backend is running, then retry.'
+          );
+        }
       }
     },
     [algorithms, mazeType, walls, weights, startNode, endNode, play, playback, load]
@@ -603,7 +641,7 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
         </div>
       </header>
 
-      {/* No in-browser fallback exists for pathfinding — surface the failure. */}
+      {/* Backend unreachable and no local fallback available */}
       {load.hasError && (
         <div className="validation-alert-banner">
           <span className="alert-icon">⚠️</span>
@@ -612,6 +650,22 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
           </span>
           <button type="button" className="btn btn-secondary arena-retry-btn" onClick={handleReset}>
             Retry
+          </button>
+        </div>
+      )}
+
+      {/* Result came from browser fallback rather than backend */}
+      {fallbackNotice && (
+        <div className="arena-notice-banner" role="status">
+          <Cpu size={16} className="arena-notice-icon" />
+          <span>{fallbackNotice}</span>
+          <button
+            type="button"
+            className="arena-notice-close"
+            onClick={() => setFallbackNotice(null)}
+            aria-label="Dismiss notice"
+          >
+            ✕
           </button>
         </div>
       )}
