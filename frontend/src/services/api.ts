@@ -3,10 +3,12 @@ import type { CatalogResponse, RaceResponse, TreeSimulationRequest, TreeSimulati
 const isBrowser = typeof window !== 'undefined';
 const isLocalhost =
   isBrowser && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+const RENDER_BACKEND_URL = 'https://algorithmracevisualizer.onrender.com';
 const configuredBase = import.meta.env.VITE_API_BASE_URL?.trim();
 
-export const isBackendAvailable = Boolean(configuredBase || isLocalhost);
-const API_BASE_URL = configuredBase || (isLocalhost ? 'http://localhost:8080' : '');
+export const isBackendAvailable = true;
+const API_BASE_URL = configuredBase || (isLocalhost ? 'http://localhost:8080' : RENDER_BACKEND_URL);
 
 /**
  * Every request gets a deadline. Without one a cold or sleeping backend leaves
@@ -60,10 +62,6 @@ function withDeadline(timeoutMs: number, external?: AbortSignal | null) {
 }
 
 async function request<T>(path: string, options?: RequestOptions): Promise<T> {
-  if (!API_BASE_URL) {
-    throw new Error('Standalone client mode: No backend server configured.');
-  }
-
   const { timeoutMs = DEFAULT_TIMEOUT_MS, signal: callerSignal, headers, ...rest } = options ?? {};
   const deadline = withDeadline(timeoutMs, callerSignal);
 
