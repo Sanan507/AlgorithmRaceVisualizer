@@ -95,7 +95,7 @@ export function Controls({
                 className="timeline-slider"
                 disabled={disabled}
                 aria-label="Timeline"
-                style={{ background: `linear-gradient(to right, #0ea5e9 ${timelinePercent}%, rgba(129, 140, 248, 0.2) ${timelinePercent}%)` }}
+                style={{ background: `linear-gradient(to right, #fc6d26 ${timelinePercent}%, rgba(252, 109, 38, 0.2) ${timelinePercent}%)` }}
               />
               <span className="frame-counter">
                 {frameIndex + 1} / {maxFrames}
@@ -115,7 +115,7 @@ export function Controls({
           onChange={(event) => onSpeedChange(Number(event.target.value))}
           className="speed-slider"
           aria-label="Playback Speed"
-          style={{ background: `linear-gradient(to right, #0ea5e9 ${speedPercent}%, rgba(129, 140, 248, 0.2) ${speedPercent}%)` }}
+          style={{ background: `linear-gradient(to right, #fc6d26 ${speedPercent}%, rgba(252, 109, 38, 0.2) ${speedPercent}%)` }}
         />
         <span className="speed-value">{speed}x</span>
       </label>

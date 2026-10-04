@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import './styles.css';
 import './styles/arenaLoading.css';
-import './styles/gitlabLanding.css';
+import './styles/landing.css';
 import './styles/mobile.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

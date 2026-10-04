@@ -800,7 +800,7 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
                     { label: 'Water (5x)', weight: 5, color: '#0284c7', badgeBg: 'rgba(2, 132, 199, 0.15)' },
                     { label: 'Forest (8x)', weight: 8, color: '#16a34a', badgeBg: 'rgba(22, 163, 74, 0.15)' },
                     { label: 'Mountain (15x)', weight: 15, color: '#64748b', badgeBg: 'rgba(100, 116, 139, 0.15)' },
-                    { label: 'Clear (1x)', weight: 1, color: '#6366f1', badgeBg: 'rgba(99, 102, 241, 0.15)' }
+                    { label: 'Clear (1x)', weight: 1, color: '#fc6d26', badgeBg: 'rgba(252, 109, 38, 0.15)' }
                   ].map((t) => (
                     <button
                       key={t.weight}

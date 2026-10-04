@@ -336,7 +336,7 @@ export function LandingPage({ onNavigate, darkMode = true, setDarkMode }: Props)
   };
 
   return (
-    <div className={`gitlab-landing ${!darkMode ? 'light-mode' : ''}`}>
+    <div className={`landing-page ${!darkMode ? 'light-mode' : ''} gitlab-landing`}>
       <div className="gl-bg-mesh" />
       <div className="gl-grid-pattern" />
 

@@ -205,7 +205,7 @@ export function QuizPage({ onNavigateArena }: QuizPageProps) {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <h1>AlgoGym & Interactive Challenge Arena</h1>
-            <span className="worker-pill-badge" style={{ background: 'rgba(99, 102, 241, 0.15)', borderColor: '#6366f1', color: '#a5b4fc' }}>
+            <span className="worker-pill-badge" style={{ background: 'rgba(252, 109, 38, 0.15)', borderColor: '#fc6d26', color: '#fc6d26' }}>
               <Sparkles size={13} className="text-amber-400" />
               <span>SaaS Gamification Engine</span>
             </span>

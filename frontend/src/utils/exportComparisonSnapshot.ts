@@ -145,13 +145,12 @@ export function exportComparisonSnapshot(options: SnapshotExportOptions) {
 
   // Top Neon Line with Glow
   ctx.save();
-  ctx.shadowColor = '#6366f1';
+  ctx.shadowColor = '#fc6d26';
   ctx.shadowBlur = 14;
   const topBarGrad = ctx.createLinearGradient(0, 0, baseWidth, 0);
-  topBarGrad.addColorStop(0, '#38bdf8');
-  topBarGrad.addColorStop(0.35, '#818cf8');
-  topBarGrad.addColorStop(0.7, '#c084fc');
-  topBarGrad.addColorStop(1, '#f43f5e');
+  topBarGrad.addColorStop(0, '#fc6d26');
+  topBarGrad.addColorStop(0.5, '#ec4899');
+  topBarGrad.addColorStop(1, '#8b5cf6');
   ctx.fillStyle = topBarGrad;
   ctx.fillRect(0, 0, baseWidth, 4);
   ctx.restore();

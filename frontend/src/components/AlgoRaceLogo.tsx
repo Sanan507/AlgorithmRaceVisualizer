@@ -55,9 +55,9 @@ export const AlgoRaceLogo: React.FC<LogoProps> = ({
         >
           <defs>
             <linearGradient id={`${gradientId}-bars`} x1="0" y1="32" x2="32" y2="0">
-              <stop offset="0%" stopColor="#38bdf8" />
-              <stop offset="55%" stopColor="#818cf8" />
-              <stop offset="100%" stopColor="#c084fc" />
+              <stop offset="0%" stopColor="#6366f1" />
+              <stop offset="50%" stopColor="#ec4899" />
+              <stop offset="100%" stopColor="#fc6d26" />
             </linearGradient>
           </defs>
 
@@ -71,7 +71,7 @@ export const AlgoRaceLogo: React.FC<LogoProps> = ({
             height="10"
             rx="2.75"
             fill={`url(#${gradientId}-bars)`}
-            opacity="0.42"
+            opacity="0.55"
           />
           <rect
             className="logo-bar logo-bar--2"
@@ -81,7 +81,7 @@ export const AlgoRaceLogo: React.FC<LogoProps> = ({
             height="17"
             rx="2.75"
             fill={`url(#${gradientId}-bars)`}
-            opacity="0.68"
+            opacity="0.8"
           />
           <rect
             className="logo-bar logo-bar--3"
@@ -110,7 +110,7 @@ export const AlgoRaceLogo: React.FC<LogoProps> = ({
               Algo
               <span
                 style={{
-                  background: 'linear-gradient(135deg, #38bdf8 0%, #818cf8 55%, #c084fc 100%)',
+                  background: 'linear-gradient(135deg, #fc6d26 0%, #ec4899 50%, #8b5cf6 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                 }}
@@ -127,9 +127,9 @@ export const AlgoRaceLogo: React.FC<LogoProps> = ({
                   fontWeight: 600,
                   padding: '1.5px 6px',
                   borderRadius: '6px',
-                  background: 'rgba(99, 102, 241, 0.1)',
-                  border: '1px solid rgba(99, 102, 241, 0.22)',
-                  color: '#818cf8',
+                  background: 'rgba(252, 109, 38, 0.12)',
+                  border: '1px solid rgba(252, 109, 38, 0.3)',
+                  color: '#fc6d26',
                   letterSpacing: '0.02em',
                 }}
               >
