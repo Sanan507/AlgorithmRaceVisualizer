@@ -1,4 +1,4 @@
-import { BarChart3, Binary, GitBranch, History, Settings, ChevronLeft, ChevronRight, LayoutGrid, X, Sun, Moon, Layers, FolderTree, Trophy } from 'lucide-react';
+import { BarChart3, Binary, GitBranch, History, Settings, ChevronLeft, ChevronRight, LayoutGrid, X, Layers, FolderTree, Trophy } from 'lucide-react';
 import { useAudio } from '../context/AudioContext';
 import { AlgoRaceLogo } from './AlgoRaceLogo';
 
@@ -101,22 +101,6 @@ export function Sidebar({
         </div>
 
         <div className="sidebar-bottom">
-          {setDarkMode && (
-            <button
-              className="nav-item theme-toggle-item"
-              onClick={() => {
-                play('click');
-                setDarkMode(!darkMode);
-              }}
-              title={collapsed ? (darkMode ? 'Switch to Light Mode (T)' : 'Switch to Dark Mode (T)') : undefined}
-              aria-label={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            >
-              {darkMode ? <Sun size={18} className="nav-icon text-amber-400" /> : <Moon size={18} className="nav-icon" />}
-              <span className="nav-label">{darkMode ? 'Light Mode' : 'Dark Mode'}</span>
-              {!collapsed && <kbd className="sidebar-hotkey-badge">T</kbd>}
-            </button>
-          )}
-
           <button 
             className="nav-item sidebar-toggle-item" 
             onClick={handleToggle} 

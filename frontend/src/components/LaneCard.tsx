@@ -105,7 +105,11 @@ export const LaneCard = memo(function LaneCard({
     if (frame?.pathFound && frame?.path && frame.path.length > 0) {
       const pSteps = frame.path.length;
       const pCost = weights
-        ? frame.path.reduce((sum, pt) => sum + (weights?.[pt.row]?.[pt.col] ?? 1), 0)
+        ? frame.path.reduce((sum, pt) => {
+            const r = pt.row ?? (pt as any).r ?? 0;
+            const c = pt.col ?? (pt as any).c ?? 0;
+            return sum + (weights?.[r]?.[c] ?? 1);
+          }, 0)
         : pSteps;
       actionValue = pCost !== pSteps ? `Cost: ${pCost} (${pSteps} steps)` : `${pSteps} steps`;
     } else if (frame?.done) {

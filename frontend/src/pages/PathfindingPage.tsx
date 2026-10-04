@@ -553,10 +553,15 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
   const winnerPathCost = useMemo(() => {
     if (!winnerLane?.frames) return 0;
     const finalFrame = winnerLane.frames[winnerLane.frames.length - 1];
-    if (!finalFrame?.path) return 0;
-    if (!response?.weights) return finalFrame.path.length;
-    return finalFrame.path.reduce((sum, pt) => sum + (response.weights?.[pt.row]?.[pt.col] ?? 1), 0);
-  }, [winnerLane, response]);
+    if (!finalFrame?.path || finalFrame.path.length === 0) return 0;
+    const gridWeights = response?.weights ?? weights ?? currentWeightsRef.current;
+    if (!gridWeights) return finalFrame.path.length;
+    return finalFrame.path.reduce((sum, pt) => {
+      const r = pt.row ?? pt.r ?? 0;
+      const c = pt.col ?? pt.c ?? 0;
+      return sum + (gridWeights[r]?.[c] ?? 1);
+    }, 0);
+  }, [winnerLane, response, weights]);
 
   useEffect(() => {
     if (isCompleted && response && hasStartedPlaybackRef.current && !winnerAnnouncedRef.current) {

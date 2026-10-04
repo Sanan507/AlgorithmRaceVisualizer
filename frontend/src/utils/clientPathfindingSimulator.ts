@@ -354,17 +354,17 @@ function simulateSingleLane(
 
     if (meetingPoint) {
       // Reconstruct bidirectional path
-      const forwardHalf: { row: number; col: number }[] = [];
+      const forwardHalf: { row: number; col: number; r: number; c: number }[] = [];
       let curr: [number, number] | undefined = meetingPoint;
       while (curr && (curr[0] !== -1 || curr[1] !== -1)) {
-        forwardHalf.unshift({ row: curr[0], col: curr[1] });
+        forwardHalf.unshift({ row: curr[0], col: curr[1], r: curr[0], c: curr[1] });
         const p = visitedForward.get(key(curr[0], curr[1]));
         curr = p && p[0] !== -1 ? p : undefined;
       }
-      const backwardHalf: { row: number; col: number }[] = [];
+      const backwardHalf: { row: number; col: number; r: number; c: number }[] = [];
       let bCurr = visitedBackward.get(key(meetingPoint[0], meetingPoint[1]));
       while (bCurr && (bCurr[0] !== -1 || bCurr[1] !== -1)) {
-        backwardHalf.push({ row: bCurr[0], col: bCurr[1] });
+        backwardHalf.push({ row: bCurr[0], col: bCurr[1], r: bCurr[0], c: bCurr[1] });
         const p = visitedBackward.get(key(bCurr[0], bCurr[1]));
         bCurr = p && p[0] !== -1 ? p : undefined;
       }
@@ -460,7 +460,7 @@ function simulateSingleLane(
   if (pathFound && finalPath.length === 0) {
     let curr: [number, number] | undefined = [eR, eC];
     while (curr) {
-      finalPath.unshift({ row: curr[0], col: curr[1] });
+      finalPath.unshift({ row: curr[0], col: curr[1], r: curr[0], c: curr[1] });
       curr = parentMap.get(key(curr[0], curr[1]));
     }
   }

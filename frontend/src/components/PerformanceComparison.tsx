@@ -252,7 +252,11 @@ export function PerformanceComparison({
     const effectiveWeights = response?.weights ?? weights;
     const pathLength = (type === 'pathfinding' && frame?.path) ? frame.path.length : 0;
     const pathCost = (type === 'pathfinding' && frame?.path)
-      ? frame.path.reduce((sum, pt) => sum + (effectiveWeights?.[pt.row]?.[pt.col] ?? 1), 0)
+      ? frame.path.reduce((sum, pt) => {
+          const r = pt.row ?? (pt as any).r ?? 0;
+          const c = pt.col ?? (pt as any).c ?? 0;
+          return sum + (effectiveWeights?.[r]?.[c] ?? 1);
+        }, 0)
       : pathLength;
 
     if (type === 'sorting') {

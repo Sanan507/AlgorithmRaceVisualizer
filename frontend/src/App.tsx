@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
-import { Sun, Moon, Menu } from 'lucide-react';
+import { Sun, Moon, Menu, Github } from 'lucide-react';
 import { Sidebar } from './components/Sidebar';
 import { AlgoRaceLogo } from './components/AlgoRaceLogo';
 import { LandingPage } from './pages/LandingPage';
@@ -262,6 +262,35 @@ export default function App() {
             />
 
             <div className="content-shell">
+              <div className="desktop-top-bar">
+                <div className="desktop-top-bar-right">
+                  <button
+                    type="button"
+                    className="app-theme-toggle"
+                    onClick={() => {
+                      play('click');
+                      setDarkMode(!darkMode);
+                    }}
+                    title={darkMode ? 'Switch to Light Mode (T)' : 'Switch to Dark Mode (T)'}
+                    aria-label={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                  >
+                    {darkMode ? <Sun size={15} className="text-amber-400" /> : <Moon size={15} className="text-sky-600" />}
+                    <span>{darkMode ? 'Light' : 'Dark'}</span>
+                    <kbd className="theme-kbd">T</kbd>
+                  </button>
+                  <a
+                    href="https://github.com/Sanan507/AlgorithmRaceVisualizer"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="app-github-btn"
+                    title="View GitHub Repository"
+                    aria-label="GitHub Repository"
+                  >
+                    <Github size={16} />
+                  </a>
+                </div>
+              </div>
+
               {active === 'sorting' && <SortingPage catalog={catalog} />}
               {active === 'searching' && <SearchingPage catalog={catalog} />}
               {active === 'pathfinding' && <PathfindingPage catalog={catalog} />}

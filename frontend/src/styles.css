@@ -829,6 +829,120 @@ button, input, select {
   overflow-y: auto;
 }
 
+/* Desktop Global Top Utility Bar */
+.desktop-top-bar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 16px 48px 0;
+  margin-bottom: -16px;
+  position: relative;
+  z-index: 40;
+}
+
+@media (max-width: 900px) {
+  .desktop-top-bar {
+    display: none;
+  }
+}
+
+.desktop-top-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.app-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  background: var(--color-bg-panel);
+  border: 1px solid var(--color-border-line);
+  color: var(--color-text-primary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.app-theme-toggle:hover {
+  border-color: var(--color-accent-secondary);
+  background: var(--color-bg-panel-2);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--color-accent-glow);
+}
+
+:root[data-theme='light'] .app-theme-toggle {
+  background: #ffffff;
+  border: 1px solid rgba(0, 101, 145, 0.16);
+  box-shadow: 0 2px 8px rgba(0, 101, 145, 0.06);
+  color: #131b2e;
+}
+
+:root[data-theme='light'] .app-theme-toggle:hover {
+  background: #f0f9ff;
+  border-color: #0ea5e9;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.18);
+}
+
+.theme-kbd {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(14, 165, 233, 0.1);
+  border: 1px solid rgba(14, 165, 233, 0.25);
+  color: var(--color-accent-secondary);
+}
+
+:root[data-theme='light'] .theme-kbd {
+  background: rgba(14, 165, 233, 0.1);
+  border-color: rgba(14, 165, 233, 0.3);
+  color: #0284c7;
+}
+
+.app-github-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-bg-panel);
+  border: 1px solid var(--color-border-line);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  text-decoration: none;
+}
+
+.app-github-btn:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-accent-secondary);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--color-accent-glow);
+}
+
+:root[data-theme='light'] .app-github-btn {
+  background: #ffffff;
+  border: 1px solid rgba(0, 101, 145, 0.16);
+  box-shadow: 0 2px 8px rgba(0, 101, 145, 0.06);
+  color: #475569;
+}
+
+:root[data-theme='light'] .app-github-btn:hover {
+  background: #f0f9ff;
+  border-color: #0ea5e9;
+  color: #0f172a;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.18);
+}
+
 .page {
   padding: 40px 48px;
   max-width: 1600px;

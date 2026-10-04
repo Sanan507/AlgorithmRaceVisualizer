@@ -16,7 +16,12 @@ export type CatalogResponse = {
   complexity: Record<string, ComplexityInfo>;
 };
 
-export type PointDto = { row: number; col: number };
+export type PointDto = {
+  row?: number;
+  col?: number;
+  r?: number;
+  c?: number;
+};
 
 export type SimulationFrame = {
   frame: number;
