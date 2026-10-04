@@ -42,6 +42,19 @@ export type SimulationFrame = {
   explanation?: string;
 };
 
+export type CellState =
+  | 'EMPTY'
+  | 'WALL'
+  | 'START'
+  | 'END'
+  | 'VISITED'
+  | 'FRONTIER'
+  | 'PATH'
+  | 'VISITED_FORWARD'
+  | 'VISITED_BACKWARD'
+  | 'FRONTIER_FORWARD'
+  | 'FRONTIER_BACKWARD';
+
 export type LaneStats = {
   comparisons: number;
   swaps: number;
@@ -49,6 +62,7 @@ export type LaneStats = {
   timeMs: number;
   found: boolean;
   foundIndex: number | null;
+  pathFound?: boolean;
 };
 
 export type RaceLaneResponse = {

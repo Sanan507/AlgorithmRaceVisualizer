@@ -127,6 +127,8 @@ export function simulateClientPathfinding(params: PathfindingParams): RaceRespon
 
   return {
     type: 'pathfinding',
+    dataset: null,
+    target: null,
     walls,
     weights,
     lanes,
@@ -500,6 +502,7 @@ function simulateSingleLane(
     swaps: 0,
     steps,
     timeMs: frames.length * frameMs,
+    found: pathFound,
     pathFound,
     foundIndex: pathFound ? finalPath.length : null,
   };
