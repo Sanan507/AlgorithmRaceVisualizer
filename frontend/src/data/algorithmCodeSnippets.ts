@@ -1,3 +1,5 @@
+import { fallbackCatalog } from './fallbackCatalog';
+
 export type SupportedLanguage = 'typescript' | 'java' | 'python' | 'cpp';
 export type StepOperation = 'compare' | 'swap' | 'pivot' | 'region' | 'done' | 'loop' | 'found' | 'notfound' | 'visit' | 'idle';
 
@@ -549,6 +551,441 @@ function merge(L: number[], R: number[]): number[] {
     },
   },
 
+  /* ────────────────── HEAP SORT ────────────────── */
+  heapsort: {
+    algorithmId: 'heapsort',
+    algorithmName: 'Heap Sort',
+    languages: {
+      typescript: {
+        language: 'typescript', displayName: 'TypeScript',
+        code: `function heapSort(arr: number[]): number[] {
+  const n = arr.length;
+  for (let i = Math.floor(n / 2) - 1; i >= 0; i--) heapify(arr, n, i);
+  for (let i = n - 1; i > 0; i--) {
+    [arr[0], arr[i]] = [arr[i], arr[0]];      // extract max
+    heapify(arr, i, 0);                        // restore heap
+  }
+  return arr;
+}`,
+        getHighlight: sortHighlight({ fnDecl: 0, outerLoop: 2, innerLoop: 3, compare: 2, swap: 4, doneReturn: 7 }),
+      },
+      java: {
+        language: 'java', displayName: 'Java',
+        code: `public static void heapSort(int[] arr) {
+    int n = arr.length;
+    for (int i = n / 2 - 1; i >= 0; i--) heapify(arr, n, i);
+    for (int i = n - 1; i > 0; i--) {
+        int temp = arr[0]; arr[0] = arr[i]; arr[i] = temp; // swap
+        heapify(arr, i, 0);
+    }
+}`,
+        getHighlight: sortHighlight({ fnDecl: 0, outerLoop: 2, innerLoop: 3, compare: 2, swap: 4, doneReturn: 7 }),
+      },
+      python: {
+        language: 'python', displayName: 'Python',
+        code: `def heap_sort(arr):
+    n = len(arr)
+    for i in range(n // 2 - 1, -1, -1): heapify(arr, n, i)
+    for i in range(n - 1, 0, -1):
+        arr[0], arr[i] = arr[i], arr[0]       # swap
+        heapify(arr, i, 0)
+    return arr`,
+        getHighlight: sortHighlight({ fnDecl: 0, outerLoop: 2, innerLoop: 3, compare: 2, swap: 4, doneReturn: 6 }),
+      },
+      cpp: {
+        language: 'cpp', displayName: 'C++',
+        code: `void heapSort(vector<int>& arr) {
+    int n = arr.size();
+    for (int i = n / 2 - 1; i >= 0; i--) heapify(arr, n, i);
+    for (int i = n - 1; i > 0; i--) {
+        swap(arr[0], arr[i]);                 // swap
+        heapify(arr, i, 0);
+    }
+}`,
+        getHighlight: sortHighlight({ fnDecl: 0, outerLoop: 2, innerLoop: 3, compare: 2, swap: 4, doneReturn: 7 }),
+      },
+    },
+  },
+
+  /* ────────────────── SHELL SORT ────────────────── */
+  shellsort: {
+    algorithmId: 'shellsort',
+    algorithmName: 'Shell Sort',
+    languages: {
+      typescript: {
+        language: 'typescript', displayName: 'TypeScript',
+        code: `function shellSort(arr: number[]): number[] {
+  const n = arr.length;
+  for (let gap = Math.floor(n / 2); gap > 0; gap = Math.floor(gap / 2)) {
+    for (let i = gap; i < n; i++) {
+      const temp = arr[i];
+      let j = i;
+      while (j >= gap && arr[j - gap] > temp) {
+        arr[j] = arr[j - gap];                // shift
+        j -= gap;
+      }
+      arr[j] = temp;
+    }
+  }
+  return arr;
+}`,
+        getHighlight: sortHighlight({ fnDecl: 0, outerLoop: 2, innerLoop: 3, compare: 6, swap: 7, doneReturn: 13 }),
+      },
+      java: {
+        language: 'java', displayName: 'Java',
+        code: `public static void shellSort(int[] arr) {
+    int n = arr.length;
+    for (int gap = n / 2; gap > 0; gap /= 2) {
+        for (int i = gap; i < n; i++) {
+            int temp = arr[i], j = i;
+            while (j >= gap && arr[j - gap] > temp) {
+                arr[j] = arr[j - gap];
+                j -= gap;
+            }
+            arr[j] = temp;
+        }
+    }
+}`,
+        getHighlight: sortHighlight({ fnDecl: 0, outerLoop: 2, innerLoop: 3, compare: 5, swap: 6, doneReturn: 12 }),
+      },
+      python: {
+        language: 'python', displayName: 'Python',
+        code: `def shell_sort(arr):
+    n = len(arr)
+    gap = n // 2
+    while gap > 0:
+        for i in range(gap, n):
+            temp = arr[i]
+            j = i
+            while j >= gap and arr[j - gap] > temp:
+                arr[j] = arr[j - gap]
+                j -= gap
+            arr[j] = temp
+        gap //= 2
+    return arr`,
+        getHighlight: sortHighlight({ fnDecl: 0, outerLoop: 3, innerLoop: 4, compare: 7, swap: 8, doneReturn: 12 }),
+      },
+      cpp: {
+        language: 'cpp', displayName: 'C++',
+        code: `void shellSort(vector<int>& arr) {
+    int n = arr.size();
+    for (int gap = n / 2; gap > 0; gap /= 2) {
+        for (int i = gap; i < n; i++) {
+            int temp = arr[i], j = i;
+            while (j >= gap && arr[j - gap] > temp) {
+                arr[j] = arr[j - gap];
+                j -= gap;
+            }
+            arr[j] = temp;
+        }
+    }
+}`,
+        getHighlight: sortHighlight({ fnDecl: 0, outerLoop: 2, innerLoop: 3, compare: 5, swap: 6, doneReturn: 12 }),
+      },
+    },
+  },
+
+  /* ────────────────── COMB SORT ────────────────── */
+  combsort: {
+    algorithmId: 'combsort',
+    algorithmName: 'Comb Sort',
+    languages: {
+      typescript: {
+        language: 'typescript', displayName: 'TypeScript',
+        code: `function combSort(arr: number[]): number[] {
+  let gap = arr.length;
+  let swapped = true;
+  while (gap > 1 || swapped) {
+    gap = Math.max(1, Math.floor(gap / 1.3));
+    swapped = false;
+    for (let i = 0; i < arr.length - gap; i++) {
+      if (arr[i] > arr[i + gap]) {            // compare
+        [arr[i], arr[i + gap]] = [arr[i + gap], arr[i]]; // swap
+        swapped = true;
+      }
+    }
+  }
+  return arr;
+}`,
+        getHighlight: sortHighlight({ fnDecl: 0, outerLoop: 3, innerLoop: 6, compare: 7, swap: 8, doneReturn: 13 }),
+      },
+      java: {
+        language: 'java', displayName: 'Java',
+        code: `public static void combSort(int[] arr) {
+    int gap = arr.length;
+    boolean swapped = true;
+    while (gap > 1 || swapped) {
+        gap = Math.max(1, (int)(gap / 1.3));
+        swapped = false;
+        for (int i = 0; i < arr.length - gap; i++) {
+            if (arr[i] > arr[i + gap]) {
+                int temp = arr[i]; arr[i] = arr[i + gap]; arr[i + gap] = temp;
+                swapped = true;
+            }
+        }
+    }
+}`,
+        getHighlight: sortHighlight({ fnDecl: 0, outerLoop: 3, innerLoop: 6, compare: 7, swap: 8, doneReturn: 13 }),
+      },
+      python: {
+        language: 'python', displayName: 'Python',
+        code: `def comb_sort(arr):
+    gap = len(arr)
+    swapped = True
+    while gap > 1 or swapped:
+        gap = max(1, int(gap / 1.3))
+        swapped = False
+        for i in range(len(arr) - gap):
+            if arr[i] > arr[i + gap]:
+                arr[i], arr[i + gap] = arr[i + gap], arr[i]
+                swapped = True
+    return arr`,
+        getHighlight: sortHighlight({ fnDecl: 0, outerLoop: 3, innerLoop: 6, compare: 7, swap: 8, doneReturn: 10 }),
+      },
+      cpp: {
+        language: 'cpp', displayName: 'C++',
+        code: `void combSort(vector<int>& arr) {
+    int gap = arr.size();
+    bool swapped = true;
+    while (gap > 1 || swapped) {
+        gap = max(1, (int)(gap / 1.3));
+        swapped = false;
+        for (int i = 0; i < (int)arr.size() - gap; i++) {
+            if (arr[i] > arr[i + gap]) {
+                swap(arr[i], arr[i + gap]);
+                swapped = true;
+            }
+        }
+    }
+}`,
+        getHighlight: sortHighlight({ fnDecl: 0, outerLoop: 3, innerLoop: 6, compare: 7, swap: 8, doneReturn: 13 }),
+      },
+    },
+  },
+
+  /* ────────────────── COCKTAIL SORT ────────────────── */
+  cocktailsort: {
+    algorithmId: 'cocktailsort',
+    algorithmName: 'Cocktail Sort',
+    languages: {
+      typescript: {
+        language: 'typescript', displayName: 'TypeScript',
+        code: `function cocktailSort(arr: number[]): number[] {
+  let swapped = true, start = 0, end = arr.length - 1;
+  while (swapped) {
+    swapped = false;
+    for (let i = start; i < end; i++) {
+      if (arr[i] > arr[i + 1]) {
+        [arr[i], arr[i + 1]] = [arr[i + 1], arr[i]]; // forward pass
+        swapped = true;
+      }
+    }
+    if (!swapped) break;
+    end--; swapped = false;
+    for (let i = end - 1; i >= start; i--) {
+      if (arr[i] > arr[i + 1]) {
+        [arr[i], arr[i + 1]] = [arr[i + 1], arr[i]]; // backward pass
+        swapped = true;
+      }
+    }
+    start++;
+  }
+  return arr;
+}`,
+        getHighlight: sortHighlight({ fnDecl: 0, outerLoop: 2, innerLoop: 4, compare: 5, swap: 6, doneReturn: 19 }),
+      },
+      java: {
+        language: 'java', displayName: 'Java',
+        code: `public static void cocktailSort(int[] arr) {
+    boolean swapped = true; int start = 0, end = arr.length - 1;
+    while (swapped) {
+        swapped = false;
+        for (int i = start; i < end; i++) {
+            if (arr[i] > arr[i + 1]) {
+                int t = arr[i]; arr[i] = arr[i + 1]; arr[i + 1] = t;
+                swapped = true;
+            }
+        }
+        if (!swapped) break;
+        end--; swapped = false;
+        for (int i = end - 1; i >= start; i--) {
+            if (arr[i] > arr[i + 1]) {
+                int t = arr[i]; arr[i] = arr[i + 1]; arr[i + 1] = t;
+                swapped = true;
+            }
+        }
+        start++;
+    }
+}`,
+        getHighlight: sortHighlight({ fnDecl: 0, outerLoop: 2, innerLoop: 4, compare: 5, swap: 6, doneReturn: 18 }),
+      },
+      python: {
+        language: 'python', displayName: 'Python',
+        code: `def cocktail_sort(arr):
+    swapped = True
+    start, end = 0, len(arr) - 1
+    while swapped:
+        swapped = False
+        for i in range(start, end):
+            if arr[i] > arr[i + 1]:
+                arr[i], arr[i + 1] = arr[i + 1], arr[i]
+                swapped = True
+        if not swapped: break
+        end -= 1
+        swapped = False
+        for i in range(end - 1, start - 1, -1):
+            if arr[i] > arr[i + 1]:
+                arr[i], arr[i + 1] = arr[i + 1], arr[i]
+                swapped = True
+        start += 1
+    return arr`,
+        getHighlight: sortHighlight({ fnDecl: 0, outerLoop: 3, innerLoop: 5, compare: 6, swap: 7, doneReturn: 17 }),
+      },
+      cpp: {
+        language: 'cpp', displayName: 'C++',
+        code: `void cocktailSort(vector<int>& arr) {
+    bool swapped = true; int start = 0, end = (int)arr.size() - 1;
+    while (swapped) {
+        swapped = false;
+        for (int i = start; i < end; i++) {
+            if (arr[i] > arr[i + 1]) {
+                swap(arr[i], arr[i + 1]);
+                swapped = true;
+            }
+        }
+        if (!swapped) break;
+        end--; swapped = false;
+        for (int i = end - 1; i >= start; i--) {
+            if (arr[i] > arr[i + 1]) {
+                swap(arr[i], arr[i + 1]);
+                swapped = true;
+            }
+        }
+        start++;
+    }
+}`,
+        getHighlight: sortHighlight({ fnDecl: 0, outerLoop: 2, innerLoop: 4, compare: 5, swap: 6, doneReturn: 18 }),
+      },
+    },
+  },
+
+  /* ────────────────── COUNTING SORT ────────────────── */
+  countingsort: {
+    algorithmId: 'countingsort',
+    algorithmName: 'Counting Sort',
+    languages: {
+      typescript: {
+        language: 'typescript', displayName: 'TypeScript',
+        code: `function countingSort(arr: number[]): number[] {
+  const max = Math.max(...arr, 0);
+  const count = new Array(max + 1).fill(0);
+  for (const x of arr) count[x]++;             // count frequencies
+  let idx = 0;
+  for (let i = 0; i <= max; i++) {
+    while (count[i]-- > 0) {
+      arr[idx++] = i;                         // rebuild array
+    }
+  }
+  return arr;
+}`,
+        getHighlight: sortHighlight({ fnDecl: 0, outerLoop: 3, innerLoop: 5, compare: 3, swap: 7, doneReturn: 10 }),
+      },
+      java: {
+        language: 'java', displayName: 'Java',
+        code: `public static void countingSort(int[] arr) {
+    int max = Arrays.stream(arr).max().orElse(0);
+    int[] count = new int[max + 1];
+    for (int x : arr) count[x]++;             // count
+    int idx = 0;
+    for (int i = 0; i <= max; i++) {
+        while (count[i]-- > 0) arr[idx++] = i; // rebuild
+    }
+}`,
+        getHighlight: sortHighlight({ fnDecl: 0, outerLoop: 3, innerLoop: 5, compare: 3, swap: 6, doneReturn: 8 }),
+      },
+      python: {
+        language: 'python', displayName: 'Python',
+        code: `def counting_sort(arr):
+    if not arr: return arr
+    max_val = max(arr)
+    count = [0] * (max_val + 1)
+    for x in arr: count[x] += 1                # count
+    idx = 0
+    for i in range(max_val + 1):
+        while count[i] > 0:
+            arr[idx] = i; idx += 1; count[i] -= 1
+    return arr`,
+        getHighlight: sortHighlight({ fnDecl: 0, outerLoop: 4, innerLoop: 6, compare: 4, swap: 8, doneReturn: 9 }),
+      },
+      cpp: {
+        language: 'cpp', displayName: 'C++',
+        code: `void countingSort(vector<int>& arr) {
+    if (arr.empty()) return;
+    int maxVal = *max_element(arr.begin(), arr.end());
+    vector<int> count(maxVal + 1, 0);
+    for (int x : arr) count[x]++;             // count
+    int idx = 0;
+    for (int i = 0; i <= maxVal; i++) {
+        while (count[i]-- > 0) arr[idx++] = i;
+    }
+}`,
+        getHighlight: sortHighlight({ fnDecl: 0, outerLoop: 4, innerLoop: 6, compare: 4, swap: 7, doneReturn: 9 }),
+      },
+    },
+  },
+
+  /* ────────────────── RADIX SORT ────────────────── */
+  radixsort: {
+    algorithmId: 'radixsort',
+    algorithmName: 'Radix Sort',
+    languages: {
+      typescript: {
+        language: 'typescript', displayName: 'TypeScript',
+        code: `function radixSort(arr: number[]): number[] {
+  const max = Math.max(...arr, 0);
+  for (let exp = 1; Math.floor(max / exp) > 0; exp *= 10) {
+    countSortByDigit(arr, exp);               // sort by current digit
+  }
+  return arr;
+}`,
+        getHighlight: sortHighlight({ fnDecl: 0, outerLoop: 2, innerLoop: 3, compare: 2, swap: 3, doneReturn: 5 }),
+      },
+      java: {
+        language: 'java', displayName: 'Java',
+        code: `public static void radixSort(int[] arr) {
+    int max = Arrays.stream(arr).max().orElse(0);
+    for (int exp = 1; max / exp > 0; exp *= 10) {
+        countSortByDigit(arr, exp);           // sort by digit
+    }
+}`,
+        getHighlight: sortHighlight({ fnDecl: 0, outerLoop: 2, innerLoop: 3, compare: 2, swap: 3, doneReturn: 5 }),
+      },
+      python: {
+        language: 'python', displayName: 'Python',
+        code: `def radix_sort(arr):
+    if not arr: return arr
+    max_val = max(arr)
+    exp = 1
+    while max_val // exp > 0:
+        count_sort_by_digit(arr, exp)         # sort by digit
+        exp *= 10
+    return arr`,
+        getHighlight: sortHighlight({ fnDecl: 0, outerLoop: 4, innerLoop: 5, compare: 4, swap: 5, doneReturn: 7 }),
+      },
+      cpp: {
+        language: 'cpp', displayName: 'C++',
+        code: `void radixSort(vector<int>& arr) {
+    if (arr.empty()) return;
+    int maxVal = *max_element(arr.begin(), arr.end());
+    for (int exp = 1; maxVal / exp > 0; exp *= 10) {
+        countSortByDigit(arr, exp);           // sort by digit
+    }
+}`,
+        getHighlight: sortHighlight({ fnDecl: 0, outerLoop: 3, innerLoop: 4, compare: 3, swap: 4, doneReturn: 6 }),
+      },
+    },
+  },
+
   /* ────────────────── LINEAR SEARCH ────────────────── */
   linearsearch: {
     algorithmId: 'linearsearch',
@@ -734,6 +1171,213 @@ function merge(L: number[], R: number[]): number[] {
     return -1;                               // not found
 }`,
         getHighlight: searchHighlight({ init: 1, loopHead: 2, checkTarget: 5, narrow: 7, found: 5, notFound: 11 }),
+      },
+    },
+  },
+
+  /* ────────────────── JUMP SEARCH ────────────────── */
+  jumpsearch: {
+    algorithmId: 'jumpsearch',
+    algorithmName: 'Jump Search',
+    languages: {
+      typescript: {
+        language: 'typescript', displayName: 'TypeScript',
+        code: `function jumpSearch(arr: number[], target: number): number {
+  const n = arr.length;
+  let step = Math.floor(Math.sqrt(n));
+  let prev = 0;
+  while (arr[Math.min(step, n) - 1] < target) { // jump block
+    prev = step;
+    step += Math.floor(Math.sqrt(n));
+    if (prev >= n) return -1;
+  }
+  while (arr[prev] < target) {                  // linear search inside block
+    prev++;
+    if (prev === Math.min(step, n)) return -1;
+  }
+  if (arr[prev] === target) return prev;        // found!
+  return -1;                                    // not found
+}`,
+        getHighlight: searchHighlight({ init: 1, loopHead: 4, checkTarget: 9, narrow: 5, found: 13, notFound: 14 }),
+      },
+      java: {
+        language: 'java', displayName: 'Java',
+        code: `public static int jumpSearch(int[] arr, int target) {
+    int n = arr.length;
+    int step = (int) Math.floor(Math.sqrt(n));
+    int prev = 0;
+    while (arr[Math.min(step, n) - 1] < target) { // jump block
+        prev = step;
+        step += (int) Math.floor(Math.sqrt(n));
+        if (prev >= n) return -1;
+    }
+    while (arr[prev] < target) {                  // linear search inside block
+        prev++;
+        if (prev == Math.min(step, n)) return -1;
+    }
+    if (arr[prev] == target) return prev;         // found!
+    return -1;                                    // not found
+}`,
+        getHighlight: searchHighlight({ init: 1, loopHead: 4, checkTarget: 9, narrow: 5, found: 13, notFound: 14 }),
+      },
+      python: {
+        language: 'python', displayName: 'Python',
+        code: `import math
+
+def jump_search(arr, target):
+    n = len(arr)
+    step = int(math.sqrt(n))
+    prev = 0
+    while arr[min(step, n) - 1] < target:       # jump block
+        prev = step
+        step += int(math.sqrt(n))
+        if prev >= n: return -1
+    while arr[prev] < target:                   # linear search inside block
+        prev += 1
+        if prev == min(step, n): return -1
+    if arr[prev] == target: return prev         # found!
+    return -1                                   # not found`,
+        getHighlight: searchHighlight({ init: 3, loopHead: 6, checkTarget: 10, narrow: 7, found: 13, notFound: 14 }),
+      },
+      cpp: {
+        language: 'cpp', displayName: 'C++',
+        code: `int jumpSearch(const vector<int>& arr, int target) {
+    int n = arr.size();
+    int step = sqrt(n);
+    int prev = 0;
+    while (arr[min(step, n) - 1] < target) {    // jump block
+        prev = step;
+        step += sqrt(n);
+        if (prev >= n) return -1;
+    }
+    while (arr[prev] < target) {                // linear search inside block
+        prev++;
+        if (prev == min(step, n)) return -1;
+    }
+    if (arr[prev] == target) return prev;       // found!
+    return -1;                                  // not found
+}`,
+        getHighlight: searchHighlight({ init: 1, loopHead: 4, checkTarget: 9, narrow: 5, found: 13, notFound: 14 }),
+      },
+    },
+  },
+
+  /* ────────────────── EXPONENTIAL SEARCH ────────────────── */
+  exponentialsearch: {
+    algorithmId: 'exponentialsearch',
+    algorithmName: 'Exponential Search',
+    languages: {
+      typescript: {
+        language: 'typescript', displayName: 'TypeScript',
+        code: `function exponentialSearch(arr: number[], target: number): number {
+  if (arr[0] === target) return 0;              // check first element
+  let i = 1;
+  while (i < arr.length && arr[i] <= target) {  // double search bound
+    i = i * 2;
+  }
+  return binarySearch(arr, target, Math.floor(i / 2), Math.min(i, arr.length - 1));
+}`,
+        getHighlight: searchHighlight({ init: 1, loopHead: 3, checkTarget: 1, narrow: 4, found: 6, notFound: 6 }),
+      },
+      java: {
+        language: 'java', displayName: 'Java',
+        code: `public static int exponentialSearch(int[] arr, int target) {
+    if (arr[0] == target) return 0;              // check first element
+    int i = 1;
+    while (i < arr.length && arr[i] <= target) { // double search bound
+        i = i * 2;
+    }
+    return binarySearch(arr, target, i / 2, Math.min(i, arr.length - 1));
+}`,
+        getHighlight: searchHighlight({ init: 1, loopHead: 3, checkTarget: 1, narrow: 4, found: 6, notFound: 6 }),
+      },
+      python: {
+        language: 'python', displayName: 'Python',
+        code: `def exponential_search(arr, target):
+    if arr[0] == target: return 0               # check first element
+    i = 1
+    while i < len(arr) and arr[i] <= target:    # double search bound
+        i = i * 2
+    return binary_search(arr, target, i // 2, min(i, len(arr) - 1))`,
+        getHighlight: searchHighlight({ init: 1, loopHead: 3, checkTarget: 1, narrow: 4, found: 5, notFound: 5 }),
+      },
+      cpp: {
+        language: 'cpp', displayName: 'C++',
+        code: `int exponentialSearch(const vector<int>& arr, int target) {
+    if (arr[0] == target) return 0;              // check first element
+    int i = 1, n = arr.size();
+    while (i < n && arr[i] <= target) {          // double search bound
+        i = i * 2;
+    }
+    return binarySearch(arr, target, i / 2, min(i, n - 1));
+}`,
+        getHighlight: searchHighlight({ init: 1, loopHead: 3, checkTarget: 1, narrow: 4, found: 6, notFound: 6 }),
+      },
+    },
+  },
+
+  /* ────────────────── INTERPOLATION SEARCH ────────────────── */
+  interpolationsearch: {
+    algorithmId: 'interpolationsearch',
+    algorithmName: 'Interpolation Search',
+    languages: {
+      typescript: {
+        language: 'typescript', displayName: 'TypeScript',
+        code: `function interpolationSearch(arr: number[], target: number): number {
+  let lo = 0, hi = arr.length - 1;
+  while (lo <= hi && target >= arr[lo] && target <= arr[hi]) {
+    if (lo === hi) return arr[lo] === target ? lo : -1;
+    const pos = lo + Math.floor(((target - arr[lo]) * (hi - lo)) / (arr[hi] - arr[lo]));
+    if (arr[pos] === target) return pos;        // found!
+    if (arr[pos] < target) lo = pos + 1;        // probe right
+    else hi = pos - 1;                          // probe left
+  }
+  return -1;                                    // not found
+}`,
+        getHighlight: searchHighlight({ init: 1, loopHead: 2, checkTarget: 5, narrow: 6, found: 5, notFound: 9 }),
+      },
+      java: {
+        language: 'java', displayName: 'Java',
+        code: `public static int interpolationSearch(int[] arr, int target) {
+    int lo = 0, hi = arr.length - 1;
+    while (lo <= hi && target >= arr[lo] && target <= arr[hi]) {
+        if (lo == hi) return arr[lo] == target ? lo : -1;
+        int pos = lo + ((target - arr[lo]) * (hi - lo)) / (arr[hi] - arr[lo]);
+        if (arr[pos] == target) return pos;     // found!
+        if (arr[pos] < target) lo = pos + 1;    // probe right
+        else hi = pos - 1;                      // probe left
+    }
+    return -1;                                  // not found
+}`,
+        getHighlight: searchHighlight({ init: 1, loopHead: 2, checkTarget: 5, narrow: 6, found: 5, notFound: 9 }),
+      },
+      python: {
+        language: 'python', displayName: 'Python',
+        code: `def interpolation_search(arr, target):
+    lo, hi = 0, len(arr) - 1
+    while lo <= hi and target >= arr[lo] and target <= arr[hi]:
+        if lo == hi: return lo if arr[lo] == target else -1
+        pos = lo + ((target - arr[lo]) * (hi - lo)) // (arr[hi] - arr[lo])
+        if arr[pos] == target: return pos       # found!
+        elif arr[pos] < target: lo = pos + 1    # probe right
+        else: hi = pos - 1                      # probe left
+    return -1                                   # not found`,
+        getHighlight: searchHighlight({ init: 1, loopHead: 2, checkTarget: 5, narrow: 6, found: 5, notFound: 8 }),
+      },
+      cpp: {
+        language: 'cpp', displayName: 'C++',
+        code: `int interpolationSearch(const vector<int>& arr, int target) {
+    int lo = 0, hi = (int)arr.size() - 1;
+    while (lo <= hi && target >= arr[lo] && target <= arr[hi]) {
+        if (lo == hi) return arr[lo] == target ? lo : -1;
+        int pos = lo + (double)(target - arr[lo]) / (arr[hi] - arr[lo]) * (hi - lo);
+        if (arr[pos] == target) return pos;     // found!
+        if (arr[pos] < target) lo = pos + 1;    // probe right
+        else hi = pos - 1;                      // probe left
+    }
+    return -1;                                  // not found
+}`,
+        getHighlight: searchHighlight({ init: 1, loopHead: 2, checkTarget: 5, narrow: 6, found: 5, notFound: 9 }),
       },
     },
   },
@@ -1538,12 +2182,75 @@ Node* insertBST(Node* root, int val) {
    PUBLIC API
    ═══════════════════════════════════════════════════════════════════════════ */
 
+const ALIAS_MAP: Record<string, string> = {
+  asearch: 'astar',
+  astarsearch: 'astar',
+  astar: 'astar',
+  a: 'astar',
+  dijkstras: 'dijkstra',
+  dijkstrasalgorithm: 'dijkstra',
+  breadthfirstsearch: 'bfs',
+  depthfirstsearch: 'dfs',
+  bidirectionalbreadthfirstsearch: 'bidirectionalbfs',
+  greedybestfirstsearch: 'greedybestfirst',
+  bst: 'binarysearchtree',
+  avl: 'avltree',
+  rbtree: 'redblacktree',
+  redblack: 'redblacktree',
+};
+
+function createCatalogFallbackSnippet(
+  algorithmName: string,
+  language: SupportedLanguage
+): CodeSnippet {
+  const info = fallbackCatalog.complexity[algorithmName] ||
+    Object.entries(fallbackCatalog.complexity).find(([k]) =>
+      k.toLowerCase().replace(/[^a-z0-9]/g, '') ===
+      algorithmName.toLowerCase().replace(/[^a-z0-9]/g, '')
+    )?.[1];
+
+  const pseudocode = info?.pseudocode ||
+    `// Algorithm: ${algorithmName}\n// Execution frame tracer ready\nwhile (hasActiveSteps()) {\n    processNextStep();\n}`;
+  const theory = info?.theory ? `// Note: ${info.theory}\n` : '';
+
+  const formatByLang: Record<SupportedLanguage, string> = {
+    typescript: `// TypeScript Implementation: ${algorithmName}\n${theory}\n${pseudocode}`,
+    java: `// Java Implementation: ${algorithmName}\n${theory}\n${pseudocode}`,
+    python: `# Python Implementation: ${algorithmName}\n${theory.replace(/\/\//g, '#')}\n${pseudocode.replace(/\/\//g, '#')}`,
+    cpp: `// C++ Implementation: ${algorithmName}\n${theory}\n${pseudocode}`,
+  };
+
+  const code = formatByLang[language] || formatByLang.typescript;
+
+  return {
+    language,
+    displayName: language.toUpperCase(),
+    code,
+    getHighlight: (type: StepOperation) => {
+      switch (type) {
+        case 'done':
+          return { line: code.split('\n').length - 1, operation: 'done' };
+        case 'swap':
+        case 'compare':
+        case 'pivot':
+        case 'region':
+        case 'visit':
+          return { line: Math.min(2, code.split('\n').length - 1), operation: type };
+        default:
+          return { line: 0, operation: 'idle' };
+      }
+    },
+  };
+}
+
 export function getAlgorithmCodeSnippet(
   algorithmName: string,
   language: SupportedLanguage = 'typescript'
-): CodeSnippet | null {
-  const clean = (algorithmName || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+): CodeSnippet {
+  const raw = algorithmName || '';
+  const clean = raw.toLowerCase().replace(/\*/g, 'star').replace(/[^a-z0-9]/g, '');
 
+  // 1. Direct match
   if (ALGORITHM_CODE_SNIPPETS[clean]) {
     return (
       ALGORITHM_CODE_SNIPPETS[clean].languages[language] ??
@@ -1551,17 +2258,27 @@ export function getAlgorithmCodeSnippet(
     );
   }
 
-  // Sort keys by length descending so longer keys like "binarysearchtree" (16) match before "binarysearch" (12)
-  const sortedKeys = Object.keys(ALGORITHM_CODE_SNIPPETS).sort((a, b) => b.length - a.length);
+  // 2. Check alias map
+  const mappedKey = ALIAS_MAP[clean];
+  if (mappedKey && ALGORITHM_CODE_SNIPPETS[mappedKey]) {
+    return (
+      ALGORITHM_CODE_SNIPPETS[mappedKey].languages[language] ??
+      ALGORITHM_CODE_SNIPPETS[mappedKey].languages['typescript']
+    );
+  }
 
+  // 3. Substring match (longest key first)
+  const sortedKeys = Object.keys(ALGORITHM_CODE_SNIPPETS).sort((a, b) => b.length - a.length);
   for (const key of sortedKeys) {
-    if (clean.includes(key)) {
+    if (clean.includes(key) || key.includes(clean)) {
       return (
         ALGORITHM_CODE_SNIPPETS[key].languages[language] ??
         ALGORITHM_CODE_SNIPPETS[key].languages['typescript']
       );
     }
   }
-  return null;
+
+  // 4. Safe fallback from catalog pseudocode — never blank!
+  return createCatalogFallbackSnippet(algorithmName, language);
 }
 

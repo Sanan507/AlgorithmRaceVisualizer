@@ -78,6 +78,8 @@ export type RaceLaneResponse = {
   stats: LaneStats;
 };
 
+export type LaneDto = RaceLaneResponse;
+
 export type RaceResponse = {
   type: 'sorting' | 'searching' | 'pathfinding';
   dataset: number[] | null;

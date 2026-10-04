@@ -1,6 +1,12 @@
 /**
  * arenaCodeInspector.css
  * Styling for the Docked Arena Code Execution Inspector & Light/Dark Theme Syntax Tokens.
+ * Features:
+ * - Top-edge draggable height resizer (↕ cursor) from 200px to 92vh.
+ * - Vertical column splitter resizers (↔ / I cursor) between each lane in side-by-side mode.
+ * - S/M/L height presets and fullscreen expansion.
+ * - Custom styled scrollbars for multi-column horizontal code comparison.
+ * - Unified Sunset Orange & Violet theme across Dark and Light modes.
  */
 
 /* ─── Docked Inspector Main Panel ────────────────────────────────────────── */
@@ -10,16 +16,21 @@
   left: 0;
   right: 0;
   z-index: 1000;
-  background: rgba(13, 17, 26, 0.96);
+  background: rgba(13, 17, 26, 0.97);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-top: 1px solid rgba(252, 109, 38, 0.35);
   box-shadow: 0 -12px 36px rgba(0, 0, 0, 0.65), 0 0 24px rgba(252, 109, 38, 0.15);
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), height 0.3s ease;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), height 0.15s ease;
   display: flex;
   flex-direction: column;
-  max-height: 48vh;
+  min-height: 200px;
   animation: inspectorSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.arena-code-inspector--resizing {
+  transition: none !important;
+  user-select: none !important;
 }
 
 @keyframes inspectorSlideUp {
@@ -34,8 +45,56 @@
 }
 
 .arena-code-inspector--fullscreen {
-  max-height: 85vh;
-  height: 85vh;
+  height: 90vh !important;
+  max-height: 96vh !important;
+}
+
+/* ─── Top Edge Window Height Resizer (↕ cursor) ──────────────────────────── */
+.inspector-top-resizer {
+  position: absolute;
+  top: -6px;
+  left: 0;
+  right: 0;
+  height: 12px;
+  cursor: ns-resize;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+}
+
+.inspector-top-resizer-line {
+  position: absolute;
+  top: 5px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: transparent;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.inspector-top-resizer-handle {
+  width: 44px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.22);
+  transition: all 0.18s ease;
+  z-index: 2;
+}
+
+.inspector-top-resizer:hover .inspector-top-resizer-line,
+.inspector-top-resizer--active .inspector-top-resizer-line {
+  background: rgba(252, 109, 38, 0.75);
+  box-shadow: 0 0 12px rgba(252, 109, 38, 0.6);
+}
+
+.inspector-top-resizer:hover .inspector-top-resizer-handle,
+.inspector-top-resizer--active .inspector-top-resizer-handle {
+  background: #fc6d26;
+  width: 68px;
+  height: 5px;
+  box-shadow: 0 0 14px rgba(252, 109, 38, 0.9);
 }
 
 /* ─── Inspector Header ───────────────────────────────────────────────────── */
@@ -130,7 +189,7 @@
 .inspector-header-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex-shrink: 0;
 }
 
@@ -173,6 +232,41 @@
   font-size: 0.72rem;
 }
 
+/* Height Preset Chips */
+.inspector-height-presets {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 6px;
+  padding: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.inspector-size-chip {
+  padding: 2px 7px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  font-family: var(--font-mono, monospace);
+  border-radius: 4px;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.inspector-size-chip:hover {
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.inspector-size-chip.active {
+  background: rgba(252, 109, 38, 0.25);
+  color: #ff914d;
+  box-shadow: 0 0 6px rgba(252, 109, 38, 0.2);
+}
+
 .inspector-actions {
   display: flex;
   align-items: center;
@@ -206,16 +300,20 @@
 /* ─── Inspector Body ─────────────────────────────────────────────────────── */
 .inspector-body {
   flex: 1;
-  overflow-y: auto;
+  overflow-y: hidden;
+  overflow-x: auto;
   min-height: 180px;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 .inspector-single-view {
   flex: 1;
   display: flex;
   flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
 }
 
 .inspector-embedded-cv.cv-card {
@@ -232,32 +330,62 @@
   max-height: none !important;
   flex: 1;
   padding: 10px 0;
+  overflow-y: auto;
 }
 
-/* Compare Mode Grid */
-.inspector-compare-grid {
+/* ─── Compare Track & Panels ─────────────────────────────────────────────── */
+.inspector-compare-track {
   flex: 1;
-  display: grid;
-  gap: 1px;
-  background: rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
   overflow-x: auto;
+  overflow-y: hidden;
   min-width: 100%;
+  height: 100%;
+  background: rgba(10, 14, 22, 0.95);
+}
+
+.inspector-compare-track::-webkit-scrollbar {
+  height: 8px;
+}
+
+.inspector-compare-track::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.inspector-compare-track::-webkit-scrollbar-thumb {
+  background: rgba(252, 109, 38, 0.4);
+  border-radius: 4px;
+}
+
+.inspector-compare-track::-webkit-scrollbar-thumb:hover {
+  background: rgba(252, 109, 38, 0.7);
 }
 
 .inspector-compare-col {
   background: rgba(13, 17, 26, 0.98);
   display: flex;
   flex-direction: column;
-  min-width: 0;
+  height: 100%;
+  overflow: hidden;
 }
 
 .inspector-col-title-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 14px;
-  background: rgba(0, 0, 0, 0.25);
+  padding: 6px 12px;
+  background: rgba(0, 0, 0, 0.35);
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+
+.inspector-col-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
 }
 
 .inspector-col-name {
@@ -265,16 +393,72 @@
   font-size: 0.78rem;
   font-weight: 700;
   color: #e2e8f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .inspector-col-badge {
   font-family: var(--font-mono, monospace);
   font-size: 0.65rem;
-  padding: 2px 7px;
+  padding: 1px 6px;
   border-radius: 4px;
   background: rgba(252, 109, 38, 0.15);
   color: #fc6d26;
   border: 1px solid rgba(252, 109, 38, 0.3);
+  flex-shrink: 0;
+}
+
+.inspector-col-focus-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.inspector-col-focus-btn:hover {
+  color: #ffffff;
+  background: rgba(252, 109, 38, 0.2);
+  border-color: rgba(252, 109, 38, 0.45);
+}
+
+/* ─── Column Splitter Resizer (↔ / I cursor) ─────────────────────────────── */
+.inspector-col-resizer {
+  width: 12px;
+  margin: 0 -6px;
+  z-index: 25;
+  cursor: col-resize;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  position: relative;
+  flex-shrink: 0;
+  background: transparent;
+  user-select: none;
+  touch-action: none;
+}
+
+.inspector-col-resizer-line {
+  width: 2px;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.08);
+  transition: all 0.15s ease;
+}
+
+.inspector-col-resizer:hover .inspector-col-resizer-line,
+.inspector-col-resizer--active .inspector-col-resizer-line {
+  background: #fc6d26 !important;
+  width: 3px;
+  box-shadow: 0 0 10px rgba(252, 109, 38, 0.9);
 }
 
 /* ─── Minimized Dock Pill ────────────────────────────────────────────────── */
@@ -380,23 +564,27 @@
   box-shadow: 0 0 10px rgba(252, 109, 38, 0.15);
 }
 
-:root[data-theme='light'] .inspector-lang-tabs {
+:root[data-theme='light'] .inspector-lang-tabs,
+:root[data-theme='light'] .inspector-height-presets {
   background: #e2e8f0;
   border-color: #cbd5e1;
 }
 
-:root[data-theme='light'] .inspector-lang-btn {
+:root[data-theme='light'] .inspector-lang-btn,
+:root[data-theme='light'] .inspector-size-chip {
   color: #64748b;
 }
 
-:root[data-theme='light'] .inspector-lang-btn:hover {
+:root[data-theme='light'] .inspector-lang-btn:hover,
+:root[data-theme='light'] .inspector-size-chip:hover {
   color: #0f172a;
 }
 
-:root[data-theme='light'] .inspector-lang-btn--active {
+:root[data-theme='light'] .inspector-lang-btn--active,
+:root[data-theme='light'] .inspector-size-chip.active {
   background: #ffffff !important;
   color: #fc6d26 !important;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 :root[data-theme='light'] .inspector-action-btn {
@@ -408,8 +596,16 @@
   color: #0f172a;
 }
 
-:root[data-theme='light'] .inspector-compare-grid {
+:root[data-theme='light'] .inspector-compare-track {
+  background: #f1f5f9;
+}
+
+:root[data-theme='light'] .inspector-compare-track::-webkit-scrollbar-track {
   background: #e2e8f0;
+}
+
+:root[data-theme='light'] .inspector-compare-track::-webkit-scrollbar-thumb {
+  background: rgba(252, 109, 38, 0.45);
 }
 
 :root[data-theme='light'] .inspector-compare-col {
@@ -423,6 +619,26 @@
 
 :root[data-theme='light'] .inspector-col-name {
   color: #1e293b;
+}
+
+:root[data-theme='light'] .inspector-col-focus-btn {
+  color: #64748b;
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+}
+
+:root[data-theme='light'] .inspector-col-focus-btn:hover {
+  color: #fc6d26;
+  background: rgba(252, 109, 38, 0.12);
+  border-color: rgba(252, 109, 38, 0.35);
+}
+
+:root[data-theme='light'] .inspector-col-resizer-line {
+  background: #e2e8f0;
+}
+
+:root[data-theme='light'] .inspector-top-resizer-handle {
+  background: rgba(0, 0, 0, 0.18);
 }
 
 :root[data-theme='light'] .arena-inspector-dock-pill {
@@ -480,8 +696,16 @@
     flex-wrap: wrap;
     padding: 8px 12px;
   }
-  .inspector-compare-grid {
-    grid-template-columns: 1fr;
+  .inspector-compare-track {
+    flex-direction: column;
+  }
+  .inspector-col-resizer {
+    display: none;
+  }
+  .inspector-compare-col {
+    width: 100% !important;
+    min-width: 100% !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   }
   .arena-code-inspector {
     max-height: 60vh;
