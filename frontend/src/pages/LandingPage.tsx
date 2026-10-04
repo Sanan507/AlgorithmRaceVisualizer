@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense } from 'react';
+import { useState, useEffect, lazy, Suspense, useCallback } from 'react';
 import { AlgoRaceLogo } from '../components/AlgoRaceLogo';
 import {
   BarChart3,
@@ -7,21 +7,30 @@ import {
   Volume2,
   Zap,
   ArrowRight,
-  Sparkles,
   Cpu,
   Layers,
-  Activity,
-  Code2,
-  Sliders,
-  CheckCircle2,
-  Shield,
   Menu,
   X,
   Sun,
   Moon,
   Trophy,
+  Play,
+  Pause,
+  RotateCcw,
+  Activity,
   Check,
+  Compass,
+  Gauge,
+  Timer,
+  Workflow,
+  Target,
+  Award,
   Flame,
+  ShieldCheck,
+  Sliders,
+  Sparkles,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 
 const HeroMiniCanvas = lazy(() => import('../components/HeroMiniCanvas').then(m => ({ default: m.HeroMiniCanvas })));
@@ -35,8 +44,69 @@ interface Props {
   setDarkMode?: (val: boolean) => void;
 }
 
-export function LandingPage({ onNavigate, darkMode, setDarkMode }: Props) {
+interface QuizQuestion {
+  question: string;
+  options: string[];
+  correct: number;
+  explanation: string;
+}
+
+const SAMPLE_QUIZ_QUESTIONS: QuizQuestion[] = [
+  {
+    question: 'What is the worst-case time complexity of QuickSort when the pivot chosen is always an extreme element?',
+    options: ['O(n log n)', 'O(n²)', 'O(n)', 'O(log n)'],
+    correct: 1,
+    explanation: 'Unbalanced partitions of size (n - 1) and 0 produce a recursion tree of depth n, yielding O(n²) total comparisons.',
+  },
+  {
+    question: 'Which traversal algorithm guarantees shortest path on an unweighted grid with minimum overhead?',
+    options: ['Depth-First Search (DFS)', 'Breadth-First Search (BFS)', 'Bellman-Ford', 'Floyd-Warshall'],
+    correct: 1,
+    explanation: 'Breadth-First Search explores vertices in order of frontier distance, guaranteeing the shortest unweighted path in O(V + E).',
+  },
+  {
+    question: 'In dynamic programming, what principle enables caching identical subproblem solutions?',
+    options: ['Overlapping Subproblems', 'Greedy Choice Property', 'Amortized Time Complexity', 'Bitmask Permutations'],
+    correct: 0,
+    explanation: 'Overlapping subproblems allow storing computed results in memoization tables or matrices, eliminating redundant recalculation.',
+  },
+];
+
+export function LandingPage({ onNavigate, darkMode = true, setDarkMode }: Props) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [bannerVisible, setBannerVisible] = useState(true);
+  const [activeTab, setActiveTab] = useState<'sorting' | 'pathfinding' | 'dp' | 'quiz'>('sorting');
+
+  // ── 1. Interactive Sorting Stepper State ──
+  const [sortBars, setSortBars] = useState<number[]>([52, 24, 78, 31, 95, 63, 17, 84]);
+  const [sortMachine, setSortMachine] = useState<{ i: number; j: number; isSorted: boolean }>({
+    i: 0,
+    j: 0,
+    isSorted: false,
+  });
+  const [comparingIdxs, setComparingIdxs] = useState<number[]>([]);
+  const [swappingIdxs, setSwappingIdxs] = useState<number[]>([]);
+  const [sortedIdxs, setSortedIdxs] = useState<number[]>([]);
+  const [sortComps, setSortComps] = useState(0);
+  const [sortSwaps, setSortSwaps] = useState(0);
+  const [isAutoSorting, setIsAutoSorting] = useState(false);
+
+  // ── 2. Interactive Pathfinding 7x7 Grid State ──
+  const [gridWalls, setGridWalls] = useState<boolean[]>(() => {
+    const initial = new Array(49).fill(false);
+    [8, 9, 10, 17, 24, 25, 26, 31, 38, 39, 40].forEach(idx => {
+      initial[idx] = true;
+    });
+    return initial;
+  });
+
+  // ── 3. Interactive DP Knapsack Matrix State ──
+  const [activeDpCell, setActiveDpCell] = useState<{ r: number; c: number }>({ r: 2, c: 3 });
+
+  // ── 4. Interactive AlgoGym Quiz State ──
+  const [currentQuizIdx, setCurrentQuizIdx] = useState(0);
+  const [selectedQuizOption, setSelectedQuizOption] = useState<number | null>(null);
+  const [quizScore, setQuizScore] = useState(0);
 
   const scrollToSection = (id: string) => {
     setMobileMenuOpen(false);
@@ -46,851 +116,1220 @@ export function LandingPage({ onNavigate, darkMode, setDarkMode }: Props) {
     }
   };
 
+  const [viewMode, setViewMode] = useState<'tabbed' | 'all'>('tabbed');
+
+  const ARENAS_LIST = [
+    { key: 'sorting' as const, label: 'Sorting Arena', id: 'card-sorting' },
+    { key: 'pathfinding' as const, label: 'Pathfinding Grid', id: 'card-pathfinding' },
+    { key: 'dp' as const, label: 'DP Matrix', id: 'card-dp' },
+    { key: 'quiz' as const, label: 'Complexity Drills', id: 'card-quiz' },
+  ];
+
+  const handleTabClick = (key: 'sorting' | 'pathfinding' | 'dp' | 'quiz', id: string) => {
+    setActiveTab(key);
+    if (viewMode === 'all') {
+      const el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  };
+
+  const handlePrevArena = () => {
+    const idx = ARENAS_LIST.findIndex(a => a.key === activeTab);
+    const prevIdx = (idx - 1 + ARENAS_LIST.length) % ARENAS_LIST.length;
+    setActiveTab(ARENAS_LIST[prevIdx].key);
+  };
+
+  const handleNextArena = () => {
+    const idx = ARENAS_LIST.findIndex(a => a.key === activeTab);
+    const nextIdx = (idx + 1) % ARENAS_LIST.length;
+    setActiveTab(ARENAS_LIST[nextIdx].key);
+  };
+
   const handleNavClick = (page: NavigationPage) => {
     setMobileMenuOpen(false);
     onNavigate(page);
   };
 
-  return (
-    <div className="landing-page">
-      {/* Ambient background glow layers */}
-      <div className="landing-glow-bg glow-purple" />
-      <div className="landing-glow-bg glow-cyan" />
-      <div className="landing-grid-overlay" />
+  // ── Step-by-Step Sorting Machine ──
+  const stepSort = useCallback(() => {
+    if (sortMachine.isSorted) {
+      setSortedIdxs(sortBars.map((_, idx) => idx));
+      setIsAutoSorting(false);
+      return;
+    }
 
-      {/* Top Header / Sticky Nav */}
-      <header className="landing-navbar">
-        <div className="landing-nav-brand" onClick={() => scrollToSection('top')} style={{ cursor: 'pointer' }}>
-          <AlgoRaceLogo size={32} showText={true} />
+    const arr = [...sortBars];
+    const { i, j } = sortMachine;
+    const comps = sortComps + 1;
+    let swaps = sortSwaps;
+    const newSorted = [...sortedIdxs];
+
+    setComparingIdxs([j, j + 1]);
+
+    if (arr[j] > arr[j + 1]) {
+      const temp = arr[j];
+      arr[j] = arr[j + 1];
+      arr[j + 1] = temp;
+      swaps += 1;
+      setSwappingIdxs([j, j + 1]);
+    } else {
+      setSwappingIdxs([]);
+    }
+
+    let nextJ = j + 1;
+    let nextI = i;
+    let isDone = false;
+
+    if (nextJ >= arr.length - 1 - i) {
+      newSorted.push(arr.length - 1 - i);
+      nextJ = 0;
+      nextI = i + 1;
+    }
+
+    if (nextI >= arr.length - 1) {
+      for (let k = 0; k < arr.length; k++) {
+        if (!newSorted.includes(k)) newSorted.push(k);
+      }
+      isDone = true;
+      setIsAutoSorting(false);
+    }
+
+    setSortBars(arr);
+    setSortComps(comps);
+    setSortSwaps(swaps);
+    setSortedIdxs(newSorted);
+    setSortMachine({ i: nextI, j: nextJ, isSorted: isDone });
+
+    setTimeout(() => {
+      setComparingIdxs([]);
+      setSwappingIdxs([]);
+    }, 240);
+  }, [sortBars, sortMachine, sortComps, sortSwaps, sortedIdxs]);
+
+  // Auto-run sorting animation loop
+  useEffect(() => {
+    if (!isAutoSorting) return;
+    const timer = setInterval(() => {
+      stepSort();
+    }, 320);
+    return () => clearInterval(timer);
+  }, [isAutoSorting, stepSort]);
+
+  const shuffleSort = () => {
+    setIsAutoSorting(false);
+    const fresh = Array.from({ length: 8 }, () => Math.floor(Math.random() * 80) + 15);
+    setSortBars(fresh);
+    setSortMachine({ i: 0, j: 0, isSorted: false });
+    setComparingIdxs([]);
+    setSwappingIdxs([]);
+    setSortedIdxs([]);
+    setSortComps(0);
+    setSortSwaps(0);
+  };
+
+  // ── 7x7 BFS Pathfinding Grid ──
+  const toggleGridWall = (idx: number) => {
+    if (idx === 0 || idx === 48) return;
+    setGridWalls(prev => {
+      const next = [...prev];
+      next[idx] = !next[idx];
+      return next;
+    });
+  };
+
+  const randomizeMaze = () => {
+    const next = new Array(49).fill(false);
+    for (let i = 1; i < 48; i++) {
+      if (Math.random() < 0.28) {
+        next[i] = true;
+      }
+    }
+    setGridWalls(next);
+  };
+
+  const clearMaze = () => {
+    setGridWalls(new Array(49).fill(false));
+  };
+
+  const computeShortestPath = () => {
+    const start = 0;
+    const target = 48;
+    const queue: number[] = [start];
+    const visited = new Set<number>([start]);
+    const parent = new Map<number, number>();
+
+    const getNeighbors = (node: number) => {
+      const r = Math.floor(node / 7);
+      const c = node % 7;
+      const neighbors: number[] = [];
+      if (r > 0) neighbors.push(node - 7);
+      if (r < 6) neighbors.push(node + 7);
+      if (c > 0) neighbors.push(node - 1);
+      if (c < 6) neighbors.push(node + 1);
+      return neighbors.filter(n => !gridWalls[n]);
+    };
+
+    let found = false;
+    while (queue.length > 0) {
+      const curr = queue.shift()!;
+      if (curr === target) {
+        found = true;
+        break;
+      }
+      for (const n of getNeighbors(curr)) {
+        if (!visited.has(n)) {
+          visited.add(n);
+          parent.set(n, curr);
+          queue.push(n);
+        }
+      }
+    }
+
+    const path: number[] = [];
+    if (found) {
+      let curr = target;
+      while (curr !== start) {
+        path.push(curr);
+        curr = parent.get(curr)!;
+      }
+      path.push(start);
+    }
+    return { path, visitedCount: visited.size };
+  };
+
+  const { path: computedPath, visitedCount } = computeShortestPath();
+
+  // ── DP Knapsack Calculation ──
+  const dpWeights = [0, 2, 3, 4, 5];
+  const dpValues = [0, 3, 4, 5, 8];
+
+  const computeDpTable = () => {
+    const table: number[][] = Array.from({ length: 5 }, () => new Array(6).fill(0));
+    for (let i = 1; i <= 4; i++) {
+      for (let w = 1; w <= 5; w++) {
+        if (dpWeights[i] <= w) {
+          table[i][w] = Math.max(table[i - 1][w], table[i - 1][w - dpWeights[i]] + dpValues[i]);
+        } else {
+          table[i][w] = table[i - 1][w];
+        }
+      }
+    }
+    return table;
+  };
+  const dpTable = computeDpTable();
+
+  // ── AlgoGym Quiz ──
+  const currentQuiz = SAMPLE_QUIZ_QUESTIONS[currentQuizIdx];
+  const handleSelectQuizOption = (optIdx: number) => {
+    if (selectedQuizOption !== null) return;
+    setSelectedQuizOption(optIdx);
+    if (optIdx === currentQuiz.correct) {
+      setQuizScore(s => s + 1);
+    }
+  };
+
+  const nextQuizQuestion = () => {
+    setSelectedQuizOption(null);
+    setCurrentQuizIdx(prev => (prev + 1) % SAMPLE_QUIZ_QUESTIONS.length);
+  };
+
+  return (
+    <div className={`gitlab-landing ${!darkMode ? 'light-mode' : ''}`}>
+      <div className="gl-bg-mesh" />
+      <div className="gl-grid-pattern" />
+
+      {/* ── 1. Sticky Navbar ── */}
+      <header className="gl-navbar">
+        <div className="gl-nav-brand" onClick={() => scrollToSection('hero')}>
+          <AlgoRaceLogo size={30} showText={true} />
         </div>
 
-        <button
-          type="button"
-          className="landing-mobile-toggle"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          aria-expanded={mobileMenuOpen}
-          aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
-        >
-          {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
-        </button>
-
-        <nav className={`landing-nav-links ${mobileMenuOpen ? 'mobile-expanded' : ''}`}>
-          <button onClick={() => scrollToSection('arenas')} className="nav-link-btn">
-            Arenas
+        <nav className="gl-nav-links" aria-label="Main Navigation">
+          <button type="button" onClick={() => scrollToSection('showcase')} className="gl-nav-link-btn">
+            <Layers size={14} className="text-amber-400" />
+            <span>Arenas</span>
           </button>
-          <button onClick={() => scrollToSection('demo')} className="nav-link-btn">
-            Live Simulator
+          <button type="button" onClick={() => scrollToSection('simulator')} className="gl-nav-link-btn">
+            <Zap size={14} className="text-cyan-400" />
+            <span>Simulator</span>
           </button>
-          <button onClick={() => scrollToSection('comparison')} className="nav-link-btn">
-            Comparison
+          <button type="button" onClick={() => scrollToSection('architecture')} className="gl-nav-link-btn">
+            <Cpu size={14} className="text-purple-400" />
+            <span>Architecture</span>
           </button>
-          <button onClick={() => scrollToSection('features')} className="nav-link-btn">
-            Features
+          <button type="button" onClick={() => scrollToSection('specs')} className="gl-nav-link-btn">
+            <Sliders size={14} className="text-emerald-400" />
+            <span>Specs</span>
           </button>
-          <button onClick={() => scrollToSection('matrix')} className="nav-link-btn">
-            Algorithm Index
-          </button>
-          <button onClick={() => scrollToSection('architecture')} className="nav-link-btn">
-            Architecture
-          </button>
-          <button
-            className="landing-cta-btn btn-primary mobile-cta-only"
-            onClick={() => handleNavClick('sorting')}
-          >
-            <span>Launch Arena</span>
-            <ArrowRight size={16} />
+          <button type="button" onClick={() => scrollToSection('matrix')} className="gl-nav-link-btn">
+            <Binary size={14} className="text-blue-400" />
+            <span>Matrix</span>
           </button>
         </nav>
 
-        <div className="landing-nav-actions desktop-cta-only" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div className="gl-nav-actions">
           {setDarkMode && (
             <button
               type="button"
-              className="theme-toggle-btn-top"
+              className="gl-theme-toggle"
               onClick={() => setDarkMode(!darkMode)}
               title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-              style={{
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
-                borderRadius: '8px',
-                padding: '8px 12px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                color: 'var(--fg)',
-                transition: 'all 0.2s ease',
-              }}
             >
-              {darkMode ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} />}
+              {darkMode ? <Sun size={17} className="text-amber-400" /> : <Moon size={17} />}
             </button>
           )}
 
           <button
-            className="landing-cta-btn btn-primary"
+            type="button"
+            className="gl-btn-primary"
             onClick={() => handleNavClick('sorting')}
           >
+            <Zap size={15} />
             <span>Launch Arena</span>
-            <ArrowRight size={16} />
+            <ArrowRight size={14} />
+          </button>
+
+          <button
+            type="button"
+            className="gl-menu-mobile-btn"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle Menu"
+          >
+            {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
         </div>
-      </header>
 
-      {/* Real-Time Telemetry Ticker Marquee */}
-      <div className="landing-ticker-bar" aria-label="Real-time Algorithm Telemetry">
-        <div className="ticker-track">
-          <div className="ticker-item"><span className="ticker-pill pill-winner">⚡ QuickSort: 2.1ms (Winner)</span></div>
-          <div className="ticker-item"><span className="ticker-pill pill-cyan">🌊 MergeSort: 4.3ms (Stable)</span></div>
-          <div className="ticker-item"><span className="ticker-pill pill-purple">🧭 A* Search: 118 nodes visited</span></div>
-          <div className="ticker-item"><span className="ticker-pill pill-amber">🔍 Binary Search: 4 comps (O(log n))</span></div>
-          <div className="ticker-item"><span className="ticker-pill pill-blue">🌲 AVL Tree: Height-balanced 0.4ms</span></div>
-          <div className="ticker-item"><span className="ticker-pill pill-winner">🎒 0/1 Knapsack: Optimal Profit $240</span></div>
-          <div className="ticker-item"><span className="ticker-pill pill-cyan">🏆 AlgoGym: 94.2% Success Rate</span></div>
-          <div className="ticker-item"><span className="ticker-pill pill-purple">🔊 Web Audio: Polyphonic Chimes 60 FPS</span></div>
-          {/* Duplicate track for seamless infinite scroll */}
-          <div className="ticker-item"><span className="ticker-pill pill-winner">⚡ QuickSort: 2.1ms (Winner)</span></div>
-          <div className="ticker-item"><span className="ticker-pill pill-cyan">🌊 MergeSort: 4.3ms (Stable)</span></div>
-          <div className="ticker-item"><span className="ticker-pill pill-purple">🧭 A* Search: 118 nodes visited</span></div>
-          <div className="ticker-item"><span className="ticker-pill pill-amber">🔍 Binary Search: 4 comps (O(log n))</span></div>
-          <div className="ticker-item"><span className="ticker-pill pill-blue">🌲 AVL Tree: Height-balanced 0.4ms</span></div>
-          <div className="ticker-item"><span className="ticker-pill pill-winner">🎒 0/1 Knapsack: Optimal Profit $240</span></div>
-          <div className="ticker-item"><span className="ticker-pill pill-cyan">🏆 AlgoGym: 94.2% Success Rate</span></div>
-          <div className="ticker-item"><span className="ticker-pill pill-purple">🔊 Web Audio: Polyphonic Chimes 60 FPS</span></div>
-        </div>
-      </div>
-
-      {/* Hero Banner Section */}
-      <section id="top" className="landing-hero-section">
-        <div className="hero-content">
-          <div className="hero-chip-badge">
-            <Sparkles size={14} className="chip-icon text-amber-400" />
-            <span>ALGORITHM VISUALIZATION & BENCHMARKING ENGINE</span>
-          </div>
-
-          <h1 className="hero-main-title">
-            Visualize. Benchmark.{' '}
-            <span className="hero-gradient-text">Race Algorithms Live.</span>
-          </h1>
-
-          <p className="hero-description">
-            Compare sorting, searching, pathfinding, dynamic programming, and tree balancing algorithms side by side — with live telemetry, step debugging, and hardware-accelerated canvas visualizations.
-          </p>
-
-          <div className="hero-cta-cluster">
-            <button
-              className="hero-btn-primary hero-btn-glow"
-              onClick={() => handleNavClick('sorting')}
-            >
-              <BarChart3 size={18} />
-              <span>Launch Sorting Arena</span>
-              <ArrowRight size={16} />
+        {mobileMenuOpen && (
+          <nav className="gl-mobile-drawer">
+            <button type="button" onClick={() => scrollToSection('showcase')} className="gl-nav-link-btn">
+              <Layers size={16} className="text-amber-400" />
+              <span>Arenas Showcase</span>
             </button>
-
-            <button
-              className="hero-btn-secondary"
-              onClick={() => handleNavClick('searching')}
-            >
-              <Binary size={18} className="text-blue-400" />
-              <span>Search Arena</span>
+            <button type="button" onClick={() => scrollToSection('simulator')} className="gl-nav-link-btn">
+              <Zap size={16} className="text-cyan-400" />
+              <span>Live Simulator</span>
             </button>
-
-            <button
-              className="hero-btn-secondary"
-              onClick={() => handleNavClick('pathfinding')}
-            >
-              <GitBranch size={18} className="text-cyan-400" />
-              <span>Pathfinding</span>
+            <button type="button" onClick={() => scrollToSection('architecture')} className="gl-nav-link-btn">
+              <Cpu size={16} className="text-purple-400" />
+              <span>System Architecture</span>
             </button>
-
-            <button
-              className="hero-btn-secondary"
-              onClick={() => handleNavClick('dp')}
-            >
-              <Layers size={18} className="text-purple-400" />
-              <span>DP Matrix</span>
+            <button type="button" onClick={() => scrollToSection('specs')} className="gl-nav-link-btn">
+              <Sliders size={16} className="text-emerald-400" />
+              <span>Technical Specs</span>
             </button>
-
-            <button
-              className="hero-btn-secondary"
-              onClick={() => handleNavClick('trees')}
-            >
-              <Cpu size={18} className="text-amber-400" />
-              <span>Tree Arena</span>
-            </button>
-
-            <button
-              className="hero-btn-secondary"
-              onClick={() => handleNavClick('quiz')}
-            >
-              <Trophy size={18} className="text-emerald-400" />
-              <span>AlgoGym Quiz</span>
-            </button>
-
-            <button
-              className="hero-btn-ghost"
-              onClick={() => scrollToSection('matrix')}
-            >
+            <button type="button" onClick={() => scrollToSection('matrix')} className="gl-nav-link-btn">
+              <Binary size={16} className="text-blue-400" />
               <span>Algorithm Matrix</span>
             </button>
+            <button
+              type="button"
+              className="gl-btn-primary"
+              style={{ marginTop: '8px', width: '100%' }}
+              onClick={() => handleNavClick('sorting')}
+            >
+              <span>Launch Arena</span>
+              <ArrowRight size={15} />
+            </button>
+          </nav>
+        )}
+      </header>
+
+      {/* ── 2. High-Craft Hero Section ── */}
+      <section id="hero" className="gl-hero">
+        <h1 className="gl-hero-heading">
+          Race algorithms head-to-head.
+          <span className="gl-hero-glow-text">Zero bias. Microsecond telemetry.</span>
+        </h1>
+
+        <p className="gl-hero-subhead">
+          Benchmark sorting, pathfinding, and dynamic programming side-by-side on identical datasets with 60 FPS hardware canvas and synthesized Web Audio.
+        </p>
+
+        <div className="gl-hero-actions">
+          <button
+            type="button"
+            className="gl-btn-primary"
+            style={{ padding: '12px 26px', fontSize: '0.98rem' }}
+            onClick={() => handleNavClick('sorting')}
+          >
+            <BarChart3 size={18} />
+            <span>Launch Sorting Arena</span>
+            <ArrowRight size={16} />
+          </button>
+
+          <button
+            type="button"
+            className="gl-btn-secondary"
+            style={{ padding: '12px 26px', fontSize: '0.98rem' }}
+            onClick={() => scrollToSection('simulator')}
+          >
+            <Play size={16} className="text-cyan-400" />
+            <span>Interactive Simulator</span>
+          </button>
+        </div>
+
+        {/* Floating Interactive Hotkeys Dock */}
+        <div className="gl-hero-dock">
+          <span className="gl-dock-label">Direct Arenas:</span>
+          <button type="button" className="gl-dock-chip" onClick={() => handleNavClick('sorting')}>
+            <BarChart3 size={13} className="text-amber-400" />
+            <kbd>1</kbd> <span>Sorting</span>
+          </button>
+          <button type="button" className="gl-dock-chip" onClick={() => handleNavClick('searching')}>
+            <Binary size={13} className="text-blue-400" />
+            <kbd>2</kbd> <span>Search</span>
+          </button>
+          <button type="button" className="gl-dock-chip" onClick={() => handleNavClick('pathfinding')}>
+            <Compass size={13} className="text-cyan-400" />
+            <kbd>3</kbd> <span>Pathfinding</span>
+          </button>
+          <button type="button" className="gl-dock-chip" onClick={() => handleNavClick('dp')}>
+            <Layers size={13} className="text-purple-400" />
+            <kbd>4</kbd> <span>DP</span>
+          </button>
+          <button type="button" className="gl-dock-chip" onClick={() => handleNavClick('trees')}>
+            <Cpu size={13} className="text-emerald-400" />
+            <kbd>5</kbd> <span>Trees</span>
+          </button>
+          <button type="button" className="gl-dock-chip" onClick={() => handleNavClick('quiz')}>
+            <Trophy size={13} className="text-yellow-400" />
+            <kbd>6</kbd> <span>AlgoGym</span>
+          </button>
+        </div>
+      </section>
+
+      {/* ── 4. Centerpiece Dual-Lane Canvas Terminal Frame ── */}
+      <section id="simulator" className="gl-simulator-section">
+        <div className="gl-console-frame">
+          <div className="gl-console-header">
+            <div className="gl-console-dots">
+              <span className="gl-dot gl-dot-red" />
+              <span className="gl-dot gl-dot-yellow" />
+              <span className="gl-dot gl-dot-green" />
+            </div>
+            <div className="gl-console-title">
+              <Activity size={15} className="text-emerald-400" />
+              <span>Dual-Lane Simulation Engine (60 FPS)</span>
+            </div>
+            <div className="gl-console-meta">
+              <span className="gl-telemetry-badge">
+                <Check size={12} /> Direct 2D Context
+              </span>
+              <span>Deterministic Seeds</span>
+            </div>
           </div>
 
-          {/* Interactive Keyboard Shortcuts Navigation Bar */}
-          <div className="hero-keycaps-row">
-            <span className="keycaps-label">
-              <Sparkles size={12} className="text-amber-400" />
-              <span>Direct Hotkeys:</span>
-            </span>
-            <div className="keycaps-group">
-              <button className="kbd-pill" onClick={() => handleNavClick('sorting')} title="Press 1 for Sorting Arena">
-                <kbd>1</kbd> <span>Sorting</span>
-              </button>
-              <button className="kbd-pill" onClick={() => handleNavClick('searching')} title="Press 2 for Search Arena">
-                <kbd>2</kbd> <span>Search</span>
-              </button>
-              <button className="kbd-pill" onClick={() => handleNavClick('pathfinding')} title="Press 3 for Pathfinding Arena">
-                <kbd>3</kbd> <span>Pathfinding</span>
-              </button>
-              <button className="kbd-pill" onClick={() => handleNavClick('dp')} title="Press 4 for DP Arena">
-                <kbd>4</kbd> <span>DP</span>
-              </button>
-              <button className="kbd-pill" onClick={() => handleNavClick('trees')} title="Press 5 for Trees Arena">
-                <kbd>5</kbd> <span>Trees</span>
-              </button>
-              <button className="kbd-pill" onClick={() => handleNavClick('quiz')} title="Press 6 or Q for AlgoGym Quiz">
-                <kbd>6</kbd> <span>Gym</span>
-              </button>
-              <button className="kbd-pill" onClick={() => handleNavClick('history')} title="Press H for Performance Benchmarks">
-                <kbd>H</kbd> <span>Benchmarks</span>
-              </button>
-              {setDarkMode && (
-                <button className="kbd-pill" onClick={() => setDarkMode(!darkMode)} title="Press T to toggle theme">
-                  <kbd>T</kbd> <span>Theme</span>
-                </button>
-              )}
-            </div>
+          <div className="gl-console-body">
+            <Suspense fallback={<div style={{ height: '340px', background: '#090a10', borderRadius: '10px' }} />}>
+              <HeroMiniCanvas />
+            </Suspense>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 5. Interactive Stacking Arenas ── */}
+      <section id="showcase" className="gl-showcase-section">
+        <div className="gl-section-heading-wrap">
+          <div className="gl-section-pill">
+            <Layers size={13} />
+            <span>Interactive Arenas</span>
+          </div>
+          <h2 className="gl-section-title">Test drive the arenas live</h2>
+          <p className="gl-section-desc">
+            Interact with the core simulation engines directly on this page before launching a full-scale competition.
+          </p>
+        </div>
+
+        {/* Arena Workbench Controls: Dynamic Tabs & View Mode */}
+        <div className="gl-tabs-controls-row">
+          <div className="gl-stack-tabs-bar" role="tablist">
+            <button
+              type="button"
+              className={`gl-stack-tab-btn ${activeTab === 'sorting' ? 'active tab-sorting' : ''}`}
+              onClick={() => handleTabClick('sorting', 'card-sorting')}
+            >
+              <span className="gl-tab-icon-wrap" style={{ background: 'rgba(252, 109, 38, 0.15)', color: '#fc6d26' }}>
+                <BarChart3 size={15} />
+              </span>
+              <span>Sorting Arena</span>
+            </button>
+            <button
+              type="button"
+              className={`gl-stack-tab-btn ${activeTab === 'pathfinding' ? 'active tab-pathfinding' : ''}`}
+              onClick={() => handleTabClick('pathfinding', 'card-pathfinding')}
+            >
+              <span className="gl-tab-icon-wrap" style={{ background: 'rgba(6, 182, 212, 0.15)', color: '#06b6d4' }}>
+                <Compass size={15} />
+              </span>
+              <span>Pathfinding Grid</span>
+            </button>
+            <button
+              type="button"
+              className={`gl-stack-tab-btn ${activeTab === 'dp' ? 'active tab-dp' : ''}`}
+              onClick={() => handleTabClick('dp', 'card-dp')}
+            >
+              <span className="gl-tab-icon-wrap" style={{ background: 'rgba(139, 92, 246, 0.15)', color: '#8b5cf6' }}>
+                <Layers size={15} />
+              </span>
+              <span>DP Matrix</span>
+            </button>
+            <button
+              type="button"
+              className={`gl-stack-tab-btn ${activeTab === 'quiz' ? 'active tab-quiz' : ''}`}
+              onClick={() => handleTabClick('quiz', 'card-quiz')}
+            >
+              <span className="gl-tab-icon-wrap" style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#10b981' }}>
+                <Trophy size={15} />
+              </span>
+              <span>Complexity Drills</span>
+            </button>
           </div>
 
-          {/* Statistics Bar */}
-          <div className="hero-stats-grid">
-            <div className="stat-card">
-              <span className="stat-number">20+</span>
-              <span className="stat-label">Competitive Algorithms</span>
-            </div>
-            <div className="stat-card">
-              <span className="stat-number">&lt; 1ms</span>
-              <span className="stat-label">Telemetry Precision</span>
-            </div>
-            <div className="stat-card">
-              <span className="stat-number">60 FPS</span>
-              <span className="stat-label">Hardware Canvas Engine</span>
-            </div>
-            <div className="stat-card">
-              <span className="stat-number">Web Audio</span>
-              <span className="stat-label">Synthesized Chimes</span>
-            </div>
+          <div className="gl-view-mode-pill">
+            <button
+              type="button"
+              className={`gl-view-mode-btn ${viewMode === 'tabbed' ? 'active' : ''}`}
+              onClick={() => setViewMode('tabbed')}
+            >
+              Tabbed
+            </button>
+            <button
+              type="button"
+              className={`gl-view-mode-btn ${viewMode === 'all' ? 'active' : ''}`}
+              onClick={() => setViewMode('all')}
+            >
+              View All
+            </button>
           </div>
         </div>
 
-        {/* Live Hardware Mini Canvas Teaser */}
-        <div id="demo" className="hero-canvas-showcase">
-          <Suspense fallback={<div className="hero-canvas-skeleton" />}>
-            <HeroMiniCanvas />
+        <ul className="gl-stacking-list">
+          {/* Card 1: Sorting */}
+          <li id="card-sorting" className="gl-stacking-card" style={{ display: viewMode === 'all' || activeTab === 'sorting' ? 'grid' : 'none' }}>
+            <div className="gl-workbench-info">
+              <div>
+                <div className="gl-icon-hub hub-orange">
+                  <BarChart3 size={26} />
+                </div>
+                <span className="gl-card-kicker">Sorting Benchmark</span>
+                <h3 className="gl-card-title">Deterministic Multi-Lane Sorting</h3>
+                <p className="gl-card-desc">
+                  Run QuickSort, MergeSort, and HeapSort simultaneously on identical seeds. Observe active comparisons, pivot partitioning, and sorted sub-arrays in real time.
+                </p>
+
+                <div className="gl-spec-pills">
+                  <span className="gl-spec-pill">
+                    <Gauge size={13} className="text-amber-400" />
+                    <span>O(n log n) Best</span>
+                  </span>
+                  <span className="gl-spec-pill">
+                    <Timer size={13} className="text-amber-400" />
+                    <span>Microsecond Precision</span>
+                  </span>
+                  <span className="gl-spec-pill">
+                    <Volume2 size={13} className="text-amber-400" />
+                    <span>Web Audio Synced</span>
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <button
+                  type="button"
+                  className="gl-btn-primary"
+                  onClick={() => handleNavClick('sorting')}
+                >
+                  <span>Launch Sorting Arena</span>
+                  <ArrowRight size={14} />
+                </button>
+              </div>
+            </div>
+
+            <div className="gl-workbench-sim">
+              <div className="gl-sim-widget">
+                <div className="gl-widget-header">
+                  <span className="gl-widget-tag">
+                    <BarChart3 size={14} />
+                    <span>Bubble Sort Stepper</span>
+                  </span>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <button
+                      type="button"
+                      className={`gl-widget-btn ${isAutoSorting ? 'active-run' : ''}`}
+                      onClick={() => setIsAutoSorting(!isAutoSorting)}
+                      title={isAutoSorting ? 'Pause Auto Sort' : 'Auto Run Sorting'}
+                    >
+                      {isAutoSorting ? <Pause size={12} /> : <Play size={12} />}
+                      <span>{isAutoSorting ? 'Pause' : 'Auto Run'}</span>
+                    </button>
+                    <button type="button" className="gl-widget-btn" onClick={stepSort} title="Execute one step">
+                      <Play size={12} /> <span>Step</span>
+                    </button>
+                    <button type="button" className="gl-widget-btn" onClick={shuffleSort} title="Shuffle array">
+                      <RotateCcw size={12} /> <span>Shuffle</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="gl-sort-bars-area">
+                  {sortBars.map((val, idx) => {
+                    const isComp = comparingIdxs.includes(idx);
+                    const isSwap = swappingIdxs.includes(idx);
+                    const isSorted = sortedIdxs.includes(idx);
+                    return (
+                      <div
+                        key={idx}
+                        className={`gl-sort-bar-col ${isComp ? 'comparing' : ''} ${isSwap ? 'swapping' : ''} ${isSorted ? 'sorted' : ''}`}
+                        style={{ height: `${(val / 100) * 100}%` }}
+                      />
+                    );
+                  })}
+                </div>
+
+                <div className="gl-widget-telemetry-row">
+                  <span>Comps: <strong>{sortComps}</strong></span>
+                  <span>Swaps: <strong>{sortSwaps}</strong></span>
+                  <span style={{ color: sortMachine.isSorted ? '#10b981' : '#38bdf8' }}>
+                    {sortMachine.isSorted ? '✓ Fully Sorted' : isAutoSorting ? '⚡ Running...' : 'Click "Auto Run"'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {viewMode === 'tabbed' && (
+              <div className="gl-workbench-footer-nav">
+                <button type="button" className="gl-workbench-nav-btn" onClick={handlePrevArena}>
+                  <ChevronLeft size={15} />
+                  <span>Prev: Complexity Drills</span>
+                </button>
+                <div className="gl-workbench-nav-dots">
+                  {ARENAS_LIST.map((a) => (
+                    <button
+                      key={a.key}
+                      type="button"
+                      className={`gl-workbench-nav-dot ${activeTab === a.key ? 'active' : ''}`}
+                      onClick={() => setActiveTab(a.key)}
+                      title={`Go to ${a.label}`}
+                    />
+                  ))}
+                </div>
+                <button type="button" className="gl-workbench-nav-btn" onClick={handleNextArena}>
+                  <span>Next: Pathfinding Grid</span>
+                  <ChevronRight size={15} />
+                </button>
+              </div>
+            )}
+          </li>
+
+          {/* Card 2: Pathfinding */}
+          <li id="card-pathfinding" className="gl-stacking-card" style={{ display: viewMode === 'all' || activeTab === 'pathfinding' ? 'grid' : 'none' }}>
+            <div className="gl-workbench-info">
+              <div>
+                <div className="gl-icon-hub hub-cyan">
+                  <Compass size={26} />
+                </div>
+                <span className="gl-card-kicker">Graph & Pathfinding</span>
+                <h3 className="gl-card-title">Heuristic 2D Pathfinding</h3>
+                <p className="gl-card-desc">
+                  Draw obstacle barriers directly on the grid and watch BFS and A* compute shortest routes with instantaneous frontier exploration.
+                </p>
+
+                <div className="gl-spec-pills">
+                  <span className="gl-spec-pill">
+                    <Workflow size={13} className="text-cyan-400" />
+                    <span>O(V + E) Bounds</span>
+                  </span>
+                  <span className="gl-spec-pill">
+                    <Target size={13} className="text-cyan-400" />
+                    <span>Manhattan Metric</span>
+                  </span>
+                  <span className="gl-spec-pill">
+                    <Activity size={13} className="text-cyan-400" />
+                    <span>Frontier Inspector</span>
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <button
+                  type="button"
+                  className="gl-btn-primary"
+                  onClick={() => handleNavClick('pathfinding')}
+                >
+                  <span>Launch Pathfinding Arena</span>
+                  <ArrowRight size={14} />
+                </button>
+              </div>
+            </div>
+
+            <div className="gl-workbench-sim">
+              <div className="gl-sim-widget">
+                <div className="gl-widget-header">
+                  <span className="gl-widget-tag" style={{ color: '#06b6d4' }}>
+                    <Compass size={14} />
+                    <span>Dynamic Obstacle Grid (7×7)</span>
+                  </span>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <button type="button" className="gl-widget-btn" onClick={randomizeMaze}>
+                      <span>Maze</span>
+                    </button>
+                    <button type="button" className="gl-widget-btn" onClick={clearMaze}>
+                      <span>Clear</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="gl-grid-canvas">
+                  {gridWalls.map((isWall, idx) => {
+                    const isStart = idx === 0;
+                    const isTarget = idx === 48;
+                    const isPath = computedPath.includes(idx) && !isStart && !isTarget;
+                    return (
+                      <div
+                        key={idx}
+                        className={`gl-grid-tile ${isStart ? 'tile-start' : ''} ${isTarget ? 'tile-target' : ''} ${isWall ? 'tile-wall' : ''} ${isPath ? 'tile-path' : ''}`}
+                        onClick={() => toggleGridWall(idx)}
+                      />
+                    );
+                  })}
+                </div>
+
+                <div className="gl-widget-telemetry-row">
+                  <span>Visited: <strong>{visitedCount}</strong></span>
+                  <span>Path: <strong>{computedPath.length ? `${computedPath.length - 1} steps` : 'Blocked'}</strong></span>
+                  <span style={{ color: computedPath.length ? '#10b981' : '#ef4444' }}>
+                    {computedPath.length ? '✓ Route Solved' : '⚠️ Route Blocked'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {viewMode === 'tabbed' && (
+              <div className="gl-workbench-footer-nav">
+                <button type="button" className="gl-workbench-nav-btn" onClick={handlePrevArena}>
+                  <ChevronLeft size={15} />
+                  <span>Prev: Sorting Arena</span>
+                </button>
+                <div className="gl-workbench-nav-dots">
+                  {ARENAS_LIST.map((a) => (
+                    <button
+                      key={a.key}
+                      type="button"
+                      className={`gl-workbench-nav-dot ${activeTab === a.key ? 'active' : ''}`}
+                      onClick={() => setActiveTab(a.key)}
+                      title={`Go to ${a.label}`}
+                    />
+                  ))}
+                </div>
+                <button type="button" className="gl-workbench-nav-btn" onClick={handleNextArena}>
+                  <span>Next: DP Matrix</span>
+                  <ChevronRight size={15} />
+                </button>
+              </div>
+            )}
+          </li>
+
+          {/* Card 3: DP Matrix */}
+          <li id="card-dp" className="gl-stacking-card" style={{ display: viewMode === 'all' || activeTab === 'dp' ? 'grid' : 'none' }}>
+            <div className="gl-workbench-info">
+              <div>
+                <div className="gl-icon-hub hub-purple">
+                  <Layers size={26} />
+                </div>
+                <span className="gl-card-kicker">Dynamic Programming</span>
+                <h3 className="gl-card-title">Optimal Substructure Recurrence</h3>
+                <p className="gl-card-desc">
+                  Trace exact top and diagonal parent lookups cell-by-cell in 0/1 Knapsack, Coin Change, and Longest Common Subsequence.
+                </p>
+
+                <div className="gl-spec-pills">
+                  <span className="gl-spec-pill">
+                    <Layers size={13} className="text-purple-400" />
+                    <span>Bottom-Up Tabulation</span>
+                  </span>
+                  <span className="gl-spec-pill">
+                    <Cpu size={13} className="text-purple-400" />
+                    <span>O(n · W) Matrix</span>
+                  </span>
+                  <span className="gl-spec-pill">
+                    <Sparkles size={13} className="text-purple-400" />
+                    <span>Color-Coded Lookups</span>
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <button
+                  type="button"
+                  className="gl-btn-primary"
+                  onClick={() => handleNavClick('dp')}
+                >
+                  <span>Launch DP Arena</span>
+                  <ArrowRight size={14} />
+                </button>
+              </div>
+            </div>
+
+            <div className="gl-workbench-sim">
+              <div className="gl-sim-widget">
+                <div className="gl-widget-header">
+                  <span className="gl-widget-tag" style={{ color: '#c084fc' }}>
+                    <Layers size={14} />
+                    <span>0/1 Knapsack Recurrence Table</span>
+                  </span>
+                </div>
+
+                <div className="gl-dp-table-wrap">
+                  <table className="gl-dp-mini-grid">
+                    <thead>
+                      <tr>
+                        <th>Item \ W</th>
+                        {[0, 1, 2, 3, 4, 5].map(w => (
+                          <th key={w}>w={w}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {dpTable.map((row, r) => (
+                        <tr key={r}>
+                          <td style={{ fontWeight: 600, color: '#94a3b8' }}>
+                            {r === 0 ? '∅' : `i=${r} ($${dpValues[r]})`}
+                          </td>
+                          {row.map((val, c) => {
+                            const isCurrent = activeDpCell.r === r && activeDpCell.c === c;
+                            const isParentTop = activeDpCell.r > 0 && r === activeDpCell.r - 1 && c === activeDpCell.c;
+                            const wt = dpWeights[activeDpCell.r];
+                            const isParentDiag = activeDpCell.r > 0 && activeDpCell.c >= wt && r === activeDpCell.r - 1 && c === activeDpCell.c - wt;
+                            const isDep = isParentTop || isParentDiag;
+
+                            return (
+                              <td
+                                key={c}
+                                className={isCurrent ? 'gl-dp-cell-active' : isDep ? 'gl-dp-cell-dep' : ''}
+                                onClick={() => setActiveDpCell({ r, c })}
+                                onMouseEnter={() => setActiveDpCell({ r, c })}
+                                style={{ cursor: 'pointer' }}
+                              >
+                                {val}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="gl-dp-formula-pill">
+                  {activeDpCell.r === 0 ? (
+                    <span>dp[0][{activeDpCell.c}] = 0 (Base Case: No items)</span>
+                  ) : activeDpCell.c < dpWeights[activeDpCell.r] ? (
+                    <span>
+                      w={activeDpCell.c} &lt; wt={dpWeights[activeDpCell.r]} ⇒ Cannot take item: dp[{activeDpCell.r}][{activeDpCell.c}] = <strong>{dpTable[activeDpCell.r][activeDpCell.c]}</strong>
+                    </span>
+                  ) : (
+                    <span>
+                      dp[{activeDpCell.r}][{activeDpCell.c}] = max(
+                      <span style={{ color: '#c084fc' }}>dp[{activeDpCell.r - 1}][{activeDpCell.c}]</span>, 
+                      <span style={{ color: '#fbbf24' }}>dp[{activeDpCell.r - 1}][{activeDpCell.c - dpWeights[activeDpCell.r]}]+{dpValues[activeDpCell.r]}</span>
+                      ) = <strong>{dpTable[activeDpCell.r][activeDpCell.c]}</strong>
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {viewMode === 'tabbed' && (
+              <div className="gl-workbench-footer-nav">
+                <button type="button" className="gl-workbench-nav-btn" onClick={handlePrevArena}>
+                  <ChevronLeft size={15} />
+                  <span>Prev: Pathfinding Grid</span>
+                </button>
+                <div className="gl-workbench-nav-dots">
+                  {ARENAS_LIST.map((a) => (
+                    <button
+                      key={a.key}
+                      type="button"
+                      className={`gl-workbench-nav-dot ${activeTab === a.key ? 'active' : ''}`}
+                      onClick={() => setActiveTab(a.key)}
+                      title={`Go to ${a.label}`}
+                    />
+                  ))}
+                </div>
+                <button type="button" className="gl-workbench-nav-btn" onClick={handleNextArena}>
+                  <span>Next: Complexity Drills</span>
+                  <ChevronRight size={15} />
+                </button>
+              </div>
+            )}
+          </li>
+
+          {/* Card 4: AlgoGym */}
+          <li id="card-quiz" className="gl-stacking-card" style={{ display: viewMode === 'all' || activeTab === 'quiz' ? 'grid' : 'none' }}>
+            <div className="gl-workbench-info">
+              <div>
+                <div className="gl-icon-hub hub-emerald">
+                  <Trophy size={26} />
+                </div>
+                <span className="gl-card-kicker">Complexity Drills</span>
+                <h3 className="gl-card-title">Big-O Complexity Intuition</h3>
+                <p className="gl-card-desc">
+                  Sharpen runtime intuition and edge-case handling with interactive LeetCode and competitive programming challenges.
+                </p>
+
+                <div className="gl-spec-pills">
+                  <span className="gl-spec-pill">
+                    <Award size={13} className="text-emerald-400" />
+                    <span>LeetCode Patterns</span>
+                  </span>
+                  <span className="gl-spec-pill">
+                    <Flame size={13} className="text-emerald-400" />
+                    <span>Instant Score Telemetry</span>
+                  </span>
+                  <span className="gl-spec-pill">
+                    <ShieldCheck size={13} className="text-emerald-400" />
+                    <span>Edge-Case Sandboxes</span>
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <button
+                  type="button"
+                  className="gl-btn-primary"
+                  onClick={() => handleNavClick('quiz')}
+                >
+                  <span>Enter AlgoGym</span>
+                  <ArrowRight size={14} />
+                </button>
+              </div>
+            </div>
+
+            <div className="gl-workbench-sim">
+              <div className="gl-sim-widget">
+                <div className="gl-widget-header">
+                  <span className="gl-widget-tag" style={{ color: '#10b981' }}>
+                    <Trophy size={14} />
+                    <span>Question {currentQuizIdx + 1} of {SAMPLE_QUIZ_QUESTIONS.length}</span>
+                  </span>
+                  <span style={{ fontSize: '0.74rem', color: '#10b981', fontWeight: 700 }}>Score: {quizScore}</span>
+                </div>
+
+                <p className="gl-quiz-question">{currentQuiz.question}</p>
+
+                <div className="gl-quiz-options">
+                  {currentQuiz.options.map((opt, optIdx) => {
+                    const isSelected = selectedQuizOption === optIdx;
+                    const isCorrect = selectedQuizOption !== null && optIdx === currentQuiz.correct;
+                    const isWrong = isSelected && optIdx !== currentQuiz.correct;
+
+                    return (
+                      <div
+                        key={optIdx}
+                        className={`gl-quiz-opt ${isCorrect ? 'correct' : ''} ${isWrong ? 'incorrect' : ''}`}
+                        onClick={() => handleSelectQuizOption(optIdx)}
+                      >
+                        <span style={{ fontFamily: 'monospace', fontWeight: 700 }}>{String.fromCharCode(65 + optIdx)}.</span>
+                        <span>{opt}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {selectedQuizOption !== null && (
+                  <div>
+                    <p className="gl-quiz-feedback">
+                      <strong>{selectedQuizOption === currentQuiz.correct ? '✓ Correct! ' : '✗ Incorrect. '}</strong>
+                      {currentQuiz.explanation}
+                    </p>
+                    <button
+                      type="button"
+                      className="gl-widget-btn"
+                      style={{ marginTop: '8px' }}
+                      onClick={nextQuizQuestion}
+                    >
+                      <span>Next Question →</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {viewMode === 'tabbed' && (
+              <div className="gl-workbench-footer-nav">
+                <button type="button" className="gl-workbench-nav-btn" onClick={handlePrevArena}>
+                  <ChevronLeft size={15} />
+                  <span>Prev: DP Matrix</span>
+                </button>
+                <div className="gl-workbench-nav-dots">
+                  {ARENAS_LIST.map((a) => (
+                    <button
+                      key={a.key}
+                      type="button"
+                      className={`gl-workbench-nav-dot ${activeTab === a.key ? 'active' : ''}`}
+                      onClick={() => setActiveTab(a.key)}
+                      title={`Go to ${a.label}`}
+                    />
+                  ))}
+                </div>
+                <button type="button" className="gl-workbench-nav-btn" onClick={handleNextArena}>
+                  <span>Next: Sorting Arena</span>
+                  <ChevronRight size={15} />
+                </button>
+              </div>
+            )}
+          </li>
+        </ul>
+      </section>
+
+      {/* ── 6. System Architecture ── */}
+      <section id="architecture" className="gl-architecture-section">
+        <div className="gl-section-heading-wrap">
+          <div className="gl-section-pill">
+            <Cpu size={13} />
+            <span>Under The Hood</span>
+          </div>
+          <h2 className="gl-section-title">Engineered for computational precision</h2>
+          <p className="gl-section-desc">
+            Direct bitmap execution and deterministic random generation eliminate browser lag and benchmark bias.
+          </p>
+        </div>
+
+        <div className="gl-arch-grid">
+          <div className="gl-arch-card">
+            <div className="gl-arch-icon" style={{ background: 'rgba(6, 182, 212, 0.15)', color: '#06b6d4' }}>
+              <Cpu size={22} />
+            </div>
+            <h3 className="gl-arch-title">Hardware 60 FPS Canvas</h3>
+            <p className="gl-arch-desc">
+              Direct bitmap rendering avoids DOM reflows and layout recalculations during high-frequency array swaps.
+            </p>
+            <div className="gl-arch-tags">
+              <span className="gl-arch-tag">Direct 2D Context</span>
+              <span className="gl-arch-tag">requestAnimationFrame</span>
+              <span className="gl-arch-tag">Zero DOM Thrash</span>
+            </div>
+          </div>
+
+          <div className="gl-arch-card">
+            <div className="gl-arch-icon" style={{ background: 'rgba(252, 109, 38, 0.15)', color: '#fc6d26' }}>
+              <Zap size={22} />
+            </div>
+            <h3 className="gl-arch-title">Deterministic PRNG Seeds</h3>
+            <p className="gl-arch-desc">
+              Every multi-lane race generates identical pseudo-random sequences across lanes to ensure mathematical parity.
+            </p>
+            <div className="gl-arch-tags">
+              <span className="gl-arch-tag">Seed Parity</span>
+              <span className="gl-arch-tag">Replayability</span>
+              <span className="gl-arch-tag">Reproducible Runs</span>
+            </div>
+          </div>
+
+          <div className="gl-arch-card">
+            <div className="gl-arch-icon" style={{ background: 'rgba(139, 92, 246, 0.15)', color: '#8b5cf6' }}>
+              <Volume2 size={22} />
+            </div>
+            <h3 className="gl-arch-title">Web Audio Polyphony</h3>
+            <p className="gl-arch-desc">
+              Logarithmic frequency synthesis maps array element values to distinct acoustic pitches for sensory inspection.
+            </p>
+            <div className="gl-arch-tags">
+              <span className="gl-arch-tag">Web Audio API</span>
+              <span className="gl-arch-tag">Logarithmic Hz</span>
+              <span className="gl-arch-tag">Gain Envelopes</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 7. Technical Specification Table ── */}
+      <section id="specs" className="gl-spec-section">
+        <div className="gl-section-heading-wrap">
+          <div className="gl-section-pill">
+            <Sliders size={13} />
+            <span>Technical Audit</span>
+          </div>
+          <h2 className="gl-section-title">Conventional Visualizers vs AlgoRace</h2>
+          <p className="gl-section-desc">
+            A direct architectural comparison between single-threaded browser toys and a scientific benchmarking engine.
+          </p>
+        </div>
+
+        <div className="gl-spec-table-container">
+          <table className="gl-spec-table">
+            <thead>
+              <tr>
+                <th>Benchmark Dimension</th>
+                <th>Conventional Visualizers</th>
+                <th>AlgoRace Platform</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="gl-spec-metric-name">
+                  <Activity size={16} className="text-amber-400" />
+                  <span>Execution Model</span>
+                </td>
+                <td className="gl-spec-legacy-val">Single algorithm in isolation</td>
+                <td className="gl-spec-algorace-val">
+                  <Check size={15} className="text-emerald-400" />
+                  <span>Concurrent multi-lane race</span>
+                </td>
+              </tr>
+              <tr>
+                <td className="gl-spec-metric-name">
+                  <ShieldCheck size={16} className="text-cyan-400" />
+                  <span>Dataset Parity</span>
+                </td>
+                <td className="gl-spec-legacy-val">Unpaired random arrays (biased)</td>
+                <td className="gl-spec-algorace-val">
+                  <Check size={15} className="text-emerald-400" />
+                  <span>Deterministic seed preservation</span>
+                </td>
+              </tr>
+              <tr>
+                <td className="gl-spec-metric-name">
+                  <Cpu size={16} className="text-purple-400" />
+                  <span>Rendering Pipeline</span>
+                </td>
+                <td className="gl-spec-legacy-val">DOM elements (reflow stutter)</td>
+                <td className="gl-spec-algorace-val">
+                  <Check size={15} className="text-emerald-400" />
+                  <span>Hardware 60 FPS HTML5 Canvas</span>
+                </td>
+              </tr>
+              <tr>
+                <td className="gl-spec-metric-name">
+                  <Sliders size={16} className="text-blue-400" />
+                  <span>Timeline Control</span>
+                </td>
+                <td className="gl-spec-legacy-val">Play / Pause only</td>
+                <td className="gl-spec-algorace-val">
+                  <Check size={15} className="text-emerald-400" />
+                  <span>Frame-accurate scrubbing seek bar</span>
+                </td>
+              </tr>
+              <tr>
+                <td className="gl-spec-metric-name">
+                  <Volume2 size={16} className="text-emerald-400" />
+                  <span>Acoustic Feedback</span>
+                </td>
+                <td className="gl-spec-legacy-val">Mute / None</td>
+                <td className="gl-spec-algorace-val">
+                  <Check size={15} className="text-emerald-400" />
+                  <span>Synthesized Web Audio polyphony</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* ── 8. Comprehensive Algorithm Matrix ── */}
+      <section id="matrix" style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px 70px' }}>
+        <div className="gl-section-heading-wrap">
+          <div className="gl-section-pill">
+            <Binary size={13} />
+            <span>Reference Matrix</span>
+          </div>
+          <h2 className="gl-section-title">Asymptotic Complexity Directory</h2>
+          <p className="gl-section-desc">
+            Search, filter, and inspect Big-O bounds across all implemented algorithms.
+          </p>
+        </div>
+
+        <div style={{ marginTop: '24px' }}>
+          <Suspense fallback={<div style={{ height: '320px', background: '#0e1017', borderRadius: '12px' }} />}>
+            <AlgorithmMatrix onNavigate={handleNavClick} />
           </Suspense>
         </div>
       </section>
 
-      {/* Feature Arenas Bento Grid */}
-      <section id="arenas" className="landing-section bento-section">
-        <div className="section-header">
-          <div className="section-badge">
-            <Layers size={14} className="text-indigo-400" />
-            <span>INTERACTIVE ARENAS</span>
-          </div>
-          <h2 className="section-title">Built for Precision & Deep Algorithmic Insight</h2>
-          <p className="section-subtitle">
-            Engineered for computer scientists, competitive coders, and students to evaluate computational behavior side-by-side.
+      {/* ── 9. Pre-Footer Launchpad ── */}
+      <section className="gl-launchpad">
+        <div className="gl-launchpad-box">
+          <h2 className="gl-launchpad-title">Ready for real-time benchmarking?</h2>
+          <p className="gl-launchpad-sub">
+            Jump into multi-lane arenas, run deterministic races, inspect pseudocode, and benchmark execution times live.
           </p>
-        </div>
-
-        <div className="bento-grid">
-          {/* Row 1: Card 1 (Sorting Arena - 2 col) + Card 2 (Search Arena - 1 col) */}
-          <div className="bento-card bento-card-large bento-sorting featured" onClick={() => handleNavClick('sorting')}>
-            <div className="bento-card-bg-glow glow-purple-subtle" />
-            <div className="bento-card-header">
-              <div className="bento-icon-wrapper icon-purple">
-                <BarChart3 size={22} />
-              </div>
-              <span className="bento-arena-tag">SORTING ARENA</span>
-            </div>
-            <h3 className="bento-title">Multi-Lane Array Sorting Race</h3>
-            <p className="bento-text">
-              Compare QuickSort, MergeSort, HeapSort, RadixSort, CountingSort, InsertionSort, and SelectionSort on uniform dataset seeds.
-              Features glowing visual indicators for comparisons, swaps, pivots, heap bounds, and sorted sub-arrays.
-            </p>
-
-            <div className="bento-preview-pills">
-              <span className="bento-pill">Step Debugger & Timeline Seek</span>
-              <span className="bento-pill">Uniform Seed Preservation</span>
-              <span className="bento-pill">Pseudocode Inspector</span>
-              <span className="bento-pill">Multi-Lane Concurrent Race</span>
-            </div>
-
-            <div className="bento-card-action">
-              <span>Launch Sorting Arena</span>
-              <ArrowRight size={16} />
-            </div>
-          </div>
-
-          <div className="bento-card bento-searching" onClick={() => handleNavClick('searching')}>
-            <div className="bento-card-header">
-              <div className="bento-icon-wrapper icon-blue">
-                <Binary size={22} />
-              </div>
-              <span className="bento-arena-tag">SEARCH ARENA</span>
-            </div>
-            <h3 className="bento-title">Binary, Jump & Linear Search</h3>
-            <p className="bento-text">
-              Observe logarithmic search space elimination in Binary and Exponential search with darkened inactive boundaries and targeted pivots.
-            </p>
-            <div className="bento-preview-pills">
-              <span className="bento-pill">O(log n) Halving</span>
-              <span className="bento-pill">Jump Interval Step</span>
-              <span className="bento-pill">Interpolation Target</span>
-            </div>
-            <div className="bento-card-action">
-              <span>Launch Search Arena</span>
-              <ArrowRight size={16} />
-            </div>
-          </div>
-
-          {/* Row 2: Card 3 (Pathfinding Arena - 2 col) + Card 4 (DP Arena - 1 col) */}
-          <div className="bento-card bento-card-large bento-pathfinding" onClick={() => handleNavClick('pathfinding')}>
-            <div className="bento-card-bg-glow glow-cyan-subtle" />
-            <div className="bento-card-header">
-              <div className="bento-icon-wrapper icon-cyan">
-                <GitBranch size={22} />
-              </div>
-              <span className="bento-arena-tag">PATHFINDING ARENA</span>
-            </div>
-            <h3 className="bento-title">2D Grid Pathfinding & Interactive Maze Editor</h3>
-            <p className="bento-text">
-              Visualize A*, Dijkstra, BFS, and DFS graph traversals on custom 2D grid maps.
-              Click and drag directly on the canvas to draw custom wall barriers with live shortest-path recalculations.
-            </p>
-
-            <div className="bento-preview-pills">
-              <span className="bento-pill">Interactive Drag Walls</span>
-              <span className="bento-pill">Recursive Division Maze Gen</span>
-              <span className="bento-pill">Manhattan / Euclidean Heuristics</span>
-              <span className="bento-pill">Shortest Path Highlight</span>
-            </div>
-
-            <div className="bento-card-action">
-              <span>Launch Pathfinding Arena</span>
-              <ArrowRight size={16} />
-            </div>
-          </div>
-
-          <div className="bento-card bento-dp" onClick={() => handleNavClick('dp')}>
-            <div className="bento-card-header">
-              <div className="bento-icon-wrapper icon-purple">
-                <Layers size={22} />
-              </div>
-              <span className="bento-arena-tag">DP MATRIX ARENA</span>
-            </div>
-            <h3 className="bento-title">Dynamic Programming Recurrence</h3>
-            <p className="bento-text">
-              Step through 0/1 Knapsack, Longest Common Subsequence (LCS), Edit Distance, and Coin Change with live state matrices.
-            </p>
-            <div className="bento-preview-pills">
-              <span className="bento-pill">2D State Grid</span>
-              <span className="bento-pill">Recurrence Highlighting</span>
-              <span className="bento-pill">Memoization Cache</span>
-            </div>
-            <div className="bento-card-action">
-              <span>Launch DP Arena</span>
-              <ArrowRight size={16} />
-            </div>
-          </div>
-
-          {/* Row 3: Card 5 (Tree Structures - 1 col) + Card 6 (AlgoGym Quiz - 2 col) */}
-          <div className="bento-card bento-trees" onClick={() => handleNavClick('trees')}>
-            <div className="bento-card-header">
-              <div className="bento-icon-wrapper icon-amber">
-                <Cpu size={22} />
-              </div>
-              <span className="bento-arena-tag">TREE STRUCTURES</span>
-            </div>
-            <h3 className="bento-title">Self-Balancing AVL & BST</h3>
-            <p className="bento-text">
-              Watch Left and Right tree rotations maintain height balance with real-time balance factor telemetry on insert and delete.
-            </p>
-            <div className="bento-preview-pills">
-              <span className="bento-pill">AVL Rotations</span>
-              <span className="bento-pill">BST Traversal</span>
-              <span className="bento-pill">Balance Factors</span>
-            </div>
-            <div className="bento-card-action">
-              <span>Explore Trees Arena</span>
-              <ArrowRight size={16} />
-            </div>
-          </div>
-
-          <div className="bento-card bento-card-large bento-quiz featured" onClick={() => handleNavClick('quiz')}>
-            <div className="bento-card-bg-glow glow-cyan-subtle" />
-            <div className="bento-card-header">
-              <div className="bento-icon-wrapper icon-emerald">
-                <Trophy size={22} />
-              </div>
-              <span className="bento-arena-tag">ALGOGYM & QUIZ ARENA</span>
-            </div>
-            <h3 className="bento-title">Interactive LeetCode Challenges & Complexity Drills</h3>
-            <p className="bento-text">
-              Test your algorithmic knowledge with gamified competitive challenges, complexity analysis drills, edge-case debugging, and speed trivia.
-            </p>
-
-            <div className="bento-preview-pills">
-              <span className="bento-pill">LeetCode Problem Drills</span>
-              <span className="bento-pill">Time/Space Complexity Quiz</span>
-              <span className="bento-pill">Direct Arena Launch Handoff</span>
-              <span className="bento-pill">Streak & Accuracy Telemetry</span>
-            </div>
-
-            <div className="bento-card-action">
-              <span>Enter AlgoGym</span>
-              <ArrowRight size={16} />
-            </div>
-          </div>
-
-          {/* Row 4: Card 7 (Benchmarks - 2 col) + Card 8 (Sound Engine - 1 col) */}
-          <div className="bento-card bento-card-large bento-benchmarks" onClick={() => handleNavClick('history')}>
-            <div className="bento-card-header">
-              <div className="bento-icon-wrapper icon-emerald">
-                <Activity size={22} />
-              </div>
-              <span className="bento-arena-tag">BENCHMARKS & HISTORICAL TELEMETRY</span>
-            </div>
-            <h3 className="bento-title">Real-Time Performance Graphs & Operation Counters</h3>
-            <p className="bento-text">
-              Live comparative execution time graphs ($ms$), total comparisons, and swap count telemetry for scientific benchmarking and comparative reporting.
-            </p>
-            <div className="bento-preview-pills">
-              <span className="bento-pill">Execution Charts ($ms$)</span>
-              <span className="bento-pill">Operations Counter</span>
-              <span className="bento-pill">Exportable Race Logs</span>
-            </div>
-            <div className="bento-card-action">
-              <span>View Benchmarks</span>
-              <ArrowRight size={16} />
-            </div>
-          </div>
-
-          <div className="bento-card bento-audio" onClick={() => handleNavClick('settings')}>
-            <div className="bento-card-header">
-              <div className="bento-icon-wrapper icon-amber">
-                <Volume2 size={22} />
-              </div>
-              <span className="bento-arena-tag">SOUND ENGINE</span>
-            </div>
-            <h3 className="bento-title">Synthesized Web Audio Engine</h3>
-            <p className="bento-text">
-              Custom polyphonic synthesized acoustic chimes mapped to array frequencies for sensory feedback on comparisons and swaps.
-            </p>
-            <div className="bento-preview-pills">
-              <span className="bento-pill">Polyphonic Chimes</span>
-              <span className="bento-pill">Frequency Mapping</span>
-            </div>
-            <div className="bento-card-action">
-              <span>Audio Settings</span>
-              <ArrowRight size={16} />
-            </div>
-          </div>
+          <button
+            type="button"
+            className="gl-btn-primary"
+            style={{ padding: '12px 28px', fontSize: '0.96rem' }}
+            onClick={() => handleNavClick('sorting')}
+          >
+            <Zap size={17} />
+            <span>Launch Sorting Race</span>
+            <ArrowRight size={16} />
+          </button>
         </div>
       </section>
 
-      {/* Value Proposition Comparison Section */}
-      <section id="comparison" className="comparison-section">
-        <div className="section-header">
-          <div className="section-badge">
-            <Flame size={14} className="text-amber-400" />
-            <span>VALUE PROPOSITION</span>
-          </div>
-          <h2 className="section-title">Why AlgoRace vs Legacy Visualizers</h2>
-          <p className="section-subtitle">
-            Traditional visualizers show algorithms one at a time on synthetic data. AlgoRace delivers live multi-lane racing with scientific rigor.
-          </p>
-        </div>
-
-        <div className="comparison-grid">
-          <div className="comparison-card legacy-card">
-            <div className="comparison-card-header">
-              <span className="comp-badge badge-legacy">Legacy Visualizers</span>
-              <h3 className="comp-title">Single Algorithm Viewers</h3>
-              <p className="comp-desc">Conventional single-threaded tools with static delays and isolated executions.</p>
+      {/* ── 10. Minimalist Footer ── */}
+      <footer className="gl-footer">
+        <div className="gl-footer-grid">
+          <div>
+            <div className="gl-nav-brand" onClick={() => scrollToSection('hero')}>
+              <AlgoRaceLogo size={26} showText={true} />
             </div>
-            <ul className="comparison-list">
-              <li className="comp-item item-negative">
-                <X size={18} className="icon-cross" />
-                <span>Single algorithm execution at a time</span>
-              </li>
-              <li className="comp-item item-negative">
-                <X size={18} className="icon-cross" />
-                <span>Different random arrays make comparison biased</span>
-              </li>
-              <li className="comp-item item-negative">
-                <X size={18} className="icon-cross" />
-                <span>DOM-based animations lag on large array sizes</span>
-              </li>
-              <li className="comp-item item-negative">
-                <X size={18} className="icon-cross" />
-                <span>No step-back frame scrubbing seek bar</span>
-              </li>
-              <li className="comp-item item-negative">
-                <X size={18} className="icon-cross" />
-                <span>Limited to basic sorting only</span>
-              </li>
+            <p style={{ fontSize: '0.86rem', color: '#64748b', marginTop: '14px', lineHeight: 1.6, maxWidth: '280px' }}>
+              High-precision algorithm benchmarking and visualization engine for computer scientists and engineers.
+            </p>
+          </div>
+
+          <div>
+            <h4 className="gl-footer-col-title">Arenas</h4>
+            <ul className="gl-footer-links">
+              <li><button type="button" className="gl-footer-link" onClick={() => handleNavClick('sorting')}><span>Sorting Arena</span> <kbd>1</kbd></button></li>
+              <li><button type="button" className="gl-footer-link" onClick={() => handleNavClick('searching')}><span>Search Arena</span> <kbd>2</kbd></button></li>
+              <li><button type="button" className="gl-footer-link" onClick={() => handleNavClick('pathfinding')}><span>Pathfinding Grid</span> <kbd>3</kbd></button></li>
+              <li><button type="button" className="gl-footer-link" onClick={() => handleNavClick('dp')}><span>DP Matrix</span> <kbd>4</kbd></button></li>
+              <li><button type="button" className="gl-footer-link" onClick={() => handleNavClick('trees')}><span>Tree Balancing</span> <kbd>5</kbd></button></li>
             </ul>
           </div>
 
-          <div className="comparison-card algorace-card">
-            <div className="comp-card-glow" />
-            <div className="comparison-card-header">
-              <span className="comp-badge badge-algorace">AlgoRace</span>
-              <h3 className="comp-title">Multi-Lane Benchmarking Engine</h3>
-              <p className="comp-desc">Engineered for parallel multi-lane racing with microsecond telemetry.</p>
-            </div>
-            <ul className="comparison-list">
-              <li className="comp-item item-positive">
-                <Check size={18} className="icon-check" />
-                <span>Concurrent multi-lane algorithm race view</span>
-              </li>
-              <li className="comp-item item-positive">
-                <Check size={18} className="icon-check" />
-                <span>Exact uniform random seed preservation</span>
-              </li>
-              <li className="comp-item item-positive">
-                <Check size={18} className="icon-check" />
-                <span>60 FPS hardware-accelerated 2D HTML5 Canvas</span>
-              </li>
-              <li className="comp-item item-positive">
-                <Check size={18} className="icon-check" />
-                <span>Frame-accurate seek bar & inline pseudocode</span>
-              </li>
-              <li className="comp-item item-positive">
-                <Check size={18} className="icon-check" />
-                <span>Full suite: Sorting, Search, Pathfinding, DP & Trees</span>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      {/* Feature Details / Highlights Grid */}
-      <section id="features" className="landing-section features-highlights-section">
-        <div className="section-header">
-          <div className="section-badge">
-            <Sliders size={14} className="text-emerald-400" />
-            <span>FEATURES OVERVIEW</span>
-          </div>
-          <h2 className="section-title">Designed for Complete Execution Control</h2>
-        </div>
-
-        <div className="highlights-grid">
-          <div className="highlight-card">
-            <Code2 className="highlight-icon text-indigo-400" size={24} />
-            <h4>Inline Pseudocode Debugger</h4>
-            <p>
-              Inspect step-by-step theoretical pseudocode alongside complexity analysis ($O(1)$, $O(n \log n)$, $O(n^2)$) to understand underlying logic.
-            </p>
-          </div>
-
-          <div className="highlight-card">
-            <Sliders className="highlight-icon text-cyan-400" size={24} />
-            <h4>Frame Scrubbing & Timeline Seek</h4>
-            <p>
-              Scrub back and forth through algorithm execution timelines with interactive seek bars, step-forward, and step-backward controls.
-            </p>
-          </div>
-
-          <div className="highlight-card">
-            <CheckCircle2 className="highlight-icon text-emerald-400" size={24} />
-            <h4>Dataset Preservation</h4>
-            <p>
-              Swap between algorithms while retaining exact random seed arrays for true un-biased performance comparisons.
-            </p>
-          </div>
-
-          <div className="highlight-card">
-            <Shield className="highlight-icon text-amber-400" size={24} />
-            <h4>Obsidian Dark & Icy Glass Themes</h4>
-            <p>
-              Seamlessly switch between Obsidian dark mode and high-contrast light mode tailored for long study and development sessions.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Technical Architecture Section */}
-      <section id="architecture" className="landing-section architecture-section">
-        <div className="architecture-box">
-          <div className="arch-header">
-            <div className="arch-badge">
-              <Cpu size={14} className="text-cyan-400" />
-              <span>FULL-STACK SYSTEM ARCHITECTURE</span>
-            </div>
-            <h2 className="arch-title">Powered by High-Performance Tech Stack</h2>
-            <p className="arch-subtitle">
-              AlgoRace decouples simulation step calculation and client-side hardware canvas rendering for zero UI lag.
-            </p>
-          </div>
-
-          <div className="arch-tech-grid">
-            <div className="arch-tech-card">
-              <div className="tech-badge-icon icon-java">☕</div>
-              <h3>Spring Boot 3.4 API Engine</h3>
-              <ul>
-                <li>Java 21 / 25 High-throughput step generator</li>
-                <li>REST Endpoints (`/api/simulations/sorting`)</li>
-                <li>Deterministic Array & Grid Map generators</li>
-              </ul>
-            </div>
-
-            <div className="arch-tech-card">
-              <div className="tech-badge-icon icon-react">⚛️</div>
-              <h3>React 18 & TypeScript Client</h3>
-              <ul>
-                <li>Hardware-Accelerated 2D HTML5 Canvas rendering</li>
-                <li>60 FPS requestAnimationFrame animation loop</li>
-                <li>Context-driven Web Audio Synthesizer</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Complexity Matrix Section */}
-      <section id="matrix" className="landing-section matrix-container-section">
-        <Suspense fallback={<div className="matrix-skeleton" />}>
-          <AlgorithmMatrix onNavigate={handleNavClick} />
-        </Suspense>
-      </section>
-
-      {/* Upgraded CTA Launchpad */}
-      <section className="landing-cta-section">
-        <div className="landing-cta-card">
-          <div className="cta-ambient-glow" />
-          <div className="cta-content-wrapper">
-            <div className="cta-badge">
-              <div className="cta-status-dot" />
-              <span>READY FOR REAL-TIME BENCHMARKING</span>
-            </div>
-
-            <h2 className="cta-headline">
-              Elevate Your Computer Science Understanding
-            </h2>
-
-            <p className="cta-subheadline">
-              Jump straight into multi-lane algorithm arenas, run deterministic races, inspect pseudocode, and benchmark execution times live.
-            </p>
-
-            <div className="cta-arena-chips-grid">
-              <button className="cta-chip" onClick={() => handleNavClick('sorting')}>
-                <BarChart3 size={15} className="text-purple-400" />
-                <span>Sorting Arena</span>
-                <span className="cta-chip-kbd">1</span>
-              </button>
-              <button className="cta-chip" onClick={() => handleNavClick('searching')}>
-                <Binary size={15} className="text-blue-400" />
-                <span>Search Arena</span>
-                <span className="cta-chip-kbd">2</span>
-              </button>
-              <button className="cta-chip" onClick={() => handleNavClick('pathfinding')}>
-                <GitBranch size={15} className="text-cyan-400" />
-                <span>Pathfinding</span>
-                <span className="cta-chip-kbd">3</span>
-              </button>
-              <button className="cta-chip" onClick={() => handleNavClick('dp')}>
-                <Layers size={15} className="text-purple-400" />
-                <span>DP Matrix</span>
-                <span className="cta-chip-kbd">4</span>
-              </button>
-              <button className="cta-chip" onClick={() => handleNavClick('trees')}>
-                <Cpu size={15} className="text-amber-400" />
-                <span>Tree Arena</span>
-                <span className="cta-chip-kbd">5</span>
-              </button>
-              <button className="cta-chip" onClick={() => handleNavClick('quiz')}>
-                <Trophy size={15} className="text-emerald-400" />
-                <span>AlgoGym</span>
-                <span className="cta-chip-kbd">6</span>
-              </button>
-            </div>
-
-            <div className="cta-action-cluster">
-              <button
-                className="landing-cta-btn btn-primary btn-large"
-                onClick={() => handleNavClick('sorting')}
-              >
-                <Zap size={20} />
-                <span>Launch Sorting Race</span>
-                <ArrowRight size={18} />
-              </button>
-
-              <button
-                className="hero-btn-ghost"
-                onClick={() => scrollToSection('matrix')}
-              >
-                <span>Browse Algorithm Directory</span>
-              </button>
-            </div>
-
-            <div className="cta-specs-strip">
-              <div className="cta-spec-item">
-                <Check size={14} className="text-emerald-400" />
-                <span>Deterministic Random Seeds</span>
-              </div>
-              <div className="cta-spec-divider" />
-              <div className="cta-spec-item">
-                <Check size={14} className="text-emerald-400" />
-                <span>60 FPS Hardware Canvas</span>
-              </div>
-              <div className="cta-spec-divider" />
-              <div className="cta-spec-item">
-                <Check size={14} className="text-emerald-400" />
-                <span>Zero Latency Web Audio</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Upgraded 4-Column SaaS Footer */}
-      <footer className="landing-footer">
-        <div className="footer-grid-container">
-          <div className="footer-col footer-col-brand">
-            <div className="landing-nav-brand" onClick={() => scrollToSection('top')} style={{ cursor: 'pointer' }}>
-              <AlgoRaceLogo size={30} showText={true} />
-            </div>
-            <p className="footer-mission-text">
-              High-performance interactive algorithm benchmarking and visual exploration engine designed for computer scientists, developers, and students.
-            </p>
-            <div className="footer-status-pill">
-              <div className="status-dot-pulse" />
-              <span>System Nominal • 60 FPS</span>
-            </div>
-          </div>
-
-          <div className="footer-col">
-            <h4 className="footer-col-heading">Interactive Arenas</h4>
-            <ul className="footer-links-list">
-              <li>
-                <button onClick={() => handleNavClick('sorting')}>
-                  <span>Sorting Arena</span>
-                  <kbd>1</kbd>
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNavClick('searching')}>
-                  <span>Search Arena</span>
-                  <kbd>2</kbd>
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNavClick('pathfinding')}>
-                  <span>Pathfinding Arena</span>
-                  <kbd>3</kbd>
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNavClick('dp')}>
-                  <span>DP Matrix Arena</span>
-                  <kbd>4</kbd>
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNavClick('trees')}>
-                  <span>Tree Structures</span>
-                  <kbd>5</kbd>
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNavClick('quiz')}>
-                  <span>AlgoGym Challenges</span>
-                  <kbd>6</kbd>
-                </button>
-              </li>
+          <div>
+            <h4 className="gl-footer-col-title">Telemetry</h4>
+            <ul className="gl-footer-links">
+              <li><button type="button" className="gl-footer-link" onClick={() => handleNavClick('history')}><span>Benchmarks</span> <kbd>H</kbd></button></li>
+              <li><button type="button" className="gl-footer-link" onClick={() => handleNavClick('settings')}><span>Audio & Display</span> <kbd>S</kbd></button></li>
+              <li><button type="button" className="gl-footer-link" onClick={() => scrollToSection('simulator')}><span>Canvas Simulator</span></button></li>
+              <li><button type="button" className="gl-footer-link" onClick={() => scrollToSection('matrix')}><span>Complexity Matrix</span></button></li>
             </ul>
           </div>
 
-          <div className="footer-col">
-            <h4 className="footer-col-heading">Telemetry & Controls</h4>
-            <ul className="footer-links-list">
-              <li>
-                <button onClick={() => handleNavClick('history')}>
-                  <span>Performance Benchmarks</span>
-                  <kbd>H</kbd>
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNavClick('settings')}>
-                  <span>Audio & Display Settings</span>
-                  <kbd>S</kbd>
-                </button>
-              </li>
-              <li>
-                <button onClick={() => scrollToSection('matrix')}>
-                  <span>Complexity Matrix</span>
-                </button>
-              </li>
-              <li>
-                <button onClick={() => scrollToSection('architecture')}>
-                  <span>System Architecture</span>
-                </button>
-              </li>
-            </ul>
-          </div>
-
-          <div className="footer-col">
-            <h4 className="footer-col-heading">Community & Source</h4>
-            <ul className="footer-links-list">
+          <div>
+            <h4 className="gl-footer-col-title">Project</h4>
+            <ul className="gl-footer-links">
               <li>
                 <a
                   href="https://github.com/Sanan507/AlgorithmRaceVisualizer"
                   target="_blank"
                   rel="noreferrer"
-                  className="footer-external-link"
+                  className="gl-footer-link"
+                  style={{ textDecoration: 'none' }}
                 >
-                  <span className="footer-link-content">
-                    <Zap size={14} className="text-cyan-400" />
-                    <span>GitHub Repository</span>
-                  </span>
-                  <kbd className="footer-star-kbd">★ Star</kbd>
+                  <span>GitHub Repository</span>
+                  <span style={{ fontSize: '0.72rem', color: '#fbbf24', fontWeight: 700 }}>★ Star</span>
                 </a>
               </li>
-              <li>
-                <button onClick={() => scrollToSection('comparison')}>
-                  <span>Why AlgoRace</span>
-                </button>
-              </li>
-              <li>
-                <button onClick={() => scrollToSection('features')}>
-                  <span>Feature Highlights</span>
-                </button>
-              </li>
+              <li><button type="button" className="gl-footer-link" onClick={() => scrollToSection('architecture')}><span>Architecture</span></button></li>
+              <li><button type="button" className="gl-footer-link" onClick={() => scrollToSection('specs')}><span>Technical Specs</span></button></li>
             </ul>
           </div>
         </div>
 
-        <div className="footer-bottom-bar">
-          <p className="footer-copyright">
-            © 2026 AlgoRace. Built with precision by <strong>Sanan</strong>. Open source on GitHub.
-          </p>
-          <div className="footer-tech-stack">
-            <span className="tech-chip">React 18</span>
-            <span className="tech-chip">TypeScript</span>
-            <span className="tech-chip">Spring Boot 3.4</span>
-            <span className="tech-chip">HTML5 Canvas</span>
-            <span className="tech-chip">Web Audio API</span>
+        <div className="gl-footer-bottom">
+          <span>© 2026 AlgoRace. Built by <strong>Sanan</strong>. Open source on GitHub.</span>
+          <div className="gl-footer-chips">
+            <span className="gl-footer-chip">React 18</span>
+            <span className="gl-footer-chip">TypeScript</span>
+            <span className="gl-footer-chip">Spring Boot 3.4</span>
+            <span className="gl-footer-chip">HTML5 Canvas</span>
+            <span className="gl-footer-chip">Web Audio</span>
           </div>
         </div>
       </footer>

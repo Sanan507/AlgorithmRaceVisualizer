@@ -1,0 +1,1570 @@
+/* ==========================================================================
+   ALGORACE DESIGN SYSTEM - HIGH-CRAFT TECHNICAL BENCHMARK ENGINE
+   Inspired by GitLab, Linear, and Vercel technical craft
+   Rich iconography, fluid animations, deep light & dark mode hierarchy
+   ========================================================================== */
+
+:root {
+  /* Dark Mode Palette (Default) */
+  --gl-bg: #07080e;
+  --gl-surface: #0f1118;
+  --gl-surface-elevated: #151824;
+  --gl-surface-hover: #1c2130;
+  --gl-border: rgba(255, 255, 255, 0.08);
+  --gl-border-strong: rgba(255, 255, 255, 0.16);
+  --gl-border-focus: rgba(252, 109, 38, 0.5);
+  
+  --gl-text-primary: #f8fafc;
+  --gl-text-secondary: #94a3b8;
+  --gl-text-muted: #64748b;
+  
+  --gl-orange: #fc6d26;
+  --gl-orange-gradient: linear-gradient(135deg, #fc6d26 0%, #f59e0b 100%);
+  --gl-orange-soft: rgba(252, 109, 38, 0.14);
+  --gl-orange-glow: rgba(252, 109, 38, 0.25);
+  
+  --gl-cyan: #06b6d4;
+  --gl-cyan-gradient: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+  --gl-cyan-soft: rgba(6, 182, 212, 0.14);
+  --gl-cyan-glow: rgba(6, 182, 212, 0.25);
+  
+  --gl-purple: #8b5cf6;
+  --gl-purple-gradient: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+  --gl-purple-soft: rgba(139, 92, 246, 0.14);
+  --gl-purple-glow: rgba(139, 92, 246, 0.25);
+  
+  --gl-emerald: #10b981;
+  --gl-emerald-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  --gl-emerald-soft: rgba(16, 185, 129, 0.14);
+  --gl-emerald-glow: rgba(16, 185, 129, 0.25);
+  
+  --gl-amber: #f59e0b;
+  --gl-rose: #f43f5e;
+  
+  --gl-radius-sm: 8px;
+  --gl-radius-md: 14px;
+  --gl-radius-lg: 22px;
+  --gl-font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+/* Light Mode Overrides (Silky, Rich & Frosted — Never Flat White) */
+:root[data-theme='light'],
+.gitlab-landing.light-mode {
+  --gl-bg: #f4f6fb;
+  --gl-surface: rgba(255, 255, 255, 0.92);
+  --gl-surface-elevated: #ffffff;
+  --gl-surface-hover: #edf2f7;
+  --gl-border: rgba(15, 23, 42, 0.08);
+  --gl-border-strong: rgba(15, 23, 42, 0.14);
+  
+  --gl-text-primary: #0f172a;
+  --gl-text-secondary: #475569;
+  --gl-text-muted: #94a3b8;
+  
+  --gl-orange-soft: rgba(252, 109, 38, 0.12);
+  --gl-cyan-soft: rgba(6, 182, 212, 0.12);
+  --gl-purple-soft: rgba(139, 92, 246, 0.12);
+  --gl-emerald-soft: rgba(16, 185, 129, 0.12);
+}
+
+/* ─── Global Scope & Layout ─── */
+.gitlab-landing {
+  position: relative;
+  width: 100%;
+  max-width: 100vw;
+  min-height: 100vh;
+  background-color: var(--gl-bg);
+  color: var(--gl-text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  overflow-x: clip;
+  box-sizing: border-box;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+}
+
+.gitlab-landing *,
+.gitlab-landing *::before,
+.gitlab-landing *::after {
+  box-sizing: border-box;
+}
+
+/* Ambient Luminous Background Lighting */
+.gl-bg-mesh {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 980px;
+  background-image: 
+    radial-gradient(ellipse 75% 55% at 50% -8%, rgba(252, 109, 38, 0.18) 0%, transparent 70%),
+    radial-gradient(ellipse 45% 35% at 85% 18%, rgba(6, 182, 212, 0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 30% at 15% 30%, rgba(139, 92, 246, 0.1) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+  animation: glBreatheMesh 12s ease-in-out infinite alternate;
+}
+
+@keyframes glBreatheMesh {
+  0% { opacity: 0.85; transform: scale(1); }
+  100% { opacity: 1; transform: scale(1.03); }
+}
+
+.gl-grid-pattern {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse 85% 65% at 50% 25%, #000 35%, transparent 85%);
+  -webkit-mask-image: radial-gradient(ellipse 85% 65% at 50% 25%, #000 35%, transparent 85%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+:root[data-theme='light'] .gl-grid-pattern,
+.gitlab-landing.light-mode .gl-grid-pattern {
+  background-image: 
+    linear-gradient(to right, rgba(15, 23, 42, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.04) 1px, transparent 1px);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   1. Sticky Luxury Navbar
+   ═══════════════════════════════════════════════════════════════ */
+.gl-navbar {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 68px;
+  background: rgba(7, 8, 14, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--gl-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  z-index: 1030;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+:root[data-theme='light'] .gl-navbar,
+.gitlab-landing.light-mode .gl-navbar {
+  background: rgba(255, 255, 255, 0.88);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.gl-nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+
+
+
+.gl-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gl-nav-link-btn {
+  background: none;
+  border: none;
+  padding: 7px 15px;
+  border-radius: var(--gl-radius-sm);
+  color: var(--gl-text-secondary);
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.gl-nav-link-btn:hover {
+  color: var(--gl-text-primary);
+  background: var(--gl-surface-hover);
+}
+
+.gl-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.gl-theme-toggle {
+  background: var(--gl-surface);
+  border: 1px solid var(--gl-border);
+  color: var(--gl-text-secondary);
+  border-radius: var(--gl-radius-sm);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.gl-theme-toggle:hover {
+  color: var(--gl-text-primary);
+  border-color: var(--gl-border-strong);
+  transform: rotate(15deg);
+}
+
+.gl-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--gl-orange-gradient);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 9px 20px;
+  border-radius: var(--gl-radius-sm);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 14px rgba(252, 109, 38, 0.3);
+  white-space: nowrap;
+}
+
+.gl-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(252, 109, 38, 0.45);
+}
+
+.gl-btn-primary:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.gl-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--gl-surface);
+  color: var(--gl-text-primary);
+  border: 1px solid var(--gl-border-strong);
+  padding: 9px 20px;
+  border-radius: var(--gl-radius-sm);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.gl-btn-secondary:hover {
+  background: var(--gl-surface-hover);
+  border-color: var(--gl-orange);
+  color: var(--gl-orange);
+  transform: translateY(-2px);
+}
+
+.gl-menu-mobile-btn {
+  display: none;
+  background: var(--gl-surface);
+  border: 1px solid var(--gl-border);
+  color: var(--gl-text-primary);
+  border-radius: var(--gl-radius-sm);
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.gl-mobile-drawer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px;
+  background: var(--gl-surface);
+  border-bottom: 1px solid var(--gl-border);
+  position: absolute;
+  top: 68px;
+  left: 0;
+  right: 0;
+  z-index: 1029;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   3. Distinctive Hero Section with Live Telemetry Ticker
+   ═══════════════════════════════════════════════════════════════ */
+.gl-hero {
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 72px 24px 44px;
+  text-align: center;
+  z-index: 10;
+}
+
+
+
+.gl-hero-heading {
+  font-size: clamp(2.5rem, 5.5vw, 4.6rem);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.04em;
+  color: var(--gl-text-primary);
+  margin: 0 auto 16px;
+  max-width: 960px;
+}
+
+.gl-hero-glow-text {
+  display: block;
+  background: linear-gradient(135deg, #fc6d26 0%, #ec4899 50%, #8b5cf6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
+  margin-top: 8px;
+  filter: drop-shadow(0 2px 14px rgba(252, 109, 38, 0.25));
+}
+
+.gl-hero-subhead {
+  font-size: 1.15rem;
+  line-height: 1.65;
+  color: var(--gl-text-secondary);
+  max-width: 700px;
+  margin: 0 auto 36px;
+}
+
+.gl-hero-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+}
+
+/* Floating Interactive Hotkeys Dock */
+.gl-hero-dock {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 12px 18px;
+  background: var(--gl-surface);
+  border: 1px solid var(--gl-border-strong);
+  border-radius: var(--gl-radius-md);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  max-width: 820px;
+  margin: 0 auto;
+}
+
+.gl-dock-label {
+  font-family: var(--gl-font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--gl-text-muted);
+  letter-spacing: 0.08em;
+  margin-right: 4px;
+}
+
+.gl-dock-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--gl-surface-elevated);
+  border: 1px solid var(--gl-border);
+  padding: 4px 10px;
+  border-radius: 6px;
+  color: var(--gl-text-secondary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.gl-dock-chip:hover {
+  background: var(--gl-surface-hover);
+  color: var(--gl-text-primary);
+  border-color: var(--gl-orange);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(252, 109, 38, 0.15);
+}
+
+.gl-dock-chip kbd {
+  font-family: var(--gl-font-mono);
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: var(--gl-orange);
+  background: rgba(0, 0, 0, 0.3);
+  padding: 1px 5px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+:root[data-theme='light'] .gl-dock-chip kbd,
+.gitlab-landing.light-mode .gl-dock-chip kbd {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   4. Centerpiece Dual-Lane Canvas Terminal Frame
+   ═══════════════════════════════════════════════════════════════ */
+.gl-simulator-section {
+  position: relative;
+  max-width: 1200px;
+  margin: 16px auto 72px;
+  padding: 0 24px;
+  z-index: 10;
+}
+
+.gl-console-frame {
+  background: var(--gl-surface);
+  border: 1px solid var(--gl-border-strong);
+  border-radius: var(--gl-radius-lg);
+  overflow: hidden;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4), 0 0 40px var(--gl-orange-soft);
+  position: relative;
+}
+
+:root[data-theme='light'] .gl-console-frame,
+.gitlab-landing.light-mode .gl-console-frame {
+  background: #ffffff;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.1), 0 0 30px var(--gl-orange-soft);
+}
+
+.gl-console-header {
+  height: 44px;
+  background: #090a10;
+  border-bottom: 1px solid var(--gl-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px;
+  font-family: var(--gl-font-mono);
+  font-size: 0.74rem;
+}
+
+:root[data-theme='light'] .gl-console-header,
+.gitlab-landing.light-mode .gl-console-header {
+  background: #edf2f7;
+}
+
+.gl-console-dots {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.gl-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+}
+
+.gl-dot-red { background: #ef4444; }
+.gl-dot-yellow { background: #f59e0b; }
+.gl-dot-green { background: #10b981; }
+
+.gl-console-title {
+  color: var(--gl-text-primary);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: 0.04em;
+}
+
+.gl-console-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: var(--gl-text-muted);
+}
+
+.gl-telemetry-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #10b981;
+  font-weight: 700;
+}
+
+.gl-console-body {
+  padding: 24px;
+  background: #08090d;
+}
+
+:root[data-theme='light'] .gl-console-body,
+.gitlab-landing.light-mode .gl-console-body {
+  background: #f8fafc;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   5. Interactive Stacking Arenas (The 4 Distinct Workbenches)
+   ═══════════════════════════════════════════════════════════════ */
+.gl-showcase-section {
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 48px 24px 90px;
+  z-index: 10;
+}
+
+.gl-section-heading-wrap {
+  text-align: center;
+  max-width: 720px;
+  margin: 0 auto 36px;
+}
+
+.gl-section-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 14px;
+  border-radius: 9999px;
+  background: var(--gl-orange-soft);
+  border: 1px solid rgba(252, 109, 38, 0.35);
+  color: var(--gl-orange);
+  font-family: var(--gl-font-mono);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.gl-section-title {
+  font-size: clamp(2rem, 3.6vw, 2.8rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  color: var(--gl-text-primary);
+  margin: 0 0 12px;
+}
+
+.gl-section-desc {
+  font-size: 1.05rem;
+  color: var(--gl-text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Elevated Quick-Switcher Tabs Bar with Custom Glowing Icons */
+.gl-stack-tabs-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.gl-tabs-controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+}
+
+.gl-view-mode-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: var(--gl-surface);
+  border: 1px solid var(--gl-border-strong);
+  padding: 3px;
+  border-radius: 9999px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+:root[data-theme='light'] .gl-view-mode-pill,
+.gitlab-landing.light-mode .gl-view-mode-pill {
+  background: #ffffff;
+}
+
+.gl-view-mode-btn {
+  background: none;
+  border: none;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--gl-text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.gl-view-mode-btn:hover {
+  color: var(--gl-text-primary);
+}
+
+.gl-view-mode-btn.active {
+  background: var(--gl-orange);
+  color: #ffffff;
+  box-shadow: 0 2px 8px var(--gl-orange-glow);
+}
+
+.gl-stack-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 18px;
+  border-radius: var(--gl-radius-md);
+  background: var(--gl-surface);
+  border: 1px solid var(--gl-border-strong);
+  color: var(--gl-text-secondary);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  user-select: none;
+}
+
+:root[data-theme='light'] .gl-stack-tab-btn,
+.gitlab-landing.light-mode .gl-stack-tab-btn {
+  background: #ffffff;
+}
+
+.gl-stack-tab-btn:hover {
+  background: var(--gl-surface-hover);
+  color: var(--gl-text-primary);
+  transform: translateY(-2px);
+  border-color: var(--gl-border-strong);
+}
+
+.gl-stack-tab-btn.active {
+  background: var(--gl-surface);
+  color: var(--gl-text-primary);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.gl-stack-tab-btn.active.tab-sorting {
+  border-color: var(--gl-orange);
+  color: var(--gl-orange);
+  box-shadow: 0 4px 18px var(--gl-orange-glow);
+}
+
+.gl-stack-tab-btn.active.tab-pathfinding {
+  border-color: var(--gl-cyan);
+  color: var(--gl-cyan);
+  box-shadow: 0 4px 18px var(--gl-cyan-glow);
+}
+
+.gl-stack-tab-btn.active.tab-dp {
+  border-color: var(--gl-purple);
+  color: var(--gl-purple);
+  box-shadow: 0 4px 18px var(--gl-purple-glow);
+}
+
+.gl-stack-tab-btn.active.tab-quiz {
+  border-color: var(--gl-emerald);
+  color: var(--gl-emerald);
+  box-shadow: 0 4px 18px var(--gl-emerald-glow);
+}
+
+.gl-tab-icon-wrap {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Stacking / Workbench Card List */
+.gl-stacking-list {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: relative;
+  width: 100%;
+}
+
+/* The Individual Workbench Card — Strictly Normal Document Flow (Zero Sticky Collision Bug) */
+.gl-stacking-card {
+  position: relative;
+  background: var(--gl-surface);
+  border: 1px solid var(--gl-border-strong);
+  border-radius: var(--gl-radius-lg);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.38);
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  overflow: hidden;
+  margin-bottom: 32px;
+  scroll-margin-top: 88px;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  animation: glWorkbenchFade 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes glWorkbenchFade {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+:root[data-theme='light'] .gl-stacking-card,
+.gitlab-landing.light-mode .gl-stacking-card {
+  background: #ffffff;
+  box-shadow: 0 16px 40px -10px rgba(15, 23, 42, 0.1), 0 0 1px 1px rgba(0, 0, 0, 0.04);
+}
+
+/* Workbench In-Card Footer Switcher */
+.gl-workbench-footer-nav {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 32px;
+  background: rgba(0, 0, 0, 0.22);
+  border-top: 1px solid var(--gl-border);
+}
+
+:root[data-theme='light'] .gl-workbench-footer-nav,
+.gitlab-landing.light-mode .gl-workbench-footer-nav {
+  background: #f8fafc;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.gl-workbench-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: none;
+  border: 1px solid var(--gl-border-strong);
+  color: var(--gl-text-secondary);
+  font-size: 0.84rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: var(--gl-radius-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.gl-workbench-nav-btn:hover {
+  background: var(--gl-surface-hover);
+  color: var(--gl-text-primary);
+  border-color: var(--gl-orange);
+}
+
+.gl-workbench-nav-dots {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gl-workbench-nav-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--gl-border-strong);
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.gl-workbench-nav-dot:hover {
+  background: var(--gl-text-muted);
+}
+
+.gl-workbench-nav-dot.active {
+  width: 22px;
+  border-radius: 9999px;
+  background: var(--gl-orange);
+  box-shadow: 0 0 10px var(--gl-orange-glow);
+}
+
+/* Left Column: Icon Hub, Tech Title, Specs */
+.gl-workbench-info {
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  text-align: left;
+}
+
+/* Prominent Glowing Icon Hub */
+.gl-icon-hub {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--gl-radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s ease;
+}
+
+.gl-icon-hub.hub-orange {
+  background: var(--gl-orange-gradient);
+  color: #ffffff;
+  box-shadow: 0 8px 24px var(--gl-orange-glow);
+}
+
+.gl-icon-hub.hub-cyan {
+  background: var(--gl-cyan-gradient);
+  color: #ffffff;
+  box-shadow: 0 8px 24px var(--gl-cyan-glow);
+}
+
+.gl-icon-hub.hub-purple {
+  background: var(--gl-purple-gradient);
+  color: #ffffff;
+  box-shadow: 0 8px 24px var(--gl-purple-glow);
+}
+
+.gl-icon-hub.hub-emerald {
+  background: var(--gl-emerald-gradient);
+  color: #ffffff;
+  box-shadow: 0 8px 24px var(--gl-emerald-glow);
+}
+
+.gl-card-kicker {
+  font-family: var(--gl-font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gl-orange);
+  margin-bottom: 6px;
+  display: block;
+}
+
+.gl-card-title {
+  font-size: 1.7rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--gl-text-primary);
+  margin: 0 0 12px;
+}
+
+.gl-card-desc {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--gl-text-secondary);
+  margin: 0 0 22px;
+}
+
+/* Spec Pills with Micro-Icons */
+.gl-spec-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 28px;
+}
+
+.gl-spec-pill {
+  font-family: var(--gl-font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 5px 11px;
+  border-radius: var(--gl-radius-sm);
+  background: var(--gl-surface-elevated);
+  border: 1px solid var(--gl-border);
+  color: var(--gl-text-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+:root[data-theme='light'] .gl-spec-pill,
+.gitlab-landing.light-mode .gl-spec-pill {
+  background: #f1f5f9;
+}
+
+/* Right Column: Live Interactive Simulator Widget */
+.gl-workbench-sim {
+  background: #090a10;
+  border-left: 1px solid var(--gl-border);
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+:root[data-theme='light'] .gl-workbench-sim,
+.gitlab-landing.light-mode .gl-workbench-sim {
+  background: #f8fafc;
+}
+
+.gl-sim-widget {
+  width: 100%;
+  max-width: 440px;
+  background: var(--gl-surface);
+  border: 1px solid var(--gl-border-strong);
+  border-radius: var(--gl-radius-md);
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+:root[data-theme='light'] .gl-sim-widget,
+.gitlab-landing.light-mode .gl-sim-widget {
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+.gl-widget-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--gl-border);
+}
+
+.gl-widget-tag {
+  font-family: var(--gl-font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--gl-orange);
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gl-widget-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: var(--gl-radius-sm);
+  background: var(--gl-surface-elevated);
+  border: 1px solid var(--gl-border);
+  color: var(--gl-text-primary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+:root[data-theme='light'] .gl-widget-btn,
+.gitlab-landing.light-mode .gl-widget-btn {
+  background: #f1f5f9;
+}
+
+.gl-widget-btn:hover {
+  background: var(--gl-orange-soft);
+  border-color: var(--gl-orange);
+  color: var(--gl-orange);
+}
+
+.gl-widget-btn.active-run {
+  background: var(--gl-emerald-soft);
+  border-color: var(--gl-emerald);
+  color: var(--gl-emerald);
+}
+
+/* 1. Fluid Sorting Bars with Keyframe Glows */
+.gl-sort-bars-area {
+  display: flex;
+  align-items: flex-end;
+  gap: 7px;
+  height: 120px;
+  padding: 8px 0;
+  margin-bottom: 14px;
+}
+
+.gl-sort-bar-col {
+  flex: 1;
+  border-radius: 4px 4px 0 0;
+  background: #3b82f6;
+  transition: height 0.22s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s ease, transform 0.15s ease;
+  min-width: 14px;
+  position: relative;
+}
+
+.gl-sort-bar-col.comparing {
+  background: #ec4899 !important;
+  transform: translateY(-3px);
+  box-shadow: 0 0 14px rgba(236, 72, 153, 0.85);
+}
+
+.gl-sort-bar-col.swapping {
+  background: #f59e0b !important;
+  transform: translateY(-5px);
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.9);
+}
+
+.gl-sort-bar-col.sorted {
+  background: #10b981 !important;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.7);
+}
+
+.gl-widget-telemetry-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--gl-font-mono);
+  font-size: 0.76rem;
+  color: var(--gl-text-secondary);
+}
+
+/* 2. Pathfinding 7x7 Grid with Ripple Wave */
+.gl-grid-canvas {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.gl-grid-tile {
+  aspect-ratio: 1;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--gl-border);
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+:root[data-theme='light'] .gl-grid-tile,
+.gitlab-landing.light-mode .gl-grid-tile {
+  background: #edf2f7;
+}
+
+.gl-grid-tile:hover {
+  transform: scale(1.12);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.gl-grid-tile:active {
+  transform: scale(0.92);
+}
+
+.gl-grid-tile.tile-start {
+  background: #3b82f6 !important;
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.9) !important;
+  position: relative;
+}
+
+.gl-grid-tile.tile-target {
+  background: #ef4444 !important;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.9) !important;
+}
+
+.gl-grid-tile.tile-wall {
+  background: #475569 !important;
+  border-color: #64748b !important;
+}
+
+.gl-grid-tile.tile-path {
+  background: #10b981 !important;
+  border-color: #34d399 !important;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.9) !important;
+  animation: glPathPulse 1.8s infinite ease-in-out;
+}
+
+@keyframes glPathPulse {
+  0%, 100% { opacity: 0.85; filter: drop-shadow(0 0 2px #10b981); }
+  50% { opacity: 1; filter: drop-shadow(0 0 8px #10b981); }
+}
+
+/* 3. DP Knapsack Table */
+.gl-dp-table-wrap {
+  overflow-x: auto;
+  margin-bottom: 12px;
+}
+
+.gl-dp-mini-grid {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--gl-font-mono);
+  font-size: 0.8rem;
+}
+
+.gl-dp-mini-grid th,
+.gl-dp-mini-grid td {
+  padding: 6px 8px;
+  text-align: center;
+  border: 1px solid var(--gl-border);
+}
+
+.gl-dp-cell-active {
+  background: var(--gl-orange-soft) !important;
+  color: var(--gl-orange) !important;
+  font-weight: 700;
+  box-shadow: inset 0 0 8px rgba(252, 109, 38, 0.5);
+}
+
+.gl-dp-cell-dep {
+  background: var(--gl-purple-soft) !important;
+  color: #c084fc !important;
+  font-weight: 600;
+}
+
+.gl-dp-formula-pill {
+  font-family: var(--gl-font-mono);
+  font-size: 0.74rem;
+  padding: 8px 12px;
+  border-radius: var(--gl-radius-sm);
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--gl-text-secondary);
+  border: 1px solid var(--gl-border);
+  line-height: 1.5;
+}
+
+:root[data-theme='light'] .gl-dp-formula-pill,
+.gitlab-landing.light-mode .gl-dp-formula-pill {
+  background: #f1f5f9;
+}
+
+/* 4. AlgoGym Quiz Card */
+.gl-quiz-question {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--gl-text-primary);
+  margin: 0 0 12px;
+  line-height: 1.45;
+}
+
+.gl-quiz-options {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-bottom: 12px;
+}
+
+.gl-quiz-opt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: var(--gl-radius-sm);
+  background: var(--gl-surface-elevated);
+  border: 1px solid var(--gl-border);
+  color: var(--gl-text-secondary);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+:root[data-theme='light'] .gl-quiz-opt,
+.gitlab-landing.light-mode .gl-quiz-opt {
+  background: #f8fafc;
+}
+
+.gl-quiz-opt:hover {
+  background: var(--gl-surface-hover);
+  border-color: var(--gl-border-strong);
+  color: var(--gl-text-primary);
+}
+
+.gl-quiz-opt.correct {
+  background: rgba(16, 185, 129, 0.2) !important;
+  border-color: #10b981 !important;
+  color: #34d399 !important;
+  font-weight: 600;
+}
+
+.gl-quiz-opt.incorrect {
+  background: rgba(239, 68, 68, 0.2) !important;
+  border-color: #ef4444 !important;
+  color: #f87171 !important;
+}
+
+.gl-quiz-feedback {
+  font-size: 0.78rem;
+  color: var(--gl-text-secondary);
+  line-height: 1.45;
+  margin: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   6. System Architecture (Authentic Technical Foundations)
+   ═══════════════════════════════════════════════════════════════ */
+.gl-architecture-section {
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 24px 76px;
+}
+
+.gl-arch-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.gl-arch-card {
+  background: var(--gl-surface);
+  border: 1px solid var(--gl-border);
+  border-radius: var(--gl-radius-md);
+  padding: 32px;
+  text-align: left;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+:root[data-theme='light'] .gl-arch-card,
+.gitlab-landing.light-mode .gl-arch-card {
+  background: #ffffff;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+.gl-arch-card:hover {
+  border-color: var(--gl-border-strong);
+  transform: translateY(-4px);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.15);
+}
+
+.gl-arch-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--gl-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.gl-arch-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--gl-text-primary);
+  margin: 0 0 10px;
+  letter-spacing: -0.02em;
+}
+
+.gl-arch-desc {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--gl-text-secondary);
+  margin: 0 0 18px;
+}
+
+.gl-arch-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.gl-arch-tag {
+  font-family: var(--gl-font-mono);
+  font-size: 0.72rem;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: var(--gl-surface-elevated);
+  border: 1px solid var(--gl-border);
+  color: var(--gl-text-muted);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   7. Technical Specification Table
+   ═══════════════════════════════════════════════════════════════ */
+.gl-spec-section {
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 24px 80px;
+}
+
+.gl-spec-table-container {
+  background: var(--gl-surface);
+  border: 1px solid var(--gl-border-strong);
+  border-radius: var(--gl-radius-md);
+  overflow-x: auto;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+:root[data-theme='light'] .gl-spec-table-container,
+.gitlab-landing.light-mode .gl-spec-table-container {
+  background: #ffffff;
+}
+
+.gl-spec-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.gl-spec-table th {
+  padding: 16px 22px;
+  background: #090a10;
+  color: var(--gl-text-secondary);
+  font-weight: 700;
+  border-bottom: 1px solid var(--gl-border);
+  font-family: var(--gl-font-mono);
+  font-size: 0.76rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+:root[data-theme='light'] .gl-spec-table th,
+.gitlab-landing.light-mode .gl-spec-table th {
+  background: #f1f5f9;
+}
+
+.gl-spec-table td {
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--gl-border);
+  color: var(--gl-text-secondary);
+  vertical-align: middle;
+}
+
+.gl-spec-table tr:last-child td {
+  border-bottom: none;
+}
+
+.gl-spec-table tr:hover td {
+  background: var(--gl-surface-hover);
+}
+
+.gl-spec-metric-name {
+  font-weight: 700;
+  color: var(--gl-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gl-spec-legacy-val {
+  color: var(--gl-text-muted);
+  font-size: 0.88rem;
+}
+
+.gl-spec-algorace-val {
+  color: var(--gl-orange);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   8. Launchpad Banner & Minimalist Footer
+   ═══════════════════════════════════════════════════════════════ */
+.gl-launchpad {
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto 60px;
+  padding: 0 24px;
+}
+
+.gl-launchpad-box {
+  background: linear-gradient(135deg, #111420 0%, #1c2132 100%);
+  border: 1px solid var(--gl-border-strong);
+  border-radius: var(--gl-radius-lg);
+  padding: 48px 32px;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3), 0 0 30px var(--gl-orange-soft);
+}
+
+:root[data-theme='light'] .gl-launchpad-box,
+.gitlab-landing.light-mode .gl-launchpad-box {
+  background: linear-gradient(135deg, #ffffff 0%, #fef3eb 100%);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+}
+
+.gl-launchpad-title {
+  font-size: clamp(1.8rem, 3.2vw, 2.4rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin: 0 0 12px;
+  color: var(--gl-text-primary);
+}
+
+.gl-launchpad-sub {
+  font-size: 1.05rem;
+  color: var(--gl-text-secondary);
+  max-width: 580px;
+  margin: 0 auto 28px;
+  line-height: 1.6;
+}
+
+.gl-footer {
+  border-top: 1px solid var(--gl-border);
+  background: #06070a;
+  padding: 48px 32px 32px;
+}
+
+:root[data-theme='light'] .gl-footer,
+.gitlab-landing.light-mode .gl-footer {
+  background: #f1f5f9;
+}
+
+.gl-footer-grid {
+  max-width: 1200px;
+  margin: 0 auto 40px;
+  display: grid;
+  grid-template-columns: 1.8fr 1fr 1fr 1fr;
+  gap: 40px;
+  text-align: left;
+}
+
+.gl-footer-col-title {
+  font-family: var(--gl-font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--gl-text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 18px;
+}
+
+.gl-footer-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gl-footer-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--gl-text-secondary);
+  font-size: 0.88rem;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  transition: color 0.15s ease;
+}
+
+.gl-footer-link:hover {
+  color: var(--gl-orange);
+}
+
+.gl-footer-bottom {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-top: 24px;
+  border-top: 1px solid var(--gl-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  color: var(--gl-text-muted);
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.gl-footer-chips {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.gl-footer-chip {
+  font-family: var(--gl-font-mono);
+  font-size: 0.7rem;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: var(--gl-surface);
+  border: 1px solid var(--gl-border);
+  color: var(--gl-text-muted);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   9. Responsive Breakpoints & Mobile Touch Unsticking
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 1024px) {
+  .gl-stacking-card {
+    grid-template-columns: 1fr;
+    margin-bottom: 24px;
+  }
+
+  .gl-stack-tabs-bar {
+    display: flex;
+    overflow-x: auto;
+    justify-content: flex-start;
+    padding: 4px 2px 10px;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+  }
+
+  .gl-stack-tab-btn {
+    flex-shrink: 0;
+  }
+
+  .gl-workbench-info {
+    padding: 32px 24px;
+  }
+
+  .gl-workbench-sim {
+    border-left: none;
+    border-top: 1px solid var(--gl-border);
+    padding: 32px 20px;
+  }
+
+  .gl-arch-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .gl-footer-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+}
+
+@media (max-width: 768px) {
+  .gl-navbar {
+    padding: 0 16px;
+  }
+
+  .gl-nav-links,
+  .gl-nav-actions .gl-btn-primary {
+    display: none;
+  }
+
+  .gl-menu-mobile-btn {
+    display: flex;
+  }
+
+  .gl-hero {
+    padding: 48px 16px 32px;
+  }
+
+  .gl-hero-dock {
+    display: none;
+  }
+
+  .gl-console-body {
+    padding: 16px 12px;
+  }
+
+  .gl-showcase-section,
+  .gl-architecture-section,
+  .gl-spec-section {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .gl-footer-grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .gl-footer-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
