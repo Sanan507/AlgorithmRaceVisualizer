@@ -371,29 +371,32 @@ export function HeroMiniCanvas() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const updateDimensions = (width: number) => {
+    const updateDimensions = (width: number, height?: number) => {
       const w = Math.floor(width);
-      if (w > 0) {
-        sizeRef.current = { w, h: 260 };
+      const parentH = canvas.parentElement?.clientHeight;
+      const h = Math.floor(height || (parentH && parentH > 0 ? parentH : 280));
+      if (w > 0 && h > 0) {
+        sizeRef.current = { w, h };
         renderCanvas();
       }
     };
 
-    const initialRect = canvas.getBoundingClientRect();
-    const initW = initialRect.width || canvas.parentElement?.clientWidth || 580;
-    updateDimensions(initW);
+    const parent = canvas.parentElement;
+    const initW = parent?.clientWidth || canvas.getBoundingClientRect().width || 580;
+    const initH = parent?.clientHeight || 280;
+    updateDimensions(initW, initH > 0 ? initH : 280);
 
     const ro = new ResizeObserver((entries) => {
       for (const entry of entries) {
         const cr = entry.contentRect;
         if (cr.width > 0) {
-          updateDimensions(cr.width);
+          updateDimensions(cr.width, cr.height > 0 ? cr.height : undefined);
         }
       }
     });
 
-    if (canvas.parentElement) {
-      ro.observe(canvas.parentElement);
+    if (parent) {
+      ro.observe(parent);
     } else {
       ro.observe(canvas);
     }
@@ -501,7 +504,7 @@ export function HeroMiniCanvas() {
       <div className="hero-canvas-wrapper">
         <canvas
           ref={canvasRef}
-          style={{ width: '100%', height: '260px', display: 'block' }}
+          style={{ width: '100%', height: '100%', display: 'block' }}
           className="hero-canvas-element"
         />
       </div>

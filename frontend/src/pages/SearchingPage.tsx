@@ -844,19 +844,17 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
 
         <div className="field">
           <span>Dataset Mode</span>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <div className="dataset-mode-btn-row">
             <button
               type="button"
               className={`btn-custom-toggle ${isCustomMode ? 'active' : ''}`}
               onClick={handleToggleCustomMode}
-              style={{ flex: '1 1 auto' }}
             >
               {isCustomMode ? '✓ Custom Mode' : 'Custom Array'}
             </button>
             <button
               type="button"
-              className="btn btn-secondary"
-              style={{ fontSize: '0.82rem', padding: '0 12px', height: '38px', flex: '1 1 auto' }}
+              className="btn btn-secondary math-suite-btn"
               onClick={() => setIsModalOpen(true)}
             >
               ⚡ Math Suite

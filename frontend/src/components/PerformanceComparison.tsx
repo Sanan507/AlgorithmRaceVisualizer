@@ -369,31 +369,16 @@ export function PerformanceComparison({
 
   return (
     <section className="panel compact performance-comparison-panel">
-      <div className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+      <div className="section-title perf-comparison-header">
         <span>Performance Comparison</span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div className="perf-header-actions">
           <button
             type="button"
             className="btn btn-secondary snapshot-export-btn"
             onClick={handleExportSnapshot}
             title="Export full race comparison snapshot as PNG image"
-            style={{ 
-              display: 'inline-flex', 
-              alignItems: 'center', 
-              gap: '8px',
-              padding: '8px 16px',
-              fontSize: '0.85rem',
-              fontWeight: 600,
-              borderRadius: '8px',
-              border: '1px solid rgba(168, 85, 247, 0.4)',
-              background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(99, 102, 241, 0.15) 100%)',
-              color: '#c084fc',
-              boxShadow: '0 2px 12px rgba(168, 85, 247, 0.2)',
-              cursor: 'pointer',
-              transition: 'all 0.25s ease'
-            }}
           >
-            <Camera size={15} style={{ color: '#c084fc' }} /> 
+            <Camera size={15} style={{ color: '#c084fc', flexShrink: 0 }} /> 
             <span>Export Snapshot PNG</span>
           </button>
 
@@ -403,26 +388,8 @@ export function PerformanceComparison({
             onClick={handleDownloadCsv}
             disabled={!isCompleted}
             title={isCompleted ? "Export scientific benchmark report as CSV" : "Complete the race to export CSV report"}
-            style={{ 
-              display: 'inline-flex', 
-              alignItems: 'center', 
-              gap: '8px',
-              padding: '8px 16px',
-              fontSize: '0.85rem',
-              fontWeight: 600,
-              borderRadius: '8px',
-              border: isCompleted ? '1px solid rgba(56, 189, 248, 0.4)' : '1px solid rgba(255, 255, 255, 0.1)',
-              background: isCompleted 
-                ? 'linear-gradient(135deg, rgba(14, 165, 233, 0.15) 0%, rgba(99, 102, 241, 0.15) 100%)' 
-                : 'rgba(255, 255, 255, 0.04)',
-              color: isCompleted ? '#38bdf8' : 'var(--text-muted)',
-              boxShadow: isCompleted ? '0 2px 12px rgba(14, 165, 233, 0.2)' : 'none',
-              opacity: isCompleted ? 1 : 0.45,
-              cursor: isCompleted ? 'pointer' : 'not-allowed',
-              transition: 'all 0.25s ease'
-            }}
           >
-            <Download size={15} style={{ color: isCompleted ? '#38bdf8' : 'currentColor' }} /> 
+            <Download size={15} style={{ color: isCompleted ? '#38bdf8' : 'currentColor', flexShrink: 0 }} /> 
             <span>Export Benchmark CSV</span>
           </button>
         </div>

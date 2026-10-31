@@ -5,6 +5,8 @@ import {
   Binary,
   GitBranch,
   Volume2,
+  AudioWaveform,
+  Shuffle,
   Zap,
   ArrowRight,
   Cpu,
@@ -110,9 +112,19 @@ export function LandingPage({ onNavigate, darkMode = true, setDarkMode }: Props)
 
   const scrollToSection = (id: string) => {
     setMobileMenuOpen(false);
+    if (id === 'hero') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
     const el = document.getElementById(id);
     if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
+      const navOffset = 76;
+      const elementPosition = el.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - navOffset;
+      window.scrollTo({
+        top: Math.max(0, offsetPosition),
+        behavior: 'smooth',
+      });
     }
   };
 
@@ -1099,10 +1111,12 @@ export function LandingPage({ onNavigate, darkMode = true, setDarkMode }: Props)
 
         <div className="gl-arch-grid">
           <div className="gl-arch-card">
-            <div className="gl-arch-icon" style={{ background: 'rgba(6, 182, 212, 0.15)', color: '#06b6d4' }}>
-              <Cpu size={22} />
+            <div className="gl-arch-header-row">
+              <div className="gl-arch-icon gl-arch-icon-cyan">
+                <Gauge size={18} />
+              </div>
+              <h3 className="gl-arch-title">Hardware 60 FPS Canvas</h3>
             </div>
-            <h3 className="gl-arch-title">Hardware 60 FPS Canvas</h3>
             <p className="gl-arch-desc">
               Direct bitmap rendering avoids DOM reflows and layout recalculations during high-frequency array swaps.
             </p>
@@ -1114,10 +1128,12 @@ export function LandingPage({ onNavigate, darkMode = true, setDarkMode }: Props)
           </div>
 
           <div className="gl-arch-card">
-            <div className="gl-arch-icon" style={{ background: 'rgba(252, 109, 38, 0.15)', color: '#fc6d26' }}>
-              <Zap size={22} />
+            <div className="gl-arch-header-row">
+              <div className="gl-arch-icon gl-arch-icon-orange">
+                <Shuffle size={18} />
+              </div>
+              <h3 className="gl-arch-title">Deterministic PRNG Seeds</h3>
             </div>
-            <h3 className="gl-arch-title">Deterministic PRNG Seeds</h3>
             <p className="gl-arch-desc">
               Every multi-lane race generates identical pseudo-random sequences across lanes to ensure mathematical parity.
             </p>
@@ -1129,10 +1145,12 @@ export function LandingPage({ onNavigate, darkMode = true, setDarkMode }: Props)
           </div>
 
           <div className="gl-arch-card">
-            <div className="gl-arch-icon" style={{ background: 'rgba(139, 92, 246, 0.15)', color: '#8b5cf6' }}>
-              <Volume2 size={22} />
+            <div className="gl-arch-header-row">
+              <div className="gl-arch-icon gl-arch-icon-purple">
+                <AudioWaveform size={18} />
+              </div>
+              <h3 className="gl-arch-title">Web Audio Polyphony</h3>
             </div>
-            <h3 className="gl-arch-title">Web Audio Polyphony</h3>
             <p className="gl-arch-desc">
               Logarithmic frequency synthesis maps array element values to distinct acoustic pitches for sensory inspection.
             </p>
