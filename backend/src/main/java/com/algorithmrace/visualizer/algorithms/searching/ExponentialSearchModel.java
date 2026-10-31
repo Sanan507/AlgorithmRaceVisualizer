@@ -78,6 +78,10 @@ public class ExponentialSearchModel extends SearchModel {
     // Check index 0 edge case immediately if non-empty
     if (array.length > 0 && array[0] == target) {
       boundIndex = 0;
+    } else if (array.length <= 1) {
+      rangeFound = true;
+      low = 0;
+      high = array.length - 1;
     }
   }
 }

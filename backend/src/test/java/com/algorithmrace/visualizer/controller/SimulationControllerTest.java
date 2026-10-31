@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.algorithmrace.visualizer.AlgorithmRaceBackendApplication;
 import com.algorithmrace.visualizer.dto.PathfindingSimulationRequest;
 import com.algorithmrace.visualizer.dto.RaceResponse;
 import com.algorithmrace.visualizer.dto.SearchingSimulationRequest;
@@ -19,9 +20,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(SimulationController.class)
+@ContextConfiguration(
+    classes = {
+      AlgorithmRaceBackendApplication.class,
+      SimulationController.class,
+      GlobalExceptionHandler.class
+    })
 class SimulationControllerTest {
 
   @Autowired private MockMvc mockMvc;

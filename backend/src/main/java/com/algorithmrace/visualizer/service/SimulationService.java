@@ -52,7 +52,7 @@ public class SimulationService {
             : "build";
     List<Integer> rawValues =
         request != null && request.values() != null
-            ? request.values()
+            ? request.values().stream().limit(MAX_ARRAY_SIZE).toList()
             : List.of(50, 30, 70, 20, 40, 60, 80);
 
     List<Integer> initialValues = rawValues;

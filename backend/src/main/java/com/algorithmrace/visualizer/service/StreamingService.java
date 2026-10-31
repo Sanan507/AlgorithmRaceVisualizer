@@ -42,8 +42,9 @@ public class StreamingService {
   private static final int SORT_FRAME_MS = 16;
   private static final int SEARCH_FRAME_MS = 18;
   private static final int PATH_FRAME_MS = 20;
+  private static final long STREAM_TIMEOUT_MS = 30_000L;
 
-  private final ExecutorService executor = Executors.newCachedThreadPool();
+  private final ExecutorService executor = Executors.newFixedThreadPool(16);
 
   @PreDestroy
   public void shutdown() {
@@ -51,7 +52,7 @@ public class StreamingService {
   }
 
   public SseEmitter streamSorting(SortingSimulationRequest request) {
-    SseEmitter emitter = new SseEmitter(0L); // Infinite timeout
+    SseEmitter emitter = new SseEmitter(STREAM_TIMEOUT_MS);
     executor.execute(
         () -> {
           try {
@@ -79,7 +80,7 @@ public class StreamingService {
   }
 
   public SseEmitter streamSearching(SearchingSimulationRequest request) {
-    SseEmitter emitter = new SseEmitter(0L);
+    SseEmitter emitter = new SseEmitter(STREAM_TIMEOUT_MS);
     executor.execute(
         () -> {
           try {
@@ -115,7 +116,7 @@ public class StreamingService {
   }
 
   public SseEmitter streamPathfinding(PathfindingSimulationRequest request) {
-    SseEmitter emitter = new SseEmitter(0L);
+    SseEmitter emitter = new SseEmitter(STREAM_TIMEOUT_MS);
     executor.execute(
         () -> {
           try {

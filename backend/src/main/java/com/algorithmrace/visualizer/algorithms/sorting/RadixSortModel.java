@@ -24,20 +24,24 @@ public class RadixSortModel extends AlgorithmModel {
     frames.add(arr.clone());
     highlights.add(new int[0]);
 
+    int min = arr[0];
     int max = arr[0];
     for (int val : arr) {
+      if (val < min) min = val;
       if (val > max) max = val;
     }
 
-    for (int exp = 1; max / exp > 0; exp *= 10) {
+    long maxShifted = (long) max - min;
+    for (long exp = 1; maxShifted / exp > 0 || (maxShifted == 0 && exp == 1); exp *= 10) {
       List<List<Integer>> buckets = new ArrayList<>();
       for (int b = 0; b < 10; b++) {
         buckets.add(new ArrayList<>());
       }
 
-      // Distribute items into buckets according to current digit
+      // Distribute items into buckets according to shifted non-negative digit
       for (int i = 0; i < arr.length; i++) {
-        int digit = (arr[i] / exp) % 10;
+        long shifted = (long) arr[i] - min;
+        int digit = (int) ((shifted / exp) % 10);
         buckets.get(digit).add(arr[i]);
         frames.add(arr.clone());
         highlights.add(new int[] {i});
@@ -52,6 +56,10 @@ public class RadixSortModel extends AlgorithmModel {
           highlights.add(new int[] {idx});
           idx++;
         }
+      }
+
+      if (maxShifted == 0) {
+        break;
       }
     }
 

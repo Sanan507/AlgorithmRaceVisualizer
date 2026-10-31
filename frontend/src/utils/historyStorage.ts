@@ -89,21 +89,30 @@ export function exportHistoryToJSON(): void {
   URL.revokeObjectURL(url);
 }
 
+function sanitizeCsvValue(val: unknown): string {
+  const str = String(val ?? '');
+  const escaped = str.replace(/"/g, '""');
+  if (/^[=+\-@\t\r]/.test(escaped)) {
+    return `"'${escaped}"`;
+  }
+  return `"${escaped}"`;
+}
+
 export function exportHistoryToCSV(): void {
   const history = getHistory();
   if (history.length === 0) return;
 
   const headers = ['ID', 'Date', 'Arena Type', 'Winner', 'Dataset Size', 'Dataset Type', 'Target Value', 'Path Cost', 'Lane Count'];
   const rows = history.map(e => [
-    e.id,
-    new Date(e.date).toLocaleString(),
-    e.arenaType,
-    `"${e.winner}"`,
-    e.datasetSize || 0,
-    `"${e.datasetType || 'Default'}"`,
-    e.targetValue ?? 'N/A',
-    e.pathCost ?? 'N/A',
-    e.lanes.length
+    sanitizeCsvValue(e.id),
+    sanitizeCsvValue(new Date(e.date).toLocaleString()),
+    sanitizeCsvValue(e.arenaType),
+    sanitizeCsvValue(e.winner),
+    sanitizeCsvValue(e.datasetSize || 0),
+    sanitizeCsvValue(e.datasetType || 'Default'),
+    sanitizeCsvValue(e.targetValue ?? 'N/A'),
+    sanitizeCsvValue(e.pathCost ?? 'N/A'),
+    sanitizeCsvValue(e.lanes.length)
   ]);
 
   const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
@@ -120,7 +129,8 @@ export function importHistoryFromJSON(jsonText: string): boolean {
   try {
     const parsed = JSON.parse(jsonText);
     if (!Array.isArray(parsed)) return false;
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(parsed));
+    // Bound imported history to max 100 entries to prevent localStorage quota exhaustion
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(parsed.slice(0, 100)));
     return true;
   } catch (err) {
     console.error('Failed to import history JSON', err);

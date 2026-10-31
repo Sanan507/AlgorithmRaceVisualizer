@@ -63,7 +63,7 @@ public class SimulationController {
   @ApiResponse(responseCode = "200", description = "Tree simulation executed successfully")
   @PostMapping("/tree")
   public com.algorithmrace.visualizer.dto.TreeSimulationResponse tree(
-      @RequestBody com.algorithmrace.visualizer.dto.TreeSimulationRequest request) {
+      @Valid @RequestBody com.algorithmrace.visualizer.dto.TreeSimulationRequest request) {
     return simulationService.simulateTree(request);
   }
 }

@@ -31,7 +31,12 @@ public class CountingSortModel extends AlgorithmModel {
       if (val > max) max = val;
     }
 
-    int range = max - min + 1;
+    long longRange = (long) max - (long) min + 1;
+    if (longRange > 100_000 || longRange <= 0) {
+      throw new IllegalArgumentException(
+          "Counting Sort requires array values with range <= 100,000 to prevent memory exhaustion.");
+    }
+    int range = (int) longRange;
     int[] count = new int[range];
 
     // Phase 1: Count element frequencies

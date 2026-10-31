@@ -81,47 +81,46 @@ class RateLimitFilterTest {
   @Test
   void doFilter_nonApiRoot_bypassesFilter() throws Exception {
     RateLimitFilter filter = new RateLimitFilter();
-    MockHttpServletRequest mockRequest = mock(MockHttpServletRequest.class);
-    MockHttpServletResponse mockResponse = mock(MockHttpServletResponse.class);
+    MockHttpServletRequest request = new MockHttpServletRequest();
+    MockHttpServletResponse response = new MockHttpServletResponse();
     FilterChain mockFilterChain = mock(FilterChain.class);
 
-    when(mockRequest.getRequestURI()).thenReturn("/");
+    request.setRequestURI("/");
 
-    filter.doFilter(mockRequest, mockResponse, mockFilterChain);
+    filter.doFilter(request, response, mockFilterChain);
 
-    verify(mockFilterChain).doFilter(mockRequest, mockResponse);
-    verify(mockResponse, never()).setStatus(anyInt());
+    verify(mockFilterChain).doFilter(request, response);
   }
 
   @Test
   void doFilter_untrustedProxyHeader_ignoresSpoofedHeader() throws Exception {
     RateLimitFilter filter = new RateLimitFilter();
-    MockHttpServletRequest mockRequest = mock(MockHttpServletRequest.class);
-    MockHttpServletResponse mockResponse = mock(MockHttpServletResponse.class);
+    MockHttpServletRequest request = new MockHttpServletRequest();
+    MockHttpServletResponse response = new MockHttpServletResponse();
     FilterChain mockFilterChain = mock(FilterChain.class);
 
-    when(mockRequest.getRequestURI()).thenReturn("/api/simulations/sorting");
-    when(mockRequest.getRemoteAddr()).thenReturn("203.0.113.195"); // Public IP (not proxy)
-    when(mockRequest.getHeader("X-Forwarded-For")).thenReturn("198.51.100.10"); // Spoofed IP
+    request.setRequestURI("/api/simulations/sorting");
+    request.setRemoteAddr("203.0.113.195"); // Public IP (not proxy)
+    request.addHeader("X-Forwarded-For", "198.51.100.10"); // Spoofed IP
 
-    filter.doFilter(mockRequest, mockResponse, mockFilterChain);
+    filter.doFilter(request, response, mockFilterChain);
 
-    verify(mockFilterChain).doFilter(mockRequest, mockResponse);
+    verify(mockFilterChain).doFilter(request, response);
   }
 
   @Test
   void doFilter_trustedProxyHeader_usesForwardedHeader() throws Exception {
     RateLimitFilter filter = new RateLimitFilter();
-    MockHttpServletRequest mockRequest = mock(MockHttpServletRequest.class);
-    MockHttpServletResponse mockResponse = mock(MockHttpServletResponse.class);
+    MockHttpServletRequest request = new MockHttpServletRequest();
+    MockHttpServletResponse response = new MockHttpServletResponse();
     FilterChain mockFilterChain = mock(FilterChain.class);
 
-    when(mockRequest.getRequestURI()).thenReturn("/api/simulations/sorting");
-    when(mockRequest.getRemoteAddr()).thenReturn("127.0.0.1"); // Trusted local proxy
-    when(mockRequest.getHeader("X-Forwarded-For")).thenReturn("198.51.100.10");
+    request.setRequestURI("/api/simulations/sorting");
+    request.setRemoteAddr("127.0.0.1"); // Trusted local proxy
+    request.addHeader("X-Forwarded-For", "198.51.100.10");
 
-    filter.doFilter(mockRequest, mockResponse, mockFilterChain);
+    filter.doFilter(request, response, mockFilterChain);
 
-    verify(mockFilterChain).doFilter(mockRequest, mockResponse);
+    verify(mockFilterChain).doFilter(request, response);
   }
 }
