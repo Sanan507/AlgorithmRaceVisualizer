@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Play, Pause, RotateCcw, Zap } from 'lucide-react';
+import { getCanvasScale } from '../utils/canvasScale';
 
 interface Step {
   array: number[];
@@ -10,16 +11,20 @@ interface Step {
 }
 
 function isMobileViewport() {
-  return window.innerWidth <= 768;
+  return typeof window !== 'undefined' && window.innerWidth <= 768;
 }
 
 function prefersReducedMotion() {
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
 export function HeroMiniCanvas() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const sizeRef = useRef<{ w: number; h: number }>({ w: 580, h: 260 });
+  const animFrameRef = useRef<number | null>(null);
+  const lastStatUpdateRef = useRef<number>(0);
+
   const [isPlaying, setIsPlaying] = useState(() => !prefersReducedMotion());
   const [isMobileDevice, setIsMobileDevice] = useState(isMobileViewport);
   const [reducedMotion, setReducedMotion] = useState(prefersReducedMotion);
@@ -36,7 +41,6 @@ export function HeroMiniCanvas() {
     lane2Idx: number;
     arraySize: number;
     initialArray: number[];
-    timer: number | null;
   }>({
     lane1Steps: [],
     lane2Steps: [],
@@ -44,7 +48,6 @@ export function HeroMiniCanvas() {
     lane2Idx: 0,
     arraySize: 20,
     initialArray: [],
-    timer: null,
   });
 
   // Keep the simulator live on mobile while honoring accessibility preferences.
@@ -101,42 +104,46 @@ export function HeroMiniCanvas() {
       if (low < high) {
         const pivotVal = qArr[high];
         let i = low - 1;
+
         for (let j = low; j < high; j++) {
           qComp++;
           qSteps.push({
             array: [...qArr],
             comparing: [j, high],
             swapping: [],
-            sorted: getSortedIndices(low, high, qArr),
+            sorted: [],
             pivot: high,
           });
+
           if (qArr[j] < pivotVal) {
             i++;
             if (i !== j) {
-              qSwap++;
               const temp = qArr[i];
               qArr[i] = qArr[j];
               qArr[j] = temp;
+              qSwap++;
               qSteps.push({
                 array: [...qArr],
                 comparing: [],
                 swapping: [i, j],
-                sorted: getSortedIndices(low, high, qArr),
+                sorted: [],
                 pivot: high,
               });
             }
           }
         }
-        qSwap++;
+
         const temp = qArr[i + 1];
         qArr[i + 1] = qArr[high];
         qArr[high] = temp;
+        qSwap++;
         const pIndex = i + 1;
+
         qSteps.push({
           array: [...qArr],
           comparing: [],
-          swapping: [i + 1, high],
-          sorted: getSortedIndices(low, high, qArr),
+          swapping: [pIndex, high],
+          sorted: [pIndex],
           pivot: pIndex,
         });
 
@@ -145,55 +152,46 @@ export function HeroMiniCanvas() {
       }
     };
 
-    const getSortedIndices = (currentLow: number, currentHigh: number, currentArr: number[]) => {
-      const sorted: number[] = [];
-      for (let k = 0; k < currentArr.length; k++) {
-        if (k < currentLow || k > currentHigh) sorted.push(k);
-      }
-      return sorted;
-    };
-
     quickSortHelper(0, qArr.length - 1);
+    const n = qArr.length;
     qSteps.push({
       array: [...qArr],
       comparing: [],
       swapping: [],
-      sorted: Array.from({ length: qArr.length }, (_, k) => k),
+      sorted: Array.from({ length: n }, (_, k) => k),
     });
 
     // BubbleSort Step Generator
     const bSteps: Step[] = [];
     const bArr = [...arr];
-    const n = bArr.length;
     let bComp = 0;
     let bSwap = 0;
-    const sortedIndices: number[] = [];
 
-    for (let i = 0; i < n - 1; i++) {
+    for (let i = 0; i < n; i++) {
       for (let j = 0; j < n - i - 1; j++) {
         bComp++;
         bSteps.push({
           array: [...bArr],
           comparing: [j, j + 1],
           swapping: [],
-          sorted: [...sortedIndices],
+          sorted: Array.from({ length: i }, (_, k) => n - 1 - k),
         });
+
         if (bArr[j] > bArr[j + 1]) {
-          bSwap++;
           const temp = bArr[j];
           bArr[j] = bArr[j + 1];
           bArr[j + 1] = temp;
+          bSwap++;
           bSteps.push({
             array: [...bArr],
             comparing: [],
             swapping: [j, j + 1],
-            sorted: [...sortedIndices],
+            sorted: Array.from({ length: i }, (_, k) => n - 1 - k),
           });
         }
       }
-      sortedIndices.push(n - 1 - i);
     }
-    sortedIndices.push(0);
+
     bSteps.push({
       array: [...bArr],
       comparing: [],
@@ -204,34 +202,112 @@ export function HeroMiniCanvas() {
     return { qSteps, bSteps, qComp, qSwap, bComp, bSwap };
   };
 
+  const drawLane = (
+    ctx: CanvasRenderingContext2D,
+    _xOffset: number,
+    yOffset: number,
+    width: number,
+    height: number,
+    _title: string,
+    step: Step | undefined,
+    primaryGlow: string
+  ) => {
+    if (!step) return;
+
+    const padding = 16;
+    const availableWidth = width - padding * 2;
+    const n = step.array.length;
+    const barGap = isMobileDevice ? 3 : 4;
+    const barWidth = Math.max(3, (availableWidth - (n - 1) * barGap) / n);
+
+    const maxVal = 100;
+
+    step.array.forEach((val, i) => {
+      const barHeight = (val / maxVal) * (height - 25);
+      const x = padding + i * (barWidth + barGap);
+      const y = yOffset + height - barHeight;
+
+      let fillStyle = '#334155';
+      let shadowColor = 'transparent';
+      let shadowBlur = 0;
+
+      if (step.sorted.includes(i)) {
+        fillStyle = '#10b981';
+        shadowColor = 'rgba(16, 185, 129, 0.5)';
+        shadowBlur = 8;
+      } else if (step.swapping.includes(i)) {
+        fillStyle = '#ec4899';
+        shadowColor = 'rgba(236, 72, 153, 0.8)';
+        shadowBlur = 12;
+      } else if (step.comparing.includes(i)) {
+        fillStyle = '#f59e0b';
+        shadowColor = 'rgba(245, 158, 11, 0.7)';
+        shadowBlur = 10;
+      } else if (step.pivot === i) {
+        fillStyle = '#c084fc';
+        shadowColor = 'rgba(192, 132, 252, 0.8)';
+        shadowBlur = 12;
+      } else {
+        fillStyle = primaryGlow;
+      }
+
+      const radius = 3;
+      if (shadowBlur > 0 && !isMobileDevice) {
+        ctx.save();
+        ctx.fillStyle = fillStyle;
+        ctx.shadowColor = shadowColor;
+        ctx.shadowBlur = shadowBlur;
+        ctx.beginPath();
+        ctx.roundRect(x, y, barWidth, barHeight, [radius, radius, 0, 0]);
+        ctx.fill();
+        ctx.restore();
+      } else {
+        ctx.fillStyle = fillStyle;
+        ctx.beginPath();
+        ctx.roundRect(x, y, barWidth, barHeight, [radius, radius, 0, 0]);
+        ctx.fill();
+      }
+    });
+  };
+
   const renderCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const width = canvas.width;
-    const height = canvas.height;
+    const { w: width, h: height } = sizeRef.current;
+    if (width <= 0 || height <= 0) return;
 
+    const dpr = getCanvasScale();
+    const targetW = Math.floor(width * dpr);
+    const targetH = Math.floor(height * dpr);
+
+    if (canvas.width !== targetW || canvas.height !== targetH) {
+      canvas.width = targetW;
+      canvas.height = targetH;
+    }
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, width, height);
 
     // Background fill
     ctx.fillStyle = '#090b10';
     ctx.fillRect(0, 0, width, height);
 
-    // Subtle Grid background
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
-    ctx.lineWidth = 1;
-    for (let x = 0; x < width; x += 20) {
+    // Subtle Grid background - single batched stroke on desktop, skipped on mobile
+    if (!isMobileDevice) {
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+      ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, height);
-      ctx.stroke();
-    }
-    for (let y = 0; y < height; y += 20) {
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(width, y);
+      for (let x = 0; x < width; x += 24) {
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, height);
+      }
+      for (let y = 0; y < height; y += 24) {
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+      }
       ctx.stroke();
     }
 
@@ -268,10 +344,10 @@ export function HeroMiniCanvas() {
       stateRef.current.lane2Steps[stateRef.current.lane2Idx],
       '#3b82f6'
     );
-  }, [lane1Algo, lane2Algo]);
+  }, [lane1Algo, lane2Algo, isMobileDevice]);
 
   const resetRace = useCallback(() => {
-    const size = 22;
+    const size = isMobileDevice ? 16 : 22;
     const arr = Array.from({ length: size }, () => Math.floor(Math.random() * 85) + 15);
     const { qSteps, bSteps } = generateSteps(arr);
 
@@ -284,124 +360,116 @@ export function HeroMiniCanvas() {
     setLane1Stats({ comparisons: 0, swaps: 0, status: 'Racing...' });
     setLane2Stats({ comparisons: 0, swaps: 0, status: 'Racing...' });
     renderCanvas();
-  }, [renderCanvas]);
+  }, [renderCanvas, isMobileDevice]);
 
   useEffect(() => {
     resetRace();
   }, [resetRace]);
 
-  // Main animation timer effect - slower on mobile, paused when hidden or reduced motion is requested.
+  // Container resize observer for smooth responsive scaling
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const updateDimensions = (width: number) => {
+      const w = Math.floor(width);
+      if (w > 0) {
+        sizeRef.current = { w, h: 260 };
+        renderCanvas();
+      }
+    };
+
+    const initialRect = canvas.getBoundingClientRect();
+    const initW = initialRect.width || canvas.parentElement?.clientWidth || 580;
+    updateDimensions(initW);
+
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const cr = entry.contentRect;
+        if (cr.width > 0) {
+          updateDimensions(cr.width);
+        }
+      }
+    });
+
+    if (canvas.parentElement) {
+      ro.observe(canvas.parentElement);
+    } else {
+      ro.observe(canvas);
+    }
+
+    return () => ro.disconnect();
+  }, [renderCanvas]);
+
+  // Main animation timer effect - requestAnimationFrame with throttled state updates
   useEffect(() => {
     if (!isPlaying || !isVisible || reducedMotion) {
-      if (stateRef.current.timer) clearInterval(stateRef.current.timer);
+      if (animFrameRef.current) {
+        cancelAnimationFrame(animFrameRef.current);
+        animFrameRef.current = null;
+      }
       return;
     }
 
-    stateRef.current.timer = window.setInterval(() => {
-      let l1Finished = false;
-      let l2Finished = false;
+    let lastTick = performance.now();
+    const tickInterval = isMobileDevice ? 110 : 70;
 
-      if (stateRef.current.lane1Idx < stateRef.current.lane1Steps.length - 1) {
-        stateRef.current.lane1Idx++;
-      } else {
-        l1Finished = true;
+    const loop = (now: number) => {
+      if (now - lastTick >= tickInterval) {
+        lastTick = now;
+
+        let l1Finished = false;
+        let l2Finished = false;
+
+        if (stateRef.current.lane1Idx < stateRef.current.lane1Steps.length - 1) {
+          stateRef.current.lane1Idx++;
+        } else {
+          l1Finished = true;
+        }
+
+        if (stateRef.current.lane2Idx < stateRef.current.lane2Steps.length - 1) {
+          stateRef.current.lane2Idx++;
+        } else {
+          l2Finished = true;
+        }
+
+        renderCanvas();
+
+        if (now - lastStatUpdateRef.current >= 300 || l1Finished || l2Finished) {
+          lastStatUpdateRef.current = now;
+          setLane1Stats({
+            comparisons: Math.floor(stateRef.current.lane1Idx * 0.8),
+            swaps: Math.floor(stateRef.current.lane1Idx * 0.4),
+            status: l1Finished ? 'Winner 🏆' : 'Racing...',
+          });
+
+          setLane2Stats({
+            comparisons: Math.floor(stateRef.current.lane2Idx * 0.9),
+            swaps: Math.floor(stateRef.current.lane2Idx * 0.5),
+            status: l2Finished ? 'Completed' : 'Racing...',
+          });
+        }
+
+        if (l1Finished && l2Finished) {
+          setTimeout(() => {
+            resetRace();
+          }, 3000);
+          return;
+        }
       }
 
-      if (stateRef.current.lane2Idx < stateRef.current.lane2Steps.length - 1) {
-        stateRef.current.lane2Idx++;
-      } else {
-        l2Finished = true;
-      }
+      animFrameRef.current = requestAnimationFrame(loop);
+    };
 
-      renderCanvas();
-
-      setLane1Stats({
-        comparisons: Math.floor(stateRef.current.lane1Idx * 0.8),
-        swaps: Math.floor(stateRef.current.lane1Idx * 0.4),
-        status: l1Finished ? 'Winner 🏆' : 'Racing...',
-      });
-
-      setLane2Stats({
-        comparisons: Math.floor(stateRef.current.lane2Idx * 0.9),
-        swaps: Math.floor(stateRef.current.lane2Idx * 0.5),
-        status: l2Finished ? 'Completed' : 'Racing...',
-      });
-
-      if (l1Finished && l2Finished) {
-        setTimeout(() => {
-          resetRace();
-        }, 3000);
-      }
-    }, isMobileDevice ? 100 : 70);
+    animFrameRef.current = requestAnimationFrame(loop);
 
     return () => {
-      if (stateRef.current.timer) clearInterval(stateRef.current.timer);
+      if (animFrameRef.current) {
+        cancelAnimationFrame(animFrameRef.current);
+        animFrameRef.current = null;
+      }
     };
   }, [isPlaying, isVisible, isMobileDevice, reducedMotion, renderCanvas, resetRace]);
-
-  const drawLane = (
-    ctx: CanvasRenderingContext2D,
-    _xOffset: number,
-    yOffset: number,
-    width: number,
-    height: number,
-    _title: string,
-    step: Step | undefined,
-    primaryGlow: string
-  ) => {
-    if (!step) return;
-
-    const padding = 20;
-    const availableWidth = width - padding * 2;
-    const n = step.array.length;
-    const barGap = 4;
-    const barWidth = Math.max(3, (availableWidth - (n - 1) * barGap) / n);
-
-    const maxVal = 100;
-
-    step.array.forEach((val, i) => {
-      const barHeight = (val / maxVal) * (height - 25);
-      const x = padding + i * (barWidth + barGap);
-      const y = yOffset + height - barHeight;
-
-      let fillStyle = '#334155';
-      let shadowColor = 'transparent';
-      let shadowBlur = 0;
-
-      if (step.sorted.includes(i)) {
-        fillStyle = '#10b981';
-        shadowColor = 'rgba(16, 185, 129, 0.5)';
-        shadowBlur = 8;
-      } else if (step.swapping.includes(i)) {
-        fillStyle = '#ec4899';
-        shadowColor = 'rgba(236, 72, 153, 0.8)';
-        shadowBlur = 12;
-      } else if (step.comparing.includes(i)) {
-        fillStyle = '#f59e0b';
-        shadowColor = 'rgba(245, 158, 11, 0.7)';
-        shadowBlur = 10;
-      } else if (step.pivot === i) {
-        fillStyle = '#c084fc';
-        shadowColor = 'rgba(192, 132, 252, 0.8)';
-        shadowBlur = 12;
-      } else {
-        fillStyle = primaryGlow;
-      }
-
-      ctx.save();
-      ctx.fillStyle = fillStyle;
-      if (shadowBlur > 0) {
-        ctx.shadowColor = shadowColor;
-        ctx.shadowBlur = shadowBlur;
-      }
-
-      const radius = 3;
-      ctx.beginPath();
-      ctx.roundRect(x, y, barWidth, barHeight, [radius, radius, 0, 0]);
-      ctx.fill();
-      ctx.restore();
-    });
-  };
 
   return (
     <div className="hero-mini-canvas-container" ref={containerRef}>
@@ -433,8 +501,7 @@ export function HeroMiniCanvas() {
       <div className="hero-canvas-wrapper">
         <canvas
           ref={canvasRef}
-          width={580}
-          height={260}
+          style={{ width: '100%', height: '260px', display: 'block' }}
           className="hero-canvas-element"
         />
       </div>

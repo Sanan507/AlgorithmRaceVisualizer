@@ -29,22 +29,27 @@ export const CanvasVisualizer = memo(function CanvasVisualizer({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const frameRef = useRef<SimulationFrame | null | undefined>(frame);
   const arrayRef = useRef<number[]>(array);
+  const sizeRef = useRef<{ w: number; h: number }>({ w: 0, h: 0 });
+  const isVisibleRef = useRef<boolean>(true);
   frameRef.current = frame;
   arrayRef.current = array;
 
   const renderCanvas = useCallback((targetFrame?: SimulationFrame | null, targetArray?: number[]) => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || !isVisibleRef.current) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const rect = canvas.getBoundingClientRect();
-    const dpr = getCanvasScale();
-    const w = Math.floor(rect.width) || canvas.parentElement?.clientWidth || 600;
-    const h = height;
+    let { w, h } = sizeRef.current;
+    if (w <= 0 || h <= 0) {
+      w = canvas.parentElement?.clientWidth || 600;
+      h = height;
+      sizeRef.current = { w, h };
+    }
 
     if (w <= 0 || h <= 0) return;
 
+    const dpr = getCanvasScale();
     const targetW = Math.floor(w * dpr);
     const targetH = Math.floor(h * dpr);
 
@@ -101,17 +106,38 @@ export const CanvasVisualizer = memo(function CanvasVisualizer({
     renderCanvas(frame, array);
   }, [frame, array, renderCanvas]);
 
-  // Handle container resizing and theme changes
+  // Handle container resizing and visibility to guarantee zero layout thrashing
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    renderCanvas(frameRef.current, arrayRef.current);
-
-    const resizeObserver = new ResizeObserver(() => {
-      requestAnimationFrame(() => {
+    const updateDimensions = (width: number, hVal: number) => {
+      const w = Math.floor(width);
+      const h = Math.floor(hVal);
+      if (w > 0 && h > 0) {
+        sizeRef.current = { w, h };
+        const dpr = getCanvasScale();
+        const targetW = Math.floor(w * dpr);
+        const targetH = Math.floor(h * dpr);
+        if (canvas.width !== targetW || canvas.height !== targetH) {
+          canvas.width = targetW;
+          canvas.height = targetH;
+        }
         renderCanvas(frameRef.current, arrayRef.current);
-      });
+      }
+    };
+
+    const initialRect = canvas.getBoundingClientRect();
+    const initW = initialRect.width || canvas.parentElement?.clientWidth || 600;
+    updateDimensions(initW, height);
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const cr = entry.contentRect;
+        if (cr.width > 0) {
+          updateDimensions(cr.width, height);
+        }
+      }
     });
 
     resizeObserver.observe(canvas);
@@ -119,8 +145,26 @@ export const CanvasVisualizer = memo(function CanvasVisualizer({
       resizeObserver.observe(canvas.parentElement);
     }
 
-    return () => resizeObserver.disconnect();
-  }, [renderCanvas]);
+    let intersectionObserver: IntersectionObserver | null = null;
+    if (typeof IntersectionObserver !== 'undefined') {
+      intersectionObserver = new IntersectionObserver(
+        ([entry]) => {
+          const wasVisible = isVisibleRef.current;
+          isVisibleRef.current = entry.isIntersecting;
+          if (!wasVisible && entry.isIntersecting) {
+            renderCanvas(frameRef.current, arrayRef.current);
+          }
+        },
+        { threshold: 0.05 }
+      );
+      intersectionObserver.observe(canvas);
+    }
+
+    return () => {
+      resizeObserver.disconnect();
+      if (intersectionObserver) intersectionObserver.disconnect();
+    };
+  }, [renderCanvas, height]);
 
   return (
     <div style={{ width: '100%', height: `${height}px`, overflow: 'hidden', borderRadius: '8px' }}>

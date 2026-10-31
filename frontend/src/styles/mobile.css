@@ -66,8 +66,49 @@
   .algobot-card,
   .cv-card,
   .control-strip,
-  .nav-item {
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
+  .nav-item,
+  .hero-mini-canvas-container,
+  .gl-stacking-card,
+  .gl-workbench-container,
+  .gl-workbench-info,
+  .gl-workbench-sim,
+  .gl-navbar {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28) !important;
+  }
+
+  /* Solid navbar on mobile ensures scrolling over content causes zero repaint lag */
+  .gl-navbar {
+    background: var(--gl-bg) !important;
+  }
+  :root[data-theme='light'] .gl-navbar,
+  .gitlab-landing.light-mode .gl-navbar {
+    background: #ffffff !important;
+  }
+
+  /* Ambient mesh & pattern optimizations for mobile preview */
+  .gl-bg-mesh {
+    animation: none !important;
+    transform: none !important;
+    opacity: 0.8 !important;
+  }
+
+  .gl-grid-pattern {
+    -webkit-mask-image: none !important;
+    mask-image: none !important;
+    opacity: 0.25 !important;
+  }
+
+  /* GPU layer isolation for active canvases prevents layout invalidation cascading */
+  .race-canvas,
+  .path-canvas,
+  .tree-canvas,
+  .hero-canvas-element {
+    transform: translateZ(0);
+    will-change: transform;
+  }
+
+  .tree-canvas {
+    height: 340px !important;
   }
 
   .chart-fill,

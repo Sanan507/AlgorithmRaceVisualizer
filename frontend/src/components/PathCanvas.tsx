@@ -64,6 +64,8 @@ export const PathCanvas = memo(function PathCanvas({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const frameRef = useRef<SimulationFrame | null | undefined>(frame);
   const weightsRef = useRef<number[][] | null | undefined>(weights);
+  const sizeRef = useRef<{ w: number; h: number }>({ w: 0, h: 0 });
+  const isVisibleRef = useRef<boolean>(true);
   frameRef.current = frame;
   weightsRef.current = weights;
 
@@ -73,20 +75,23 @@ export const PathCanvas = memo(function PathCanvas({
 
   const renderCanvas = useCallback((targetFrame?: SimulationFrame | null, targetWeights?: number[][] | null) => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || !isVisibleRef.current) return;
     const currentFrame = targetFrame ?? frameRef.current;
     if (!currentFrame || !currentFrame.grid) return;
     const currentWeights = targetWeights ?? weightsRef.current;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const rect = canvas.getBoundingClientRect();
-    const dpr = getCanvasScale();
-    const w = Math.floor(rect.width) || canvas.parentElement?.clientWidth || 300;
-    const h = Math.floor(rect.height) || canvas.parentElement?.clientHeight || 200;
+    let { w, h } = sizeRef.current;
+    if (w <= 0 || h <= 0) {
+      w = canvas.parentElement?.clientWidth || 300;
+      h = canvas.parentElement?.clientHeight || 200;
+      sizeRef.current = { w, h };
+    }
 
     if (w <= 0 || h <= 0) return;
 
+    const dpr = getCanvasScale();
     const targetW = Math.floor(w * dpr);
     const targetH = Math.floor(h * dpr);
 
@@ -261,22 +266,59 @@ export const PathCanvas = memo(function PathCanvas({
     renderCanvas(frame, weights);
   }, [frame, weights, renderCanvas]);
 
-  // Handle container resizing and theme changes
+  // Handle container resizing, visibility and theme changes to guarantee zero layout thrashing
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    renderCanvas(frameRef.current, weightsRef.current);
-
-    const resizeObserver = new ResizeObserver(() => {
-      requestAnimationFrame(() => {
+    const updateDimensions = (width: number, height: number) => {
+      const w = Math.floor(width);
+      const h = Math.floor(height);
+      if (w > 0 && h > 0) {
+        sizeRef.current = { w, h };
+        const dpr = getCanvasScale();
+        const targetW = Math.floor(w * dpr);
+        const targetH = Math.floor(h * dpr);
+        if (canvas.width !== targetW || canvas.height !== targetH) {
+          canvas.width = targetW;
+          canvas.height = targetH;
+        }
         renderCanvas(frameRef.current, weightsRef.current);
-      });
+      }
+    };
+
+    const initialRect = canvas.getBoundingClientRect();
+    const initW = initialRect.width || canvas.parentElement?.clientWidth || 300;
+    const initH = initialRect.height || canvas.parentElement?.clientHeight || 200;
+    updateDimensions(initW, initH);
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const cr = entry.contentRect;
+        if (cr.width > 0 && cr.height > 0) {
+          updateDimensions(cr.width, cr.height);
+        }
+      }
     });
 
     resizeObserver.observe(canvas);
     if (canvas.parentElement) {
       resizeObserver.observe(canvas.parentElement);
+    }
+
+    let intersectionObserver: IntersectionObserver | null = null;
+    if (typeof IntersectionObserver !== 'undefined') {
+      intersectionObserver = new IntersectionObserver(
+        ([entry]) => {
+          const wasVisible = isVisibleRef.current;
+          isVisibleRef.current = entry.isIntersecting;
+          if (!wasVisible && entry.isIntersecting) {
+            renderCanvas(frameRef.current, weightsRef.current);
+          }
+        },
+        { threshold: 0.05 }
+      );
+      intersectionObserver.observe(canvas);
     }
 
     const mutationObserver = new MutationObserver(() => {
@@ -289,6 +331,7 @@ export const PathCanvas = memo(function PathCanvas({
 
     return () => {
       resizeObserver.disconnect();
+      if (intersectionObserver) intersectionObserver.disconnect();
       mutationObserver.disconnect();
     };
   }, [renderCanvas]);

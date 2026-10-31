@@ -15,8 +15,8 @@
  * smallest.
  */
 
-/** Max backing-store scale on phone-sized viewports. */
-const MOBILE_MAX_DPR = 1.5;
+/** Max backing-store scale on phone-sized viewports. 1.0 eliminates GPU fill-rate stalls and layout thrashing on mobile preview. */
+const MOBILE_MAX_DPR = 1.0;
 /** Max backing-store scale everywhere else. */
 const DESKTOP_MAX_DPR = 2;
 /** Viewport width at or below which the mobile cap applies. */

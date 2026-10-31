@@ -56,22 +56,29 @@ export const TreeCanvas = memo(function TreeCanvas({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const stepRef = useRef<TreeStep | TreeSimulationFrame | null | undefined>(step);
   const treeTypeRef = useRef<string | undefined>(treeType);
+  const sizeRef = useRef<{ w: number; h: number }>({ w: 0, h: 0 });
+  const isVisibleRef = useRef<boolean>(true);
   stepRef.current = step;
   treeTypeRef.current = treeType;
 
   const renderCanvas = useCallback((targetStep?: TreeStep | TreeSimulationFrame | null, targetTreeType?: string) => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || !isVisibleRef.current) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const rect = canvas.getBoundingClientRect();
-    const parentWidth = Math.floor(rect.width) || canvas.parentElement?.clientWidth || 800;
-    const parentHeight = 460;
-    const dpr = getCanvasScale();
+    let { w, h } = sizeRef.current;
+    if (w <= 0 || h <= 0) {
+      w = canvas.parentElement?.clientWidth || 800;
+      h = canvas.clientHeight || (typeof window !== 'undefined' && window.innerWidth <= 768 ? 360 : 460);
+      sizeRef.current = { w, h };
+    }
 
-    const targetW = Math.floor(parentWidth * dpr);
-    const targetH = Math.floor(parentHeight * dpr);
+    if (w <= 0 || h <= 0) return;
+
+    const dpr = getCanvasScale();
+    const targetW = Math.floor(w * dpr);
+    const targetH = Math.floor(h * dpr);
 
     if (canvas.width !== targetW || canvas.height !== targetH) {
       canvas.width = targetW;
@@ -80,8 +87,8 @@ export const TreeCanvas = memo(function TreeCanvas({
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    const currentW = parentWidth;
-    const currentH = parentHeight;
+    const currentW = w;
+    const currentH = h;
 
     // Clear canvas
     ctx.clearRect(0, 0, currentW, currentH);
@@ -208,22 +215,59 @@ export const TreeCanvas = memo(function TreeCanvas({
     renderCanvas(step, treeType);
   }, [step, treeType, renderCanvas]);
 
-  // Handle container resizing and theme changes
+  // Handle container resizing, visibility and theme changes to guarantee zero layout thrashing
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    renderCanvas(stepRef.current, treeTypeRef.current);
-
-    const resizeObserver = new ResizeObserver(() => {
-      requestAnimationFrame(() => {
+    const updateDimensions = (width: number, height: number) => {
+      const w = Math.floor(width);
+      const h = Math.floor(height);
+      if (w > 0 && h > 0) {
+        sizeRef.current = { w, h };
+        const dpr = getCanvasScale();
+        const targetW = Math.floor(w * dpr);
+        const targetH = Math.floor(h * dpr);
+        if (canvas.width !== targetW || canvas.height !== targetH) {
+          canvas.width = targetW;
+          canvas.height = targetH;
+        }
         renderCanvas(stepRef.current, treeTypeRef.current);
-      });
+      }
+    };
+
+    const initialRect = canvas.getBoundingClientRect();
+    const initW = initialRect.width || canvas.parentElement?.clientWidth || 800;
+    const initH = initialRect.height || (window.innerWidth <= 768 ? 360 : 460);
+    updateDimensions(initW, initH);
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const cr = entry.contentRect;
+        if (cr.width > 0 && cr.height > 0) {
+          updateDimensions(cr.width, cr.height);
+        }
+      }
     });
 
     resizeObserver.observe(canvas);
     if (canvas.parentElement) {
       resizeObserver.observe(canvas.parentElement);
+    }
+
+    let intersectionObserver: IntersectionObserver | null = null;
+    if (typeof IntersectionObserver !== 'undefined') {
+      intersectionObserver = new IntersectionObserver(
+        ([entry]) => {
+          const wasVisible = isVisibleRef.current;
+          isVisibleRef.current = entry.isIntersecting;
+          if (!wasVisible && entry.isIntersecting) {
+            renderCanvas(stepRef.current, treeTypeRef.current);
+          }
+        },
+        { threshold: 0.05 }
+      );
+      intersectionObserver.observe(canvas);
     }
 
     const mutationObserver = new MutationObserver(() => {
@@ -236,6 +280,7 @@ export const TreeCanvas = memo(function TreeCanvas({
 
     return () => {
       resizeObserver.disconnect();
+      if (intersectionObserver) intersectionObserver.disconnect();
       mutationObserver.disconnect();
     };
   }, [renderCanvas]);
