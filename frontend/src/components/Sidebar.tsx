@@ -68,8 +68,8 @@ export function Sidebar({
               style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
             >
               <AlgoRaceLogo
-                size={collapsed ? 36 : 38}
-                showText={!collapsed}
+                size={collapsed && !mobileOpen ? 36 : 38}
+                showText={!collapsed || Boolean(mobileOpen)}
                 tagline="Benchmark Engine"
               />
             </div>
@@ -84,6 +84,7 @@ export function Sidebar({
             {items.map(({ id, label, icon: Icon, hotkey }) => (
               <button
                 key={id}
+                type="button"
                 className={`nav-item ${active === id ? 'active' : ''}`}
                 onClick={() => handleNav(id)}
                 title={collapsed ? `${label} (${hotkey})` : undefined}
@@ -92,7 +93,7 @@ export function Sidebar({
                 <div className="nav-item-glow" />
                 <Icon size={18} className="nav-icon" />
                 <span className="nav-label">{label}</span>
-                {!collapsed && hotkey && (
+                {(!collapsed || Boolean(mobileOpen)) && hotkey && (
                   <kbd className="sidebar-hotkey-badge">{hotkey}</kbd>
                 )}
               </button>

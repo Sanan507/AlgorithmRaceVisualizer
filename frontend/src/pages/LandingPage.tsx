@@ -702,7 +702,7 @@ export function LandingPage({ onNavigate, darkMode = true, setDarkMode }: Props)
               <div className="gl-workbench-footer-nav">
                 <button type="button" className="gl-workbench-nav-btn" onClick={handlePrevArena}>
                   <ChevronLeft size={15} />
-                  <span>Prev: Complexity Drills</span>
+                  <span>Prev<span className="gl-btn-subtext">: Complexity Drills</span></span>
                 </button>
                 <div className="gl-workbench-nav-dots">
                   {ARENAS_LIST.map((a) => (
@@ -716,7 +716,7 @@ export function LandingPage({ onNavigate, darkMode = true, setDarkMode }: Props)
                   ))}
                 </div>
                 <button type="button" className="gl-workbench-nav-btn" onClick={handleNextArena}>
-                  <span>Next: Pathfinding Grid</span>
+                  <span>Next<span className="gl-btn-subtext">: Pathfinding Grid</span></span>
                   <ChevronRight size={15} />
                 </button>
               </div>
@@ -810,7 +810,7 @@ export function LandingPage({ onNavigate, darkMode = true, setDarkMode }: Props)
               <div className="gl-workbench-footer-nav">
                 <button type="button" className="gl-workbench-nav-btn" onClick={handlePrevArena}>
                   <ChevronLeft size={15} />
-                  <span>Prev: Sorting Arena</span>
+                  <span>Prev<span className="gl-btn-subtext">: Sorting Arena</span></span>
                 </button>
                 <div className="gl-workbench-nav-dots">
                   {ARENAS_LIST.map((a) => (
@@ -824,7 +824,7 @@ export function LandingPage({ onNavigate, darkMode = true, setDarkMode }: Props)
                   ))}
                 </div>
                 <button type="button" className="gl-workbench-nav-btn" onClick={handleNextArena}>
-                  <span>Next: DP Matrix</span>
+                  <span>Next<span className="gl-btn-subtext">: DP Matrix</span></span>
                   <ChevronRight size={15} />
                 </button>
               </div>
@@ -945,7 +945,7 @@ export function LandingPage({ onNavigate, darkMode = true, setDarkMode }: Props)
               <div className="gl-workbench-footer-nav">
                 <button type="button" className="gl-workbench-nav-btn" onClick={handlePrevArena}>
                   <ChevronLeft size={15} />
-                  <span>Prev: Pathfinding Grid</span>
+                  <span>Prev<span className="gl-btn-subtext">: Pathfinding Grid</span></span>
                 </button>
                 <div className="gl-workbench-nav-dots">
                   {ARENAS_LIST.map((a) => (
@@ -959,7 +959,7 @@ export function LandingPage({ onNavigate, darkMode = true, setDarkMode }: Props)
                   ))}
                 </div>
                 <button type="button" className="gl-workbench-nav-btn" onClick={handleNextArena}>
-                  <span>Next: Complexity Drills</span>
+                  <span>Next<span className="gl-btn-subtext">: Complexity Drills</span></span>
                   <ChevronRight size={15} />
                 </button>
               </div>
@@ -1061,7 +1061,7 @@ export function LandingPage({ onNavigate, darkMode = true, setDarkMode }: Props)
               <div className="gl-workbench-footer-nav">
                 <button type="button" className="gl-workbench-nav-btn" onClick={handlePrevArena}>
                   <ChevronLeft size={15} />
-                  <span>Prev: DP Matrix</span>
+                  <span>Prev<span className="gl-btn-subtext">: DP Matrix</span></span>
                 </button>
                 <div className="gl-workbench-nav-dots">
                   {ARENAS_LIST.map((a) => (
@@ -1075,7 +1075,7 @@ export function LandingPage({ onNavigate, darkMode = true, setDarkMode }: Props)
                   ))}
                 </div>
                 <button type="button" className="gl-workbench-nav-btn" onClick={handleNextArena}>
-                  <span>Next: Sorting Arena</span>
+                  <span>Next<span className="gl-btn-subtext">: Sorting Arena</span></span>
                   <ChevronRight size={15} />
                 </button>
               </div>

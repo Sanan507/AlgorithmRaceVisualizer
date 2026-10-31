@@ -867,18 +867,19 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
 
         <div className="field">
           <span>Dataset Mode</span>
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             <button
               type="button"
               className={`btn-custom-toggle ${isCustomMode ? 'active' : ''}`}
               onClick={handleToggleCustomMode}
+              style={{ flex: '1 1 auto' }}
             >
               {isCustomMode ? '✓ Custom Mode' : 'Custom Array'}
             </button>
             <button
               type="button"
               className="btn btn-secondary"
-              style={{ fontSize: '0.82rem', padding: '0 12px', height: '38px' }}
+              style={{ fontSize: '0.82rem', padding: '0 12px', height: '38px', flex: '1 1 auto' }}
               onClick={() => setIsModalOpen(true)}
             >
               ⚡ Math Suite
@@ -887,19 +888,19 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
         </div>
 
         {isCustomMode ? (
-          <div className="field custom-values-field" style={{ gridColumn: 'span 2' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+          <div className="field custom-values-field" style={{ gridColumn: '1 / -1' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', flexWrap: 'wrap', gap: '4px' }}>
               <span>Custom Values (comma-separated or file upload)</span>
               <span className="field-hint-text">Accepts .csv / .txt</span>
             </div>
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <div className="custom-array-input-row" style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
               <input
                 type="text"
                 className={`custom-input-inline ${hasInvalidTokens || isCustomEmpty ? 'input-error' : ''}`}
                 value={customArrayStr}
                 placeholder="e.g. 5, 3, 8, 1, 9, 2"
                 onChange={(e) => handleCustomArrayTextChange(e.target.value)}
-                style={{ flex: 1, height: '40px' }}
+                style={{ flex: '1 1 180px', height: '40px', minWidth: '0' }}
               />
               <CsvUploader onUploadSuccess={(parsed) => handleCustomArrayTextChange(parsed.join(', '))} />
             </div>

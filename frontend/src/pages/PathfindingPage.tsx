@@ -714,7 +714,7 @@ export function PathfindingPage({ catalog }: { catalog: CatalogResponse }) {
           <div style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: '10px' }}>
             Lane Algorithm Assignments
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '16px' }}>
+          <div className="lane-select-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '16px' }}>
             {algorithms.map((value, index) => (
               <SelectField
                 key={index}

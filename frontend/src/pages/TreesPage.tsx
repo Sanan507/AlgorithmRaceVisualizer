@@ -460,7 +460,7 @@ export const TreesPage: React.FC = () => {
         />
 
         {/* Traversal Output & Timeline Log Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
+        <div className="trees-summary-grid">
           {/* Output & Log Card */}
           <div className="panel" style={{ padding: '20px' }}>
             <h3 style={{ fontSize: '1rem', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>

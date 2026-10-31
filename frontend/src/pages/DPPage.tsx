@@ -513,14 +513,14 @@ export const DPPage: React.FC = () => {
       <section className="panel config-panel">
         {selectedAlgo === 'knapsack' ? (
           <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div className="dp-knapsack-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+              <div className="dp-capacity-slider-wrap" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <span className="field-label" style={{ fontWeight: 600, fontSize: '0.9rem' }}>Knapsack Capacity:</span>
                 <strong style={{ color: 'var(--accent-2, #c084fc)', fontSize: '1.1rem' }}>{knapsackCapacity}</strong>
-                <input type="range" min="3" max="14" value={knapsackCapacity} onChange={(e) => setKnapsackCapacity(Number(e.target.value))} style={{ width: '140px' }} />
+                <input type="range" min="3" max="14" value={knapsackCapacity} onChange={(e) => setKnapsackCapacity(Number(e.target.value))} className="settings-slider" style={{ width: '140px' }} />
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div className="dp-presets-wrap" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: '12px', color: 'var(--muted)', fontWeight: 600 }}>Presets:</span>
                 <button type="button" className="btn btn-secondary" onClick={() => handleKnapsackPreset('classic')} style={{ fontSize: '12px', padding: '4px 10px' }}>Classic</button>
                 <button type="button" className="btn btn-secondary" onClick={() => handleKnapsackPreset('compact')} style={{ fontSize: '12px', padding: '4px 10px' }}>Compact</button>
@@ -658,7 +658,7 @@ export const DPPage: React.FC = () => {
           }}
         />
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
+        <div className="dp-summary-grid">
           <div className="panel" style={{ padding: '20px' }}>
             <h3 style={{ fontSize: '1rem', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <CheckCircle2 size={18} className="text-emerald-400" />
