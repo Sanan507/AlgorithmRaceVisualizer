@@ -64,6 +64,7 @@
   .panel,
   .lane-card,
   .algobot-card,
+  .step-inspector-card,
   .cv-card,
   .control-strip,
   .nav-item,
@@ -177,6 +178,8 @@
   }
 
   /* Measured at 27-38px; 40px is the practical floor for a fingertip. */
+  .step-inspector-btn,
+  .step-inspector-lane-btn,
   .algobot-action-btn,
   .algo-tab-btn,
   .algobot-lane-btn,

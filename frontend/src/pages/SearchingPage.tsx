@@ -988,6 +988,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
             activeFrames={activeFrames}
             frameIndex={playback.frameIndex}
             totalFrames={playback.maxFrames}
+            target={typeof target === 'number' ? target : (activeResponse?.target ?? 20)}
             onOpenCodeInspector={(algo) => {
               setIsCodeInspectorOpen(true);
               if (algo) setInspectorSelectedAlgo(algo);

@@ -446,7 +446,7 @@ export const TreesPage: React.FC = () => {
           </div>
         </section>
 
-        {/* AlgoBot Live Step Tutor */}
+        {/* Live Execution Step Inspector */}
         <StepExplanationCard
           frameIndex={currentFrameIdx}
           totalFrames={frames.length}
