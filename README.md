@@ -65,7 +65,7 @@ Unlike static single-algorithm visualizers, **AlgoRace** is built around a concu
 
 ## 💡 Why I Built AlgoRace
 
-> *"I built AlgoRace because Big-O notation and static pseudocode never fully captured how algorithms actually behave for me. $O(n \log n)$ tells you the growth rate, but it doesn't show you why Quick Sort pulls ahead of Bubble Sort on the same dataset, or how Dijkstra's algorithm actually explores a graph step by step.*
+> *"I built AlgoRace because Big-O notation and static pseudocode never fully captured how algorithms actually behave for me. O(n \log n) tells you the growth rate, but it doesn't show you why Quick Sort pulls ahead of Bubble Sort on the same dataset, or how Dijkstra's algorithm actually explores a graph step by step.*
 >
 > *AlgoRace turns that into something you can watch and interact with. Sorting algorithms race side by side on identical dataset seeds, search algorithms visualize their space elimination as it happens, and pathfinding runs on 2D grids you can edit and re-run in real time.*
 >
