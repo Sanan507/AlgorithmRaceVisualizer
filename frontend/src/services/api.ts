@@ -5,10 +5,10 @@ const isLocalhost =
   isBrowser && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
 const RENDER_BACKEND_URL = 'https://algorithmracevisualizer.onrender.com';
-const configuredBase = import.meta.env.VITE_API_BASE_URL?.trim();
+const configuredBase = import.meta.env.VITE_API_BASE_URL !== undefined ? import.meta.env.VITE_API_BASE_URL.trim() : undefined;
 
 export const isBackendAvailable = true;
-const API_BASE_URL = configuredBase || (isLocalhost ? 'http://localhost:8080' : RENDER_BACKEND_URL);
+const API_BASE_URL = configuredBase !== undefined ? configuredBase : (isLocalhost ? 'http://localhost:8080' : RENDER_BACKEND_URL);
 
 /**
  * Every request gets a deadline. Without one a cold or sleeping backend leaves

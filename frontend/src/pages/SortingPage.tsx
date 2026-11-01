@@ -454,7 +454,7 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
             );
 
             // Fallback to Web Worker for client simulation
-            let arrayFallback = sendCustomArray || dataset || generateDataset(useSize, useType);
+            const arrayFallback = sendCustomArray || dataset || generateDataset(useSize, useType);
             workerSimulationService.runSimulation(
               {
                 type: 'sorting',

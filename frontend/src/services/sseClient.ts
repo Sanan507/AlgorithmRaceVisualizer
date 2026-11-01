@@ -5,7 +5,12 @@ export type LaneFrameEvent = {
   frame: SimulationFrame;
 };
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+const isBrowser = typeof window !== 'undefined';
+const isLocalhost =
+  isBrowser && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+const RENDER_BACKEND_URL = 'https://algorithmracevisualizer.onrender.com';
+const configuredBase = import.meta.env.VITE_API_BASE_URL !== undefined ? import.meta.env.VITE_API_BASE_URL.trim() : undefined;
+const API_BASE_URL = configuredBase !== undefined ? configuredBase : (isLocalhost ? 'http://localhost:8080' : RENDER_BACKEND_URL);
 
 /** How long to wait for the stream's first event before giving up on the backend. */
 export const DEFAULT_STREAM_TIMEOUT_MS = 8000;

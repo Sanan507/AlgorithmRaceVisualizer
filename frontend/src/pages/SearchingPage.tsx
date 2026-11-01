@@ -377,7 +377,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
             : 'The backend is unreachable, so this run is being computed in your browser.'
         );
 
-        let arrayFallback = useDataset || dataset || generateDataset(useSize, useType);
+        const arrayFallback = useDataset || dataset || generateDataset(useSize, useType);
         try {
           const fallbackRes = await workerSimulationService.runSimulation(
             {

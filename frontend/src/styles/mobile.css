@@ -4,7 +4,7 @@
  * Loaded after styles.css so these rules win at equal specificity.
  *
  * Why this file exists: on a phone the app was dropping frames badly. A live
- * audit at 375x812 found the cost was not JavaScript but *compositing* —
+ * audit at 375x812 found the cost was not JavaScript but *compositing* -
  * a dozen simultaneous `backdrop-filter: blur()` layers, 20-30 multi-layer box
  * shadows, and decorative animations running forever off-screen. Each blur
  * layer forces the GPU to re-sample everything painted underneath it on every

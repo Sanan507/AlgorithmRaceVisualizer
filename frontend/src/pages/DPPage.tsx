@@ -317,7 +317,7 @@ export const DPPage: React.FC = () => {
       const backtrack: { row: number; col: number }[] = [];
       let bi = m;
       let bj = n;
-      let lcsChars: string[] = [];
+      const lcsChars: string[] = [];
 
       while (bi > 0 && bj > 0) {
         backtrack.push({ row: bi, col: bj });

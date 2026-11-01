@@ -367,7 +367,7 @@ function simulateSingleSortingAlgorithm(
   } else if (algo.includes('Comb')) {
     // CombSort
     let gap = n;
-    let shrink = 1.3;
+    const shrink = 1.3;
     let sorted = false;
 
     while (!sorted) {
