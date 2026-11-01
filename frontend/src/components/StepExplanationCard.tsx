@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react';
 import type { RaceLaneResponse, SimulationFrame } from '../models/types';
 import { Code } from 'lucide-react';
+import { SORTING_META } from '../data/algorithmMetadata';
+import { fallbackCatalog } from '../data/fallbackCatalog';
 
 export interface StepExplanationCardProps {
   lanes?: RaceLaneResponse[];
@@ -15,7 +17,7 @@ export interface StepExplanationCardProps {
 
 interface StepDetails {
   badge: string;
-  badgeType: 'init' | 'swap' | 'compare' | 'pivot' | 'merge' | 'heap' | 'search' | 'path' | 'done' | 'step';
+  badgeType: 'init' | 'swap' | 'compare' | 'pivot' | 'merge' | 'heap' | 'search' | 'path' | 'done' | 'step' | 'dp' | 'tree';
   action: string;
   reason: string;
   contextPills: Array<{ label: string; value: string }>;
@@ -33,17 +35,71 @@ function getStepDetails(
   totalFrames: number,
   target?: number
 ): StepDetails {
-  // If frame has an explicit custom explanation (e.g. from DP or Tree arenas):
-  if (curr?.explanation) {
+  const isPathfinding = Boolean(
+    /bfs|dfs|dijkstra|a\*|astar|greedy|path/i.test(algoName) ||
+      (curr?.grid !== undefined && curr?.grid !== null) ||
+      (curr?.path !== undefined && curr?.path !== null)
+  );
+  const isSorting = Boolean(
+    SORTING_META[algoName] ||
+      fallbackCatalog.sortingAlgorithms?.includes(algoName) ||
+      /sort/i.test(algoName)
+  );
+  const isSearching = Boolean(
+    fallbackCatalog.searchingAlgorithms?.includes(algoName) ||
+      /search/i.test(algoName)
+  );
+
+  // 1. Explicit Domain Explanations (DP and Tree arenas)
+  if (curr?.explanation && !isPathfinding && !isSorting && !isSearching) {
     const isTree = /tree/i.test(algoName);
     const isDP = /dp/i.test(algoName) || /knapsack|lcs|edit/i.test(algoName);
+
+    let badge = isTree ? 'Tree Operation' : isDP ? 'DP Recurrence' : 'State Evaluation';
+    let badgeType: StepDetails['badgeType'] = isTree ? 'tree' : isDP ? 'dp' : 'step';
+
+    if (curr.done) {
+      badge = 'Solution Ready';
+      badgeType = 'done';
+    } else if (frameIndex === 0 || curr.explanation.toLowerCase().includes('initial')) {
+      badge = 'Initialize';
+      badgeType = 'init';
+    } else if (/rotat/i.test(curr.explanation)) {
+      badge = 'Tree Rotation';
+      badgeType = 'tree';
+    } else if (/not found/i.test(curr.explanation)) {
+      badge = 'Not Found';
+      badgeType = 'done';
+    } else if (/found/i.test(curr.explanation)) {
+      badge = 'Match Found';
+      badgeType = 'done';
+    } else if (/traversal/i.test(curr.explanation)) {
+      badge = 'Tree Traversal';
+      badgeType = 'tree';
+    } else if (/insert/i.test(curr.explanation)) {
+      badge = 'Tree Insertion';
+      badgeType = 'tree';
+    }
+
+    let reason = isTree
+      ? 'Updating tree structure to maintain binary search order and height balance.'
+      : 'Evaluating subproblem state by combining previously memoized optimal values.';
+
+    if (/rotat/i.test(curr.explanation)) {
+      reason = 'Rebalancing subtree via local pointer manipulation to maintain O(log N) depth.';
+    } else if (isDP && /knapsack/i.test(algoName)) {
+      reason = 'Comparing taking vs skipping current item: dp[i][w] = max(dp[i-1][w], dp[i-1][w-wt] + val).';
+    } else if (isDP && /lcs/i.test(algoName)) {
+      reason = 'Matching characters extend subsequence length by 1; mismatches inherit max from adjacent cells.';
+    } else if (isDP && /edit/i.test(algoName)) {
+      reason = 'Choosing minimum operations between insertion, deletion, and replacement for prefix substrings.';
+    }
+
     return {
-      badge: isTree ? 'Tree Operation' : isDP ? 'DP Recurrence' : 'State Evaluation',
-      badgeType: 'step',
+      badge,
+      badgeType,
       action: curr.explanation,
-      reason: isTree
-        ? 'Updating tree structure to maintain binary search order and height-balance.'
-        : 'Evaluating subproblem state by combining previously memoized optimal values.',
+      reason,
       contextPills: [
         { label: 'Algorithm', value: algoName },
         { label: 'Step', value: `${frameIndex + 1} of ${totalFrames}` },
@@ -51,14 +107,10 @@ function getStepDetails(
     };
   }
 
-  // 1. Initial State (Step 1 / Frame 0)
-  if (
-    frameIndex === 0 ||
-    curr?.frame === 0 ||
-    (curr?.comparisons === 0 && curr?.swaps === 0 && (curr?.highlight?.length ?? 0) === 0)
-  ) {
-    const size = curr?.array?.length ?? 0;
-    if (/sort/i.test(algoName)) {
+  // 2. Initial State (Frame 0 only)
+  if (frameIndex === 0) {
+    if (isSorting) {
+      const size = curr?.array?.length ?? 0;
       return {
         badge: 'Initialize',
         badgeType: 'init',
@@ -66,15 +118,17 @@ function getStepDetails(
         reason: 'Initial dataset is loaded in memory. Starting pointers and loop bounds are initialized.',
         contextPills: [
           { label: 'Dataset', value: `${size} elements` },
-          { label: 'Status', value: 'Ready to run' },
+          { label: 'Status', value: 'Ready to race' },
         ],
       };
     }
-    if (/search/i.test(algoName)) {
+
+    if (isSearching) {
+      const size = curr?.array?.length ?? 0;
       return {
         badge: 'Initialize',
         badgeType: 'init',
-        action: `Ready to search for ${target !== undefined ? target : 'target'} in ${size} elements with ${algoName}.`,
+        action: `Ready to search for ${target !== undefined ? target : 'target'} across ${size} elements with ${algoName}.`,
         reason: 'Dataset and search interval loaded. Pointers set to initial bounds.',
         contextPills: [
           { label: 'Dataset', value: `${size} elements` },
@@ -82,6 +136,20 @@ function getStepDetails(
         ],
       };
     }
+
+    if (isPathfinding) {
+      return {
+        badge: 'Initialize',
+        badgeType: 'init',
+        action: `Ready to find path with ${algoName}.`,
+        reason: 'Start node and target destination primed. Frontier queue initialized at start coordinates.',
+        contextPills: [
+          { label: 'Algorithm', value: algoName },
+          { label: 'Status', value: 'Ready to race' },
+        ],
+      };
+    }
+
     return {
       badge: 'Initialize',
       badgeType: 'init',
@@ -91,9 +159,104 @@ function getStepDetails(
     };
   }
 
-  // 2. Completed State
+  // 3. Pathfinding Arena
+  if (isPathfinding) {
+    if (curr?.pathFound || (curr?.path && curr.path.length > 0)) {
+      return {
+        badge: 'Path Found',
+        badgeType: 'done',
+        action: `Target reached! Shortest path contains ${curr.path?.length ?? 0} steps.`,
+        reason: 'Optimal route reconstructed by following parent pointers from target back to start.',
+        contextPills: [
+          { label: 'Path Length', value: `${curr.path?.length ?? 0} cells` },
+          { label: 'Explored', value: `${curr.steps ?? frameIndex + 1} cells` },
+          { label: 'Algorithm', value: algoName },
+        ],
+      };
+    }
+
+    if (curr?.done && !curr?.pathFound) {
+      return {
+        badge: 'No Path',
+        badgeType: 'done',
+        action: 'Destination unreachable: all routes blocked by walls.',
+        reason: 'Search frontier was exhausted without finding an accessible route to the target.',
+        contextPills: [
+          { label: 'Explored', value: `${curr.steps ?? frameIndex + 1} cells` },
+          { label: 'Result', value: 'Blocked' },
+          { label: 'Algorithm', value: algoName },
+        ],
+      };
+    }
+
+    // Active pathfinding search
+    let visitedCount = 0;
+    let frontierCount = 0;
+    if (curr?.grid) {
+      for (let r = 0; r < curr.grid.length; r++) {
+        for (let c = 0; c < curr.grid[r].length; c++) {
+          const cell = curr.grid[r][c];
+          if (cell === 'VISITED' || cell === 'VISITED_FORWARD' || cell === 'VISITED_BACKWARD') visitedCount++;
+          if (cell === 'FRONTIER' || cell === 'FRONTIER_FORWARD' || cell === 'FRONTIER_BACKWARD') frontierCount++;
+        }
+      }
+    }
+
+    const exploredNum = visitedCount || curr?.steps || frameIndex + 1;
+    const isAStar = /a\*|astar/i.test(algoName);
+    const isDijkstra = /dijkstra/i.test(algoName);
+    const isBidi = /bidirectional/i.test(algoName);
+    const isGreedy = /greedy/i.test(algoName);
+    const isDFS = /dfs/i.test(algoName);
+    const isBFS = /bfs/i.test(algoName);
+
+    let badge = 'Frontier Step';
+    let reason = 'Expanding frontier node and evaluating orthogonal neighbors.';
+    if (isAStar) {
+      badge = 'A* Expansion';
+      reason = 'Selecting cell with lowest f(n) = g(n) + h(n), balancing traveled distance with goal heuristic.';
+    } else if (isDijkstra) {
+      badge = 'Dijkstra Step';
+      reason = 'Settling unvisited cell with minimal cumulative edge weight g(n).';
+    } else if (isBidi) {
+      badge = 'Bidirectional BFS';
+      reason = 'Simultaneously expanding search frontiers from both start and target until frontiers intersect.';
+    } else if (isGreedy) {
+      badge = 'Greedy Step';
+      reason = 'Expanding node with lowest heuristic distance h(n) directly toward the target.';
+    } else if (isBFS) {
+      badge = 'BFS Wavefront';
+      reason = 'Exploring neighbor cells level by level in concentric wavefronts for fewest grid hops.';
+    } else if (isDFS) {
+      badge = 'DFS Exploration';
+      reason = 'Deeply traversing active corridor until a wall or dead end is reached.';
+    }
+
+    let action = `Exploring grid: ${exploredNum} cells evaluated.`;
+    if (curr?.status && !curr.status.startsWith('Ready') && curr.status !== 'Running') {
+      action = curr.status;
+    }
+
+    const pills: Array<{ label: string; value: string }> = [
+      { label: 'Explored', value: `${exploredNum} cells` },
+    ];
+    if (frontierCount > 0) {
+      pills.push({ label: 'Frontier', value: `${frontierCount} cells` });
+    }
+    pills.push({ label: 'Algorithm', value: algoName });
+
+    return {
+      badge,
+      badgeType: 'path',
+      action,
+      reason,
+      contextPills: pills,
+    };
+  }
+
+  // 4. Completed State (General)
   if (curr?.done || (totalFrames > 0 && frameIndex >= totalFrames - 1)) {
-    if (/sort/i.test(algoName)) {
+    if (isSorting) {
       return {
         badge: 'Completed',
         badgeType: 'done',
@@ -105,7 +268,7 @@ function getStepDetails(
         ],
       };
     }
-    if (/search/i.test(algoName)) {
+    if (isSearching) {
       const found = curr?.foundIndex !== null && curr?.foundIndex !== undefined && curr.foundIndex >= 0;
       return {
         badge: found ? 'Match Found' : 'Completed',
@@ -122,15 +285,6 @@ function getStepDetails(
         ],
       };
     }
-    if (curr?.pathFound) {
-      return {
-        badge: 'Path Found',
-        badgeType: 'done',
-        action: `Destination reached! Shortest path contains ${curr.path?.length ?? 0} steps.`,
-        reason: 'Optimal route reconstructed by following parent pointers from target back to start.',
-        contextPills: [{ label: 'Path Length', value: `${curr.path?.length ?? 0} steps` }],
-      };
-    }
     return {
       badge: 'Completed',
       badgeType: 'done',
@@ -140,12 +294,12 @@ function getStepDetails(
     };
   }
 
-  // 3. Sorting: In-Place Swap
+  // 5. Sorting: In-Place Swap
   const swapsIncreased =
     curr?.swaps !== undefined && prev?.swaps !== undefined && curr.swaps > prev.swaps;
   const isSwap = swapsIncreased || curr?.status?.toLowerCase().includes('swap');
 
-  if (isSwap && curr?.highlight && curr.highlight.length >= 2) {
+  if (isSorting && isSwap && curr?.highlight && curr.highlight.length >= 2) {
     const [i, j] = curr.highlight;
     const valA = curr.array?.[i];
     const valB = curr.array?.[j];
@@ -180,8 +334,8 @@ function getStepDetails(
     };
   }
 
-  // 4. QuickSort: Pivot Selection / Partitioning
-  if (curr?.pivotIndex !== undefined && curr.pivotIndex >= 0 && curr.array) {
+  // 6. QuickSort: Pivot Selection / Partitioning
+  if (isSorting && curr?.pivotIndex !== undefined && curr.pivotIndex >= 0 && curr.array) {
     const pVal = curr.array[curr.pivotIndex];
     return {
       badge: 'Pivot Partition',
@@ -195,8 +349,9 @@ function getStepDetails(
     };
   }
 
-  // 5. MergeSort: Merge Range
+  // 7. MergeSort: Merge Range
   if (
+    isSorting &&
     curr?.mergeRegionStart !== undefined &&
     curr.mergeRegionStart >= 0 &&
     curr?.mergeRegionEnd !== undefined &&
@@ -213,8 +368,8 @@ function getStepDetails(
     };
   }
 
-  // 6. HeapSort: Max-Heap Sift
-  if (curr?.heapBoundary !== undefined && curr.heapBoundary >= 0) {
+  // 8. HeapSort: Max-Heap Sift
+  if (isSorting && curr?.heapBoundary !== undefined && curr.heapBoundary >= 0) {
     return {
       badge: 'Max-Heap',
       badgeType: 'heap',
@@ -226,8 +381,8 @@ function getStepDetails(
     };
   }
 
-  // 7. Sorting: Pairwise Comparison
-  if (curr?.highlight && curr.highlight.length === 2 && curr.array && /sort/i.test(algoName)) {
+  // 9. Sorting: Pairwise Comparison
+  if (isSorting && curr?.highlight && curr.highlight.length === 2 && curr.array) {
     const [i, j] = curr.highlight;
     const v1 = curr.array[i];
     const v2 = curr.array[j];
@@ -257,8 +412,33 @@ function getStepDetails(
     }
   }
 
-  // 8. Search: Binary Search
-  if (/search/i.test(algoName)) {
+  // 10. Sorting: Fallback with live status
+  if (isSorting && curr?.status && !curr.status.startsWith('Ready') && curr.status !== 'Running') {
+    return {
+      badge: /compare/i.test(curr.status)
+        ? 'Comparison'
+        : /swap/i.test(curr.status)
+        ? 'In-Place Swap'
+        : /insert/i.test(curr.status)
+        ? 'Shift & Insert'
+        : 'Pass Step',
+      badgeType: /compare/i.test(curr.status)
+        ? 'compare'
+        : /swap/i.test(curr.status)
+        ? 'swap'
+        : 'step',
+      action: curr.status,
+      reason: 'Iterating through array sequence to verify order and maintain loop invariants.',
+      contextPills: [
+        ...(curr.comparisons !== undefined ? [{ label: 'Comparisons', value: String(curr.comparisons) }] : []),
+        ...(curr.swaps !== undefined ? [{ label: 'Swaps', value: String(curr.swaps) }] : []),
+        { label: 'Algorithm', value: algoName },
+      ],
+    };
+  }
+
+  // 11. Searching: Binary or Linear Search
+  if (isSearching) {
     if (curr?.foundIndex !== null && curr?.foundIndex !== undefined && curr.foundIndex >= 0) {
       return {
         badge: 'Match Found',
@@ -274,7 +454,13 @@ function getStepDetails(
     if (curr?.highlight && curr.highlight.length > 0 && curr.array) {
       const idx = curr.highlight[0];
       const val = curr.array[idx];
-      if (algoName.includes('Binary') && target !== undefined && val !== undefined) {
+      const isBinary = /binary/i.test(algoName);
+      const isJump = /jump/i.test(algoName);
+      const isInterpolation = /interpolation/i.test(algoName);
+      const isExponential = /exponential/i.test(algoName);
+      const isTernary = /ternary/i.test(algoName);
+
+      if (isBinary && target !== undefined && val !== undefined) {
         if (target < val) {
           return {
             badge: 'Binary Search',
@@ -302,28 +488,34 @@ function getStepDetails(
           };
         }
       }
+
+      let searchBadge = 'Sequential Scan';
+      let searchReason = `Value ${val} does not match target. Advancing to next candidate index.`;
+      if (isJump) {
+        searchBadge = 'Jump Step';
+        searchReason = 'Jumping ahead by fixed block size √N to find the interval containing target.';
+      } else if (isInterpolation) {
+        searchBadge = 'Interpolation Probe';
+        searchReason = 'Probing position estimated by key distribution.';
+      } else if (isExponential) {
+        searchBadge = 'Exponential Range';
+        searchReason = 'Doubling range bounds [2^k ... 2^(k+1)] to locate interval containing target.';
+      } else if (isTernary) {
+        searchBadge = 'Ternary Search';
+        searchReason = 'Dividing range into three parts with two midpoints to narrow the search space.';
+      }
+
       return {
-        badge: 'Sequential Scan',
+        badge: searchBadge,
         badgeType: 'search',
         action: `Inspecting index ${idx} (value ${val}) against target ${target !== undefined ? target : ''}.`,
-        reason: `Value ${val} does not match target. Advancing to next candidate index.`,
+        reason: searchReason,
         contextPills: [
           { label: 'Inspecting', value: `${val} (idx ${idx})` },
           { label: 'Target', value: String(target ?? '') },
         ],
       };
     }
-  }
-
-  // 9. Pathfinding Step
-  if (curr?.path && curr.path.length > 0) {
-    return {
-      badge: 'Path Found',
-      badgeType: 'done',
-      action: `Shortest path reconstructed (${curr.path.length} steps).`,
-      reason: 'Destination node finalized; traced parent connections back to origin.',
-      contextPills: [{ label: 'Path Length', value: `${curr.path.length} cells` }],
-    };
   }
 
   return {
