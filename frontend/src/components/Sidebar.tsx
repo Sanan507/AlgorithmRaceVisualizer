@@ -1,4 +1,4 @@
-import { BarChart3, Binary, GitBranch, History, Settings, ChevronLeft, ChevronRight, LayoutGrid, X, Layers, FolderTree, Trophy } from 'lucide-react';
+import { BarChart3, Search, Route, History, Settings, ChevronLeft, ChevronRight, LayoutGrid, X, Layers, Network, Trophy } from 'lucide-react';
 import { useAudio } from '../context/AudioContext';
 import { AlgoRaceLogo } from './AlgoRaceLogo';
 
@@ -7,10 +7,10 @@ type Page = 'landing' | 'sorting' | 'searching' | 'pathfinding' | 'dp' | 'trees'
 const items = [
   { id: 'landing',     label: 'Overview',            icon: LayoutGrid, hotkey: '0' },
   { id: 'sorting',     label: 'Sorting Arena',       icon: BarChart3,  hotkey: '1' },
-  { id: 'searching',   label: 'Search Arena',        icon: Binary,     hotkey: '2' },
-  { id: 'pathfinding', label: 'Pathfinding Arena',   icon: GitBranch,  hotkey: '3' },
+  { id: 'searching',   label: 'Search Arena',        icon: Search,     hotkey: '2' },
+  { id: 'pathfinding', label: 'Pathfinding Arena',   icon: Route,      hotkey: '3' },
   { id: 'dp',          label: 'DP Arena',            icon: Layers,     hotkey: '4' },
-  { id: 'trees',       label: 'Tree Arena',          icon: FolderTree, hotkey: '5' },
+  { id: 'trees',       label: 'Tree Arena',          icon: Network,    hotkey: '5' },
   { id: 'quiz',        label: 'AlgoGym Arena',       icon: Trophy,     hotkey: 'Q' },
   { id: 'history',     label: 'Benchmarks',          icon: History,    hotkey: 'H' },
   { id: 'settings',    label: 'Settings',            icon: Settings,   hotkey: 'S' },

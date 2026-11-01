@@ -178,6 +178,7 @@
   }
 
   /* Measured at 27-38px; 40px is the practical floor for a fingertip. */
+  .step-inspector-code-btn,
   .step-inspector-btn,
   .step-inspector-lane-btn,
   .algobot-action-btn,
