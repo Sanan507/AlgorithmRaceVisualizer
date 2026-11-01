@@ -100,13 +100,15 @@ AlgorithmRaceVisualizer/
 ├── .github/
 │   └── workflows/
 │       └── ci.yml                                # Automated CI pipeline (Frontend & Backend tests)
+├── docs/
+│   ├── ARCHITECTURE.md                           # In-depth architectural design & execution flow
+│   ├── DEPLOYMENT.md                             # Production deployment & environment guide
+│   ├── DESIGN.md                                 # UI/UX design tokens & visual standards
+│   ├── PRODUCT.md                                # Strategic product vision & roadmap
+│   └── images/                                   # Visual showcase screenshots & demo recordings
 ├── docker-compose.yml                            # Local container orchestration
 ├── docker-compose.prod.yml                       # Production multi-service container orchestration
-├── ARCHITECTURE.md                               # In-depth architectural design & execution flow
-├── DEPLOYMENT.md                                 # Production deployment & environment guide
-├── DESIGN.md                                     # UI/UX design tokens & visual standards
-├── PRODUCT.md                                    # Strategic product vision & roadmap
-├── LICENSE                                       # MIT License
+├── LICENSE                                       # Source-Available Non-Commercial License
 └── CONTRIBUTING.md                               # Contributor guide & DCO agreement
 ```
 

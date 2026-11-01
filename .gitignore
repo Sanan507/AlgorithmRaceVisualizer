@@ -32,7 +32,7 @@ create_new_issues.*
 dependency-reduced-pom.xml
 
 # Documentation
-# (DESIGN.md and PRODUCT.md are committed documentation assets)
+# (docs/ are committed documentation assets)
 
 # Build Cache & Local PR Scripts
 *.tsbuildinfo

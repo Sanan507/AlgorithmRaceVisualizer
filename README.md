@@ -13,7 +13,7 @@
 
 *A high-performance, full-stack interactive engineering platform designed to benchmark, debug, and race computer science algorithms in real-time.*
 
-[**🌐 Live Application**](https://algorithm-race-visualizer.vercel.app) • [**📖 API Documentation**](https://algorithmracevisualizer.onrender.com/swagger-ui.html) • [**⚡ Quickstart**](#-local-development--setup) • [**🏗️ Architecture**](ARCHITECTURE.md) • [**🚀 Deployment**](DEPLOYMENT.md) • [**🤝 Contributing**](CONTRIBUTING.md) • [**⚖️ License**](LICENSE)
+[**🌐 Live Application**](https://algorithm-race-visualizer.vercel.app) • [**📖 API Documentation**](https://algorithmracevisualizer.onrender.com/swagger-ui.html) • [**⚡ Quickstart**](#-local-development--setup) • [**🏗️ Architecture**](docs/ARCHITECTURE.md) • [**🚀 Deployment**](docs/DEPLOYMENT.md) • [**🎨 Design**](docs/DESIGN.md) • [**🤝 Contributing**](CONTRIBUTING.md) • [**⚖️ License**](LICENSE)
 
 </div>
 
@@ -24,21 +24,21 @@
 <div align="center">
 
 ### **Live Race Animation Demo**
-![AlgoRace Live Race Simulation](algorace_demo.webp)
+![AlgoRace Live Race Simulation](docs/images/algorace_demo.webp)
 
 </div>
 
 | **Landing Portal & Arena Launcher** | **Multi-Lane Sorting Arena** |
 |:---:|:---:|
-| ![AlgoRace Landing Portal](image-landing.png) | ![AlgoRace Multi-Lane Sorting Arena](image.png) |
+| ![AlgoRace Landing Portal](docs/images/image-landing.png) | ![AlgoRace Multi-Lane Sorting Arena](docs/images/image.png) |
 
 | **2D Grid Pathfinding Arena** | **Dynamic Programming Arena** |
 |:---:|:---:|
-| ![AlgoRace 2D Grid Pathfinding Arena](image-1.png) | ![AlgoRace Dynamic Programming Arena](image-dp.png) |
+| ![AlgoRace 2D Grid Pathfinding Arena](docs/images/image-1.png) | ![AlgoRace Dynamic Programming Arena](docs/images/image-dp.png) |
 
 | **AlgoGym Challenge Arena** | **Tree Data Structures Arena** |
 |:---:|:---:|
-| ![AlgoRace AlgoGym Challenge Arena](image-quiz.png) | ![AlgoRace Tree Structures Arena](image-trees.png) |
+| ![AlgoRace AlgoGym Challenge Arena](docs/images/image-quiz.png) | ![AlgoRace Tree Structures Arena](docs/images/image-trees.png) |
 
 ---
 
@@ -246,7 +246,7 @@ npm run dev
 
 ## 🚀 Production Deployment
 
-For detailed production setup instructions, cloud platform guides (Vercel, Render, Railway, AWS, DigitalOcean), environment variables, and Nginx reverse proxy configuration, refer to the [**Deployment Guide (DEPLOYMENT.md)**](DEPLOYMENT.md).
+For detailed production setup instructions, cloud platform guides (Vercel, Render, Railway, AWS, DigitalOcean), environment variables, and Nginx reverse proxy configuration, refer to the [**Deployment Guide (DEPLOYMENT.md)**](docs/DEPLOYMENT.md).
 
 ---
 
