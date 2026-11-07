@@ -1043,7 +1043,7 @@ export function LandingPage({ onNavigate, darkMode = true, setDarkMode }: Props)
                         className={`gl-quiz-opt ${isCorrect ? 'correct' : ''} ${isWrong ? 'incorrect' : ''}`}
                         onClick={() => handleSelectQuizOption(optIdx)}
                       >
-                        <span style={{ fontFamily: 'monospace', fontWeight: 700 }}>{String.fromCharCode(65 + optIdx)}.</span>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700 }}>{String.fromCharCode(65 + optIdx)}.</span>
                         <span>{opt}</span>
                       </div>
                     );

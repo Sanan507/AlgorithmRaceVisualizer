@@ -638,7 +638,7 @@ export const DPPage: React.FC = () => {
                 {selectedAlgo === 'knapsack' ? '0/1 Knapsack DP Table' : selectedAlgo === 'lcs' ? 'LCS Subproblem Grid' : 'Edit Distance Operations Table'}
               </strong>
             </div>
-            <span style={{ fontSize: '12px', color: 'var(--muted)', fontFamily: 'monospace' }}>
+            <span style={{ fontSize: '12px', color: 'var(--muted)', fontVariantNumeric: 'tabular-nums' }}>
               Dimensions: {rowLabels.length} × {colLabels.length}
             </span>
           </div>
@@ -693,7 +693,7 @@ export const DPPage: React.FC = () => {
                 {selectedAlgo === 'lcs' && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     <div className="complexity-grid" style={{ margin: 0 }}>
-                      <span>Longest Subsequence<strong style={{ color: '#60a5fa', fontFamily: 'monospace' }}>"{lcsResultStr}"</strong></span>
+                      <span>Longest Subsequence<strong style={{ color: '#60a5fa', fontFamily: 'var(--font-mono)' }}>"{lcsResultStr}"</strong></span>
                       <span>Subsequence Length<strong>{lcsResultStr.length} chars</strong></span>
                     </div>
                     <p style={{ fontSize: '0.85rem', color: 'var(--muted)', lineHeight: '1.5' }}>The LCS algorithm backtracks through matching character transitions in the table to form the longest shared subsequence between "{str1}" and "{str2}".</p>

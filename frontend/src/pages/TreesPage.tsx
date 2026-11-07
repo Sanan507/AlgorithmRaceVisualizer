@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { FolderTree, Plus, Trash2, Search, RefreshCw, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { FolderTree, Plus, Trash2, Search, ShieldCheck, CheckCircle2, Play, Dices } from 'lucide-react';
 import { TreeCanvas } from '../components/TreeCanvas';
 import { CodeViewer } from '../components/CodeViewer';
 import { Controls } from '../components/Controls';
@@ -19,6 +19,7 @@ export const TreesPage: React.FC = () => {
   const [treeType, setTreeType] = useState<TreeType>('bst');
   const [insertInput, setInsertInput] = useState<string>('42');
   const [searchInput, setSearchInput] = useState<string>('42');
+  const [activeTraversal, setActiveTraversal] = useState<string | null>(null);
   
   // Tree values state
   const [treeValues, setTreeValues] = useState<number[]>([50, 30, 70, 20, 40, 60, 80]);
@@ -38,6 +39,7 @@ export const TreesPage: React.FC = () => {
   useEffect(() => {
     winnerAnnouncedRef.current = false;
     userInteractedRef.current = false;
+    setActiveTraversal(null);
     runBuildSimulation(treeValues);
   }, [treeType]);
 
@@ -62,7 +64,7 @@ export const TreesPage: React.FC = () => {
     };
   }, [isPlaying, speed, frames.length]);
 
-  // Audio effect on step frame changes — mirrors Sorting/Searching/Pathfinding sound engine
+  // Audio effect on step frame changes
   useEffect(() => {
     if (!isPlaying && currentFrameIdx === 0) return;
     const currentFrame = frames[currentFrameIdx];
@@ -91,7 +93,6 @@ export const TreesPage: React.FC = () => {
     } else if (evt === 'DUPLICATE_SKIPPED') {
       play('searchMiss');
     } else {
-      // INSERT, INSERT_DONE, SEARCH_VISIT, TRAVERSAL_VISIT
       if (audioSettings.synthEnabled && playToneForValue && typeof activeVal === 'number') {
         playToneForValue(activeVal, minVal, maxVal, 'compare');
       } else {
@@ -179,6 +180,7 @@ export const TreesPage: React.FC = () => {
     if (isNaN(val)) return;
 
     userInteractedRef.current = true;
+    setActiveTraversal(null);
     const newValues = [...treeValues, val];
     setTreeValues(newValues);
 
@@ -195,6 +197,7 @@ export const TreesPage: React.FC = () => {
     if (isNaN(val)) return;
 
     userInteractedRef.current = true;
+    setActiveTraversal(null);
     executeSimulation({
       treeType,
       operation: 'search',
@@ -205,6 +208,7 @@ export const TreesPage: React.FC = () => {
 
   const runTraversal = (type: 'in' | 'pre' | 'post' | 'level') => {
     userInteractedRef.current = true;
+    setActiveTraversal(type);
     executeSimulation({
       treeType,
       operation: 'traversal',
@@ -218,7 +222,6 @@ export const TreesPage: React.FC = () => {
     if (presetType === 'standard') {
       vals = [50, 30, 70, 20, 40, 60, 80];
     } else if (presetType === 'rotation') {
-      // Unbalanced sequence to trigger rotations in AVL
       vals = [10, 20, 30, 40, 50, 25];
     } else {
       const set = new Set<number>();
@@ -228,6 +231,7 @@ export const TreesPage: React.FC = () => {
       vals = Array.from(set);
     }
     userInteractedRef.current = false;
+    setActiveTraversal(null);
     setTreeValues(vals);
     setTraversalResult([]);
     runBuildSimulation(vals);
@@ -235,12 +239,13 @@ export const TreesPage: React.FC = () => {
 
   const handleClear = () => {
     userInteractedRef.current = false;
+    setActiveTraversal(null);
     setTreeValues([]);
     setTraversalResult([]);
     setFrames([{
       frameIndex: 0,
       root: null,
-      explanation: 'Cleared tree canvas.',
+      explanation: 'Tree cleared. Ready for new operations.',
       eventType: 'CLEAR'
     }]);
     setCurrentFrameIdx(0);
@@ -262,19 +267,27 @@ export const TreesPage: React.FC = () => {
 
   const currentFrame = frames[currentFrameIdx] || null;
 
+  const maxDepth = useMemo(() => {
+    function calcDepth(n: any): number {
+      if (!n) return 0;
+      return 1 + Math.max(calcDepth(n.left), calcDepth(n.right));
+    }
+    return calcDepth(currentFrame?.root);
+  }, [currentFrame?.root]);
+
   return (
     <main className="page trees-page">
       {/* Header */}
-      <header className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <header className="page-header">
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <FolderTree className="text-amber-400" size={28} />
+            <FolderTree className="text-amber-400" size={26} />
             <h1>Tree Arena</h1>
           </div>
-          <p className="text-muted">Interactive visualizers for BST, self-balancing AVL, and Red-Black trees</p>
+          <p className="text-muted">Interactive visualizer for BST, self-balancing AVL, and Red-Black trees</p>
         </div>
 
-        {/* Segmented Controls */}
+        {/* Responsive Segmented Algorithm Switcher */}
         <div className="algo-tab-strip">
           <button
             type="button"
@@ -300,72 +313,143 @@ export const TreesPage: React.FC = () => {
         </div>
       </header>
 
-      {/* Main Operations & Config Bar */}
-      <section className="panel config-panel">
-        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-            {/* Input Actions with BST Rule Hint */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <input
-                    type="number"
-                    className="tree-num-input"
-                    value={insertInput}
-                    onChange={(e) => setInsertInput(e.target.value)}
-                    placeholder="Value..."
-                    style={{ width: '90px', height: '36px' }}
-                  />
-                  <button type="button" className="btn btn-primary" onClick={handleInsert} style={{ padding: '0 12px', height: '36px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <Plus size={14} /> Insert
-                  </button>
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <input
-                    type="number"
-                    className="tree-num-input"
-                    value={searchInput}
-                    onChange={(e) => setSearchInput(e.target.value)}
-                    placeholder="Value..."
-                    style={{ width: '90px', height: '36px' }}
-                  />
-                  <button type="button" className="btn btn-secondary" onClick={handleSearch} style={{ padding: '0 12px', height: '36px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <Search size={14} /> Search
-                  </button>
-                </div>
-              </div>
-              <span style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 500 }}>
-                💡 BST rule: smaller values go left; larger values go right.
-              </span>
+      {/* Main Operations & Config Panel */}
+      <section className="tree-toolbar-panel">
+        <div className="tree-toolbar-grid">
+          {/* Card A: Node Operations */}
+          <div className="tree-toolbar-card">
+            <div className="tree-toolbar-card-header">
+              <span>Node Operations</span>
+              <button
+                type="button"
+                className="btn btn-ghost text-rose"
+                onClick={handleClear}
+                style={{ padding: '2px 8px', fontSize: '0.74rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                title="Clear current tree canvas"
+              >
+                <Trash2 size={13} /> Clear
+              </button>
             </div>
 
-            {/* Presets & Clear */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '12px', color: 'var(--muted)', fontWeight: 600 }}>Presets:</span>
-              <button type="button" className="btn btn-secondary" onClick={() => handlePreset('standard')} style={{ fontSize: '12px', padding: '4px 10px' }}>
-                Standard
+            <div className="tree-input-actions">
+              <div className="tree-input-group">
+                <input
+                  type="number"
+                  className="tree-num-input"
+                  value={insertInput}
+                  onChange={(e) => setInsertInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleInsert(); }}
+                  placeholder="Val..."
+                  aria-label="Node value to insert"
+                />
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={handleInsert}
+                  style={{ height: '36px', minHeight: '36px', padding: '0 12px', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                >
+                  <Plus size={14} /> Insert
+                </button>
+              </div>
+
+              <div className="tree-input-group">
+                <input
+                  type="number"
+                  className="tree-num-input"
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
+                  placeholder="Val..."
+                  aria-label="Node value to search"
+                />
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={handleSearch}
+                  style={{ height: '36px', minHeight: '36px', padding: '0 12px', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                >
+                  <Search size={14} /> Search
+                </button>
+              </div>
+            </div>
+
+            <div className="tree-rule-callout">
+              <span>Invariant:</span> In-order traversal yields sorted values (left &lt; root &lt; right).
+            </div>
+          </div>
+
+          {/* Card B: Presets */}
+          <div className="tree-toolbar-card">
+            <div className="tree-toolbar-card-header">
+              <span>Quick Presets</span>
+              <span style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)' }}>{treeValues.length} nodes loaded</span>
+            </div>
+
+            <div className="tree-preset-buttons">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => handlePreset('standard')}
+                style={{ padding: '6px 10px', fontSize: '0.78rem' }}
+              >
+                Standard (7)
               </button>
-              <button type="button" className="btn btn-secondary text-amber-400" onClick={() => handlePreset('rotation')} style={{ fontSize: '12px', padding: '4px 10px' }}>
+              <button
+                type="button"
+                className="btn btn-secondary text-amber-400"
+                onClick={() => handlePreset('rotation')}
+                style={{ padding: '6px 10px', fontSize: '0.78rem' }}
+                title="Unbalanced values sequence that forces tree rotations"
+              >
                 Rotation Heavy
               </button>
-              <button type="button" className="btn btn-secondary" onClick={() => handlePreset('random')} style={{ fontSize: '12px', padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <RefreshCw size={13} /> Random
-              </button>
-              <button type="button" className="btn btn-danger" onClick={handleClear} style={{ fontSize: '12px', padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <Trash2 size={13} /> Clear Tree
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => handlePreset('random')}
+                style={{ padding: '6px 10px', fontSize: '0.78rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+              >
+                <Dices size={14} /> Random
               </button>
             </div>
           </div>
+        </div>
 
-          {/* Traversal Buttons */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', borderTop: '1px solid var(--line, rgba(255,255,255,0.08))', paddingTop: '10px' }}>
-            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--muted)' }}>Traversals:</span>
-            <button type="button" className="btn-chip" onClick={() => runTraversal('in')}>In-Order (L-N-R)</button>
-            <button type="button" className="btn-chip" onClick={() => runTraversal('pre')}>Pre-Order (N-L-R)</button>
-            <button type="button" className="btn-chip" onClick={() => runTraversal('post')}>Post-Order (L-R-N)</button>
-            <button type="button" className="btn-chip" onClick={() => runTraversal('level')}>Level-Order (BFS)</button>
+        {/* Traversal Toolbar Bar */}
+        <div className="tree-traversal-bar">
+          <div className="tree-traversal-label">
+            <Play size={13} className="text-amber-400" />
+            <span>Traversals:</span>
           </div>
+
+          <button
+            type="button"
+            className={`tree-traversal-btn ${activeTraversal === 'in' ? 'active' : ''}`}
+            onClick={() => runTraversal('in')}
+          >
+            In-Order (L-N-R)
+          </button>
+          <button
+            type="button"
+            className={`tree-traversal-btn ${activeTraversal === 'pre' ? 'active' : ''}`}
+            onClick={() => runTraversal('pre')}
+          >
+            Pre-Order (N-L-R)
+          </button>
+          <button
+            type="button"
+            className={`tree-traversal-btn ${activeTraversal === 'post' ? 'active' : ''}`}
+            onClick={() => runTraversal('post')}
+          >
+            Post-Order (L-R-N)
+          </button>
+          <button
+            type="button"
+            className={`tree-traversal-btn ${activeTraversal === 'level' ? 'active' : ''}`}
+            onClick={() => runTraversal('level')}
+          >
+            Level-Order (BFS)
+          </button>
         </div>
       </section>
 
@@ -410,38 +494,46 @@ export const TreesPage: React.FC = () => {
         onSpeedChange={setSpeed}
       />
 
-      {/* Main Grid Content */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px', marginTop: '20px' }}>
+      {/* Main Visualizer Content */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '20px' }}>
         {/* Canvas Visualizer Card */}
-        <section className="panel" style={{ padding: '20px', position: 'relative' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span className="status-pill" style={{
-                background: isCompleted ? 'rgba(16, 185, 129, 0.15)' : isPlaying ? 'rgba(59, 130, 246, 0.15)' : 'rgba(245, 158, 11, 0.15)',
-                color: isCompleted ? '#34d399' : isPlaying ? '#60a5fa' : '#fbbf24',
-                padding: '4px 10px',
-                borderRadius: '6px',
-                fontSize: '12px',
-                fontWeight: 700
-              }}>
-                {isCompleted ? '✓ Operation Done' : isPlaying ? '⚡ Simulating Tree...' : '⏸ Paused'}
+        <section className="tree-canvas-panel">
+          <header className="tree-canvas-header">
+            <div className="tree-canvas-title-group">
+              <span className={`status-pill ${isCompleted ? 'status-badge--finished' : isPlaying ? 'status-badge--running' : 'status-badge--ready'}`}>
+                {isCompleted ? '✓ Completed' : isPlaying ? '⚡ Simulating' : 'Ready'}
               </span>
-              <strong style={{ fontSize: '1.05rem', color: 'var(--text)' }}>
+              <h2 className="tree-canvas-title">
                 {treeType === 'bst' ? 'Binary Search Tree Canvas' : treeType === 'avl' ? 'AVL Tree (Self-Balancing) Canvas' : 'Red-Black Tree Canvas'}
-              </strong>
+              </h2>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '12px', color: 'var(--muted)', fontFamily: 'monospace' }}>
-              <span>Total Nodes: <strong style={{ color: 'var(--text)' }}>{treeValues.length}</strong></span>
-              {currentFrame?.eventType && (
+            <div className="tree-canvas-meta">
+              <div className="tree-stat-chip">
+                <span>Nodes:</span>
+                <strong>{treeValues.length}</strong>
+              </div>
+              {maxDepth > 0 && (
+                <div className="tree-stat-chip">
+                  <span>Depth:</span>
+                  <strong>{maxDepth}</strong>
+                </div>
+              )}
+              {treeType === 'avl' && (
+                <div className="tree-stat-chip">
+                  <span>Balance:</span>
+                  <strong>|BF| ≤ 1</strong>
+                </div>
+              )}
+              {currentFrame?.eventType && currentFrame.eventType !== 'INIT' && (
                 <span className="status-pill warning" style={{ fontSize: '11px', textTransform: 'uppercase' }}>
-                  {currentFrame.eventType}
+                  {currentFrame.eventType.replace(/_/g, ' ')}
                 </span>
               )}
             </div>
-          </div>
+          </header>
 
-          <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--line, rgba(255,255,255,0.08))' }}>
+          <div className="tree-canvas-viewport">
             <TreeCanvas step={currentFrame} treeType={treeType} />
           </div>
         </section>
@@ -460,37 +552,22 @@ export const TreesPage: React.FC = () => {
         />
 
         {/* Traversal Output & Timeline Log Grid */}
-        <div className="trees-summary-grid">
-          {/* Output & Log Card */}
-          <div className="panel" style={{ padding: '20px' }}>
-            <h3 style={{ fontSize: '1rem', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className="tree-diagnostics-grid">
+          {/* Card 1: Traversal Output & Event Stream */}
+          <div className="tree-panel-card">
+            <h3>
               <CheckCircle2 size={18} className="text-emerald-400" />
-              Traversal Output & Event Stream
+              Traversal Output &amp; Step History
             </h3>
 
             {traversalResult.length > 0 && (
-              <div style={{
-                background: 'rgba(16, 185, 129, 0.08)',
-                border: '1px solid rgba(16, 185, 129, 0.3)',
-                padding: '12px 14px',
-                borderRadius: '8px',
-                marginBottom: '14px'
-              }}>
-                <div style={{ color: '#34d399', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', marginBottom: '6px' }}>
-                  Traversal Result Sequence:
+              <div className="tree-traversal-sequence">
+                <div className="tree-traversal-sequence-header">
+                  Visited Sequence ({traversalResult.length} nodes):
                 </div>
-                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                <div className="tree-sequence-badges">
                   {traversalResult.map((val, i) => (
-                    <span key={i} style={{
-                      background: 'var(--panel-2, rgba(255,255,255,0.04))',
-                      border: '1px solid var(--line, rgba(255,255,255,0.1))',
-                      padding: '4px 8px',
-                      borderRadius: '6px',
-                      fontFamily: 'monospace',
-                      fontSize: '13px',
-                      fontWeight: 700,
-                      color: '#a7f3d0'
-                    }}>
+                    <span key={i} className="tree-sequence-badge">
                       {val}
                     </span>
                   ))}
@@ -498,44 +575,31 @@ export const TreesPage: React.FC = () => {
               </div>
             )}
 
-            <div>
-              <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '8px' }}>
-                Step Log ({frames.length} frames):
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ fontSize: '0.74rem', fontWeight: 700, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Execution Steps ({frames.length} frames):
               </div>
-              <div style={{ maxHeight: '200px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div className="tree-step-stream-list">
                 {frames.map((f, idx) => (
                   <div
                     key={idx}
+                    className={`tree-step-stream-item ${idx === currentFrameIdx ? 'active' : ''}`}
                     onClick={() => { setIsPlaying(false); setCurrentFrameIdx(idx); }}
-                    style={{
-                      padding: '8px 12px',
-                      borderRadius: '6px',
-                      background: idx === currentFrameIdx ? 'rgba(245, 158, 11, 0.12)' : 'var(--panel-2, rgba(255,255,255,0.03))',
-                      border: idx === currentFrameIdx ? '1px solid rgba(245, 158, 11, 0.4)' : '1px solid var(--line, rgba(255,255,255,0.08))',
-                      cursor: 'pointer',
-                      fontSize: '0.85rem',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center'
-                    }}
+                    title={`Click to inspect Step ${idx + 1}`}
                   >
-                    <span style={{ color: idx === currentFrameIdx ? '#fbbf24' : 'var(--muted)', fontWeight: 700 }}>
-                      Step {idx + 1}
-                    </span>
-                    <span style={{ color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '75%' }}>
-                      {f.explanation}
-                    </span>
+                    <span className="tree-step-num">Step {idx + 1}</span>
+                    <span className="tree-step-desc">{f.explanation}</span>
                   </div>
                 ))}
               </div>
             </div>
           </div>
 
-          {/* Complexity & Structural Invariants Card */}
-          <div className="panel" style={{ padding: '20px' }}>
-            <h3 style={{ fontSize: '1rem', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {/* Card 2: Complexity & Structural Invariants */}
+          <div className="tree-panel-card">
+            <h3>
               <ShieldCheck size={18} className="text-amber-400" />
-              Complexity & Structural Invariants
+              Complexity &amp; Structural Invariants
             </h3>
 
             <div className="complexity-grid">
@@ -549,25 +613,27 @@ export const TreesPage: React.FC = () => {
               </div>
             </div>
 
-            <div style={{ marginTop: '14px', fontSize: '0.88rem', color: 'var(--muted)', lineHeight: '1.6' }}>
+            <div className="tree-invariants-desc">
               {treeType === 'bst' && (
                 <p>
-                  <strong>BST Property:</strong> For any node <code style={{ color: 'var(--text)' }}>N</code>, all keys in left subtree are strictly less than <code style={{ color: 'var(--text)' }}>N.val</code>, and all keys in right subtree are strictly greater.
+                  <strong>BST Property:</strong> For every node <code>N</code>, all keys in its left subtree satisfy <code>Key(L) &lt; Key(N)</code>, and all keys in its right subtree satisfy <code>Key(R) &gt; Key(N)</code>. An in-order traversal strictly visits keys in ascending order.
                 </p>
               )}
               {treeType === 'avl' && (
                 <p>
-                  <strong>AVL Invariant:</strong> Self-balancing BST where the height difference (Balance Factor <code style={{ color: '#34d399' }}>|BF| ≤ 1</code>) between left and right subtrees is guaranteed at every node using single (LL, RR) or double (LR, RL) rotations.
+                  <strong>AVL Invariant:</strong> Strictly self-balancing BST where the height difference (Balance Factor <code>|BF| ≤ 1</code>) between left and right subtrees is preserved at every node. Deviations are immediately corrected using single (LL, RR) or double (LR, RL) rotations in <code>O(1)</code> time.
                 </p>
               )}
               {treeType === 'red_black' && (
-                <p>
-                  <strong>Red-Black Invariants:</strong>
-                  1. Nodes are either Red or Black.<br />
-                  2. Root is always Black.<br />
-                  3. Red nodes cannot have Red children.<br />
-                  4. Every path from root to leaf has equal Black height.
-                </p>
+                <div>
+                  <strong>Red-Black Tree Invariants:</strong>
+                  <ul style={{ margin: '6px 0 0 18px', padding: 0, lineHeight: 1.6 }}>
+                    <li>Every node is colored either Red or Black.</li>
+                    <li>The root node is always Black.</li>
+                    <li>Red nodes cannot have Red children (no two consecutive Reds).</li>
+                    <li>Every simple path from a node to descendant leaves contains the same number of Black nodes.</li>
+                  </ul>
+                </div>
               )}
             </div>
           </div>

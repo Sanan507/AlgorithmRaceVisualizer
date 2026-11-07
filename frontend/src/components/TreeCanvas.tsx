@@ -111,8 +111,8 @@ export const TreeCanvas = memo(function TreeCanvas({
     const currentTreeType = targetTreeType ?? treeTypeRef.current ?? treeType;
 
     if (!currentStep || !currentStep.root) {
-      ctx.fillStyle = 'rgba(148, 163, 184, 0.6)';
-      ctx.font = '500 14px -apple-system, BlinkMacSystemFont, sans-serif';
+      ctx.fillStyle = 'rgba(148, 163, 184, 0.7)';
+      ctx.font = '500 14px "Inter", -apple-system, BlinkMacSystemFont, sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText('Tree canvas is empty. Enter a value above and click Insert or select a Preset.', currentW / 2, currentH / 2);
       return;

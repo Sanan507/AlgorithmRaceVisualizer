@@ -31,9 +31,10 @@
   --shadow-card: 0 16px 40px 0 rgba(0, 0, 0, 0.65);
   --color-glow: rgba(252, 109, 38, 0.25);
 
-  --font-display: 'Manrope', 'Outfit', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
-  --font-body: 'Inter', sans-serif;
+  --font-display: 'Manrope', 'Outfit', 'Inter', -apple-system, sans-serif;
+  --font-heading: 'Manrope', 'Outfit', 'Inter', -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 :root[data-theme='light'] {
@@ -326,8 +327,13 @@ h1, h2, h3, .brand strong, .section-title, .winner-pill, .btn {
   font-family: var(--font-display);
 }
 
-.mono-text, .metric-value, .stat-value, .complexity-badge, .log-timestamp, .code-snippet {
+.mono-text, .code-snippet {
   font-family: var(--font-mono);
+}
+
+.metric-value, .stat-value, .complexity-badge, .log-timestamp {
+  font-family: var(--font-body);
+  font-variant-numeric: tabular-nums;
 }
 
 button, input, select {
@@ -1054,7 +1060,7 @@ button, input, select {
 
 .field span {
   color: #f59e0b;
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -1169,7 +1175,7 @@ select:focus-visible,
   gap: 14px;
   margin-left: auto;
   color: var(--color-text-muted);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-weight: 600;
   font-size: 0.8rem;
   text-transform: uppercase;
@@ -1247,7 +1253,7 @@ select:focus-visible,
 
 .lane-header span {
   color: var(--color-text-muted);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.78rem;
   font-weight: 500;
 }
@@ -1256,7 +1262,7 @@ select:focus-visible,
 .lane-header em,
 .status-badge {
   font-style: normal;
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.72rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -1383,7 +1389,7 @@ select:focus-visible,
   align-items: center;
   gap: 4px;
   color: var(--color-text-muted);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.68rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -1391,7 +1397,8 @@ select:focus-visible,
 }
 
 .metric-value {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
+  font-variant-numeric: tabular-nums;
   font-size: 0.95rem;
   font-weight: 700;
   color: var(--color-text-primary);
@@ -7002,7 +7009,7 @@ input[type="range"] {
 }
 
 .about-title-block h2 {
-  font-family: var(--font-heading);
+  font-family: var(--font-display);
   font-size: 1.4rem;
   font-weight: 700;
   margin-bottom: 8px;
@@ -7441,7 +7448,7 @@ input[type="range"] {
 }
 
 .about-section-block h3 {
-  font-family: var(--font-heading);
+  font-family: var(--font-display);
   font-size: 1.15rem;
   font-weight: 700;
   color: #f3f4f6;
@@ -9058,12 +9065,14 @@ input[type="range"] {
 .step-inspector-pill-k {
   color: var(--color-text-muted, #64748b);
   font-weight: 500;
+  font-family: var(--font-body);
 }
 
 .step-inspector-pill-v {
   color: var(--color-text-primary, #0f172a);
   font-weight: 600;
-  font-family: 'JetBrains Mono', Consolas, monospace;
+  font-family: var(--font-body);
+  font-variant-numeric: tabular-nums;
 }
 
 :root[data-theme='dark'] .step-inspector-pill-v {
@@ -9847,41 +9856,73 @@ input[type="range"] {
 }
 
 /* ─── Tree Arena Refined UI Styles ───────────────────────────────────────── */
+.tree-toolbar-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--color-bg-panel);
+  border: 1px solid var(--color-border-line);
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-bottom: 16px;
+}
+
+.tree-toolbar-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 1.25fr) minmax(260px, 1fr);
+  gap: 14px;
+  align-items: stretch;
+}
+
 .tree-toolbar-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--color-bg-panel-2);
+  border: 1px solid var(--color-border-line);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.tree-toolbar-card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-  background: var(--color-bg-panel);
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: 1px solid var(--color-border-line);
-  margin-bottom: 12px;
+  gap: 8px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
 }
 
-.tree-traversal-bar {
+.tree-input-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: wrap;
-  background: var(--color-bg-panel-2);
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--color-border-line);
-  margin-bottom: 12px;
+}
+
+.tree-input-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .tree-num-input {
-  width: 76px;
-  padding: 6px 8px;
+  width: 82px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0 10px;
   border-radius: 6px;
   border: 1px solid var(--color-border-line);
   background: var(--color-bg-primary);
   color: var(--color-text-primary);
-  font-size: 0.82rem;
-  font-weight: 500;
+  font-size: 0.88rem;
+  font-weight: 600;
   box-sizing: border-box;
+  transition: all 0.2s ease;
+  font-variant-numeric: tabular-nums;
 }
 
 .tree-num-input:focus {
@@ -9890,34 +9931,258 @@ input[type="range"] {
   box-shadow: 0 0 0 2px var(--color-accent-glow);
 }
 
-.tree-timeline-container {
-  max-height: 140px;
-  overflow-y: auto;
+.tree-preset-buttons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.tree-rule-callout {
+  font-size: 0.76rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.tree-traversal-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border-line);
+}
+
+.tree-traversal-label {
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tree-traversal-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border-line);
+  background: var(--color-bg-panel-2);
+  color: var(--color-text-primary);
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tree-traversal-btn:hover {
+  border-color: var(--color-accent-primary);
+  background: rgba(252, 109, 38, 0.08);
+}
+
+.tree-traversal-btn.active {
+  background: var(--color-accent-primary);
+  border-color: var(--color-accent-primary);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* Canvas Panel */
+.tree-canvas-panel {
+  background: var(--color-bg-panel);
+  border: 1px solid var(--color-border-line);
+  border-radius: 12px;
+  padding: 18px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.tree-canvas-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.tree-canvas-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tree-canvas-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.tree-canvas-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tree-stat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  background: var(--color-bg-panel-2);
+  border: 1px solid var(--color-border-line);
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.tree-stat-chip strong {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.tree-canvas-viewport {
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--color-border-line);
+  background: var(--color-bg-primary);
+  position: relative;
+}
+
+/* Diagnostics & Summary Grid */
+.tree-diagnostics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.tree-panel-card {
+  background: var(--color-bg-panel);
+  border: 1px solid var(--color-border-line);
+  border-radius: 12px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.tree-panel-card h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text-primary);
+}
+
+.tree-traversal-sequence {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  padding: 10px 12px;
+  border-radius: 8px;
+}
+
+.tree-traversal-sequence-header {
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #10b981;
+}
+
+.tree-sequence-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.tree-sequence-badge {
+  background: var(--color-bg-panel);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #34d399;
+  font-variant-numeric: tabular-nums;
+}
+
+.tree-step-stream-list {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  max-height: 180px;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
-.tree-timeline-item {
+.tree-step-stream-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   padding: 6px 10px;
   border-radius: 6px;
   background: var(--color-bg-panel-2);
   border: 1px solid var(--color-border-line);
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   transition: all 0.15s ease;
 }
 
-.tree-timeline-item:hover {
+.tree-step-stream-item:hover {
   border-color: var(--color-border-glow);
 }
 
-.tree-timeline-item.active {
-  background: rgba(245, 158, 11, 0.15);
-  border-color: rgba(245, 158, 11, 0.5);
+.tree-step-stream-item.active {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.tree-step-num {
+  font-weight: 700;
+  font-size: 0.74rem;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.tree-step-stream-item.active .tree-step-num {
+  color: #fbbf24;
+}
+
+.tree-step-desc {
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 75%;
+}
+
+.tree-invariants-desc {
+  font-size: 0.86rem;
+  line-height: 1.6;
+  color: var(--color-text-muted);
+}
+
+.tree-invariants-desc strong {
+  color: var(--color-text-primary);
 }
 
 /* ─── DP Matrix Table Grid & Formula Banner ──────────────────────────────── */

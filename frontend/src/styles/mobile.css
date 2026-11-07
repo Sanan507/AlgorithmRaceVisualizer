@@ -682,7 +682,8 @@
 
   .frame-counter {
     font-size: 0.72rem !important;
-    font-family: var(--font-mono) !important;
+    font-family: var(--font-body) !important;
+    font-variant-numeric: tabular-nums !important;
     color: var(--color-text-secondary) !important;
     white-space: nowrap !important;
     flex-shrink: 0 !important;
@@ -701,7 +702,7 @@
   }
 
   .speed-label {
-    font-family: var(--font-mono) !important;
+    font-family: var(--font-body) !important;
     font-size: 0.72rem !important;
     font-weight: 700 !important;
     color: #f59e0b !important;
@@ -719,7 +720,8 @@
   }
 
   .speed-value {
-    font-family: var(--font-mono) !important;
+    font-family: var(--font-body) !important;
+    font-variant-numeric: tabular-nums !important;
     font-size: 0.74rem !important;
     font-weight: 700 !important;
     color: var(--color-text-secondary) !important;
@@ -771,7 +773,7 @@
 
   .lane-header span {
     font-size: 0.7rem !important;
-    font-family: var(--font-mono) !important;
+    font-family: var(--font-body) !important;
     color: var(--color-text-secondary) !important;
   }
 
@@ -969,14 +971,103 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Trees Arena */
+  /* Trees Arena Mobile Layout */
+  .tree-toolbar-panel {
+    padding: 12px 10px !important;
+  }
+
+  .tree-toolbar-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .tree-toolbar-card {
+    padding: 10px 12px !important;
+  }
+
+  .tree-input-actions {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  .tree-input-group {
+    width: 100% !important;
+  }
+
+  .tree-input-group .tree-num-input {
+    flex: 1 1 auto !important;
+    width: auto !important;
+    min-height: 38px !important;
+    height: 38px !important;
+  }
+
+  .tree-input-group .btn {
+    flex: 0 0 auto !important;
+    min-height: 38px !important;
+    height: 38px !important;
+    padding: 0 14px !important;
+  }
+
+  .tree-preset-buttons {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 6px !important;
+    width: 100% !important;
+  }
+
+  .tree-preset-buttons .btn {
+    width: 100% !important;
+    justify-content: center !important;
+    font-size: 0.76rem !important;
+    min-height: 36px !important;
+    padding: 0 6px !important;
+  }
+
+  .tree-traversal-bar {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 6px !important;
+  }
+
+  .tree-traversal-label {
+    grid-column: 1 / -1 !important;
+  }
+
+  .tree-traversal-btn {
+    justify-content: center !important;
+    font-size: 0.76rem !important;
+    min-height: 36px !important;
+    padding: 6px 8px !important;
+  }
+
+  .tree-canvas-panel {
+    padding: 12px 10px !important;
+  }
+
+  .tree-canvas-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+
+  .tree-canvas-meta {
+    width: 100% !important;
+    justify-content: flex-start !important;
+  }
+
   .tree-canvas {
     height: 320px !important;
     width: 100% !important;
   }
 
-  .tree-num-input {
-    width: 75px !important;
+  .tree-diagnostics-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .tree-panel-card {
+    padding: 14px 12px !important;
   }
 
   .btn-chip {
