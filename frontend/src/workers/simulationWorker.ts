@@ -152,7 +152,7 @@ function simulateSingleSortingAlgorithm(
   let swaps = 0;
   let steps = 0;
   let frameCount = 0;
-  const startTime = performance.now();
+  let startTime = performance.now();
 
   // Dynamic sampling stride: for N > 1000, sample frames to prevent memory bloat
   const estimatedOps = algo.includes('Bubble') || algo.includes('Insertion') || algo.includes('Selection')
@@ -175,6 +175,8 @@ function simulateSingleSortingAlgorithm(
     opCounter++;
     if (!force && opCounter % stride !== 0) return;
 
+    const isInitial = frameCount === 0;
+
     frames.push({
       frame: frameCount++,
       array: [...arr],
@@ -186,15 +188,18 @@ function simulateSingleSortingAlgorithm(
       heapBoundary: -1,
       comparisons,
       swaps,
-      timeMs: Math.round((performance.now() - startTime) * 100) / 100,
+      timeMs: isInitial ? 0 : Math.max(0, Math.round((performance.now() - startTime) * 100) / 100),
       done: false,
       status,
       steps,
     });
   }
 
-  // Initial Frame
+  // Initial Frame (at frame 0, algorithm has not started yet so timeMs is 0)
   pushFrame('Initializing dataset', [], -1, -1, true);
+
+  // Reset startTime immediately before algorithm execution starts
+  startTime = performance.now();
 
   if (algo.includes('Quick')) {
     // QuickSort
@@ -523,16 +528,17 @@ function simulateSingleSearchingAlgorithm(
   let steps = 0;
   let frameCount = 0;
   let foundIndex: number | null = null;
-  const startTime = performance.now();
+  let startTime = performance.now();
 
   function pushSearchFrame(status: string, highlight: number[], found: number | null = null, done = false) {
+    const isInitial = frameCount === 0;
     frames.push({
       frame: frameCount++,
       array: [...arr],
       highlight,
       comparisons,
       swaps: 0,
-      timeMs: Math.round((performance.now() - startTime) * 100) / 100,
+      timeMs: isInitial ? 0 : Math.max(0, Math.round((performance.now() - startTime) * 100) / 100),
       done,
       status,
       foundIndex: found,
@@ -541,7 +547,11 @@ function simulateSingleSearchingAlgorithm(
     });
   }
 
+  // Initial Frame (at frame 0, search has not started yet so timeMs is 0)
   pushSearchFrame(`Initiating search for target ${target}`, []);
+
+  // Reset startTime immediately before algorithm execution starts
+  startTime = performance.now();
 
   if (algo.includes('Binary')) {
     // Array must be sorted for binary search

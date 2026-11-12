@@ -295,14 +295,17 @@ export function PerformanceComparison({
   });
 
   // Calculate live ranking
-  const rankedLanes = [...laneData].sort((a, b) => {
-    if (a.done && !b.done) return -1;
-    if (!a.done && b.done) return 1;
-    if (a.timeMs !== b.timeMs) {
-      return a.timeMs - b.timeMs;
-    }
-    return a.opValue - b.opValue;
-  });
+  const isAnyActive = laneData.some((l) => l.done || l.opValue > 0 || (playing && l.timeMs > 0));
+  const rankedLanes = isAnyActive
+    ? [...laneData].sort((a, b) => {
+        if (a.done && !b.done) return -1;
+        if (!a.done && b.done) return 1;
+        if (a.timeMs !== b.timeMs) {
+          return a.timeMs - b.timeMs;
+        }
+        return a.opValue - b.opValue;
+      })
+    : [...laneData];
 
   // Calculate efficiency comparisons
   const finishedLanes = laneData.filter(l => l.done);
@@ -401,13 +404,13 @@ export function PerformanceComparison({
           <h4>Live Statistics</h4>
           <div className="live-bars-list">
             {laneData.map((lane) => {
-              const opPercent = Math.max(3, (lane.opValue / maxOps) * 100);
-              const timePercent = Math.max(3, (lane.timeMs / maxTime) * 100);
+              const opPercent = lane.opValue === 0 ? 0 : Math.max(3, (lane.opValue / maxOps) * 100);
+              const timePercent = lane.timeMs === 0 ? 0 : Math.max(3, (lane.timeMs / maxTime) * 100);
 
               if (type === 'pathfinding') {
-                const visitedPercent = Math.max(3, (lane.nodesVisited / maxNodesVisited) * 100);
-                const frontierPercent = Math.max(3, (lane.frontierSize / maxFrontier) * 100);
-                const pathPercent = Math.max(3, (lane.pathLength / maxPathLength) * 100);
+                const visitedPercent = lane.nodesVisited === 0 ? 0 : Math.max(3, (lane.nodesVisited / maxNodesVisited) * 100);
+                const frontierPercent = lane.frontierSize === 0 ? 0 : Math.max(3, (lane.frontierSize / maxFrontier) * 100);
+                const pathPercent = lane.pathLength === 0 ? 0 : Math.max(3, (lane.pathLength / maxPathLength) * 100);
                 
                 return (
                   <div className="lane-perf-row" key={lane.name}>
@@ -473,7 +476,7 @@ export function PerformanceComparison({
               }
 
               if (type === 'searching') {
-                const isReady = lane.timeMs === 0 && lane.opValue === 0 && !isCompleted;
+                const isReady = !isCompleted && !lane.done && (lane.opValue === 0 || lane.timeMs === 0) && !playing;
                 const searchStatusText = lane.foundIndex !== null && lane.foundIndex >= 0 
                   ? `Target found at index ${lane.foundIndex}` 
                   : (lane.done 
@@ -554,7 +557,7 @@ export function PerformanceComparison({
                       <div 
                         className="chart-fill swaps-fill" 
                         style={{ 
-                          width: `${Math.max(3, (lane.secValue / Math.max(1, ...laneData.map(l => l.secValue))) * 100)}%`,
+                          width: `${lane.secValue === 0 ? 0 : Math.max(3, (lane.secValue / Math.max(1, ...laneData.map(l => l.secValue))) * 100)}%`,
                           background: 'linear-gradient(90deg, #3b82f6, #06b6d4)'
                         }} 
                       />
@@ -584,7 +587,7 @@ export function PerformanceComparison({
           <h4>Leaderboard Ranking</h4>
           <div className="ranking-list">
             {rankedLanes.map((lane, idx) => {
-              const isReady = lane.timeMs === 0 && lane.opValue === 0 && !isCompleted;
+              const isReady = !isCompleted && !lane.done && (lane.opValue === 0 || lane.timeMs === 0) && !playing;
               const statusText = lane.done || isCompleted
                 ? 'Finished'
                 : (isReady
