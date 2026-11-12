@@ -170,6 +170,7 @@ export const DPPage: React.FC = () => {
       const validation = validateKnapsackInputs(knapsackCapacity, items);
       if (!validation.valid) {
         setValidationError(validation.error || 'Invalid inputs');
+        setSteps([]);
         return;
       }
 
@@ -257,6 +258,7 @@ export const DPPage: React.FC = () => {
       const validation = validateStringInputs(str1, str2);
       if (!validation.valid) {
         setValidationError(validation.error || 'Invalid string inputs');
+        setSteps([]);
         return;
       }
 
@@ -350,6 +352,7 @@ export const DPPage: React.FC = () => {
       const validation = validateStringInputs(str1, str2);
       if (!validation.valid) {
         setValidationError(validation.error || 'Invalid string inputs');
+        setSteps([]);
         return;
       }
 

@@ -25,7 +25,17 @@ const ThemeContext = createContext<ThemeContextValue>({
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [themeMode, setThemeModeState] = useState<ThemeMode>(() => {
     const saved = localStorage.getItem(STORAGE_KEY_THEME);
-    return (saved === 'light' || saved === 'dark') ? saved : 'dark';
+    if (saved === 'light' || saved === 'dark') return saved;
+    // Check old key for seamless migration
+    const oldSaved = localStorage.getItem('algorace_dark_mode');
+    if (oldSaved !== null) {
+      try {
+        return JSON.parse(oldSaved) ? 'dark' : 'light';
+      } catch {
+        // ignore
+      }
+    }
+    return 'dark';
   });
 
   const [accessibilityMode, setAccessibilityModeState] = useState<AccessibilityMode>(() => {
@@ -38,6 +48,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', themeMode);
+    document.documentElement.dataset.theme = themeMode;
     localStorage.setItem(STORAGE_KEY_THEME, themeMode);
   }, [themeMode]);
 

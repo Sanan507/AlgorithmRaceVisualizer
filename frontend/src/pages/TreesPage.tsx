@@ -34,6 +34,7 @@ export const TreesPage: React.FC = () => {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const winnerAnnouncedRef = useRef<boolean>(false);
   const userInteractedRef = useRef<boolean>(false);
+  const currentOperationRef = useRef<string>('build');
 
   // Initialize or re-run simulation when treeType or treeValues change
   useEffect(() => {
@@ -104,7 +105,13 @@ export const TreesPage: React.FC = () => {
   const isCompleted = frames.length > 0 && currentFrameIdx === frames.length - 1;
 
   useEffect(() => {
-    if (isCompleted && frames.length > 0 && userInteractedRef.current && !winnerAnnouncedRef.current) {
+    if (
+      isCompleted &&
+      frames.length > 0 &&
+      userInteractedRef.current &&
+      !winnerAnnouncedRef.current &&
+      currentOperationRef.current !== 'insert'
+    ) {
       winnerAnnouncedRef.current = true;
       userInteractedRef.current = false;
       play('raceComplete');
@@ -144,6 +151,10 @@ export const TreesPage: React.FC = () => {
   const executeSimulation = async (req: TreeSimulationRequest) => {
     winnerAnnouncedRef.current = false;
     setIsPlaying(false);
+    currentOperationRef.current = req.operation || 'build';
+    if (req.operation === 'insert') {
+      userInteractedRef.current = false;
+    }
     const isAutoPlayOp = req.operation === 'search' || req.operation === 'traversal';
     try {
       const res = await api.tree(req);
@@ -179,7 +190,7 @@ export const TreesPage: React.FC = () => {
     const val = parseInt(insertInput, 10);
     if (isNaN(val)) return;
 
-    userInteractedRef.current = true;
+    userInteractedRef.current = false;
     setActiveTraversal(null);
     const newValues = [...treeValues, val];
     setTreeValues(newValues);

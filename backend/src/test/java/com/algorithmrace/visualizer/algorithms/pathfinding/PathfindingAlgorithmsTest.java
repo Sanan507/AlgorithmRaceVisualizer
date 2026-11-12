@@ -111,4 +111,21 @@ class PathfindingAlgorithmsTest {
               assertNotNull(lane.stats(), lane.algorithm() + " stats should not be null");
             });
   }
+
+  @Test
+  @DisplayName("Verify SimulationService pathfinding returns null winner when all paths blocked")
+  void testSimulationServicePathfinding_blockedEndNode_noWinner() {
+    boolean[][] walls = new boolean[10][10];
+    walls[8][9] = true;
+    walls[9][8] = true;
+
+    PathfindingSimulationRequest request =
+        new PathfindingSimulationRequest(algorithms, 10, 10, null, walls, null, 0, 0, 9, 9);
+
+    RaceResponse response = simulationService.simulatePathfinding(request);
+
+    assertNotNull(response);
+    org.junit.jupiter.api.Assertions.assertNull(
+        response.winner(), "Winner should be null when no algorithm finds a path");
+  }
 }

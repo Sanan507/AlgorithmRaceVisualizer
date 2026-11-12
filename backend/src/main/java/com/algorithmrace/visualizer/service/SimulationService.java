@@ -107,7 +107,7 @@ public class SimulationService {
     List<String> algos = sanitizeAlgorithms(request.algorithms());
     List<RaceLaneResponse> lanes =
         algos.stream().map(name -> simulateSortingLane(name, dataset)).toList();
-    return new RaceResponse("sorting", dataset, null, null, null, lanes, winner(lanes));
+    return new RaceResponse("sorting", dataset, null, null, null, lanes, winner("sorting", lanes));
   }
 
   public RaceResponse simulateSearching(SearchingSimulationRequest request) {
@@ -123,7 +123,8 @@ public class SimulationService {
     List<String> algos = sanitizeAlgorithms(request.algorithms());
     List<RaceLaneResponse> lanes =
         algos.stream().map(name -> simulateSearchLane(name, dataset, target)).toList();
-    return new RaceResponse("searching", dataset, target, null, null, lanes, winner(lanes));
+    return new RaceResponse(
+        "searching", dataset, target, null, null, lanes, winner("searching", lanes));
   }
 
   public RaceResponse simulatePathfinding(PathfindingSimulationRequest request) {
@@ -172,7 +173,8 @@ public class SimulationService {
                     simulatePathLane(
                         name, rows, cols, startRow, startCol, endRow, endCol, walls, weights))
             .toList();
-    return new RaceResponse("pathfinding", null, null, walls, weights, lanes, winner(lanes));
+    return new RaceResponse(
+        "pathfinding", null, null, walls, weights, lanes, winner("pathfinding", lanes));
   }
 
   private int[][] sanitizeWeights(int[][] clientWeights, int rows, int cols) {
@@ -233,7 +235,8 @@ public class SimulationService {
       frame++;
     }
     LaneStats stats =
-        new LaneStats(model.getComparisons(), model.getSwaps(), 0, model.getTimeMs(), false, null);
+        new LaneStats(
+            model.getComparisons(), model.getSwaps(), 0, model.getTimeMs(), model.isDone(), null);
     return new RaceLaneResponse(
         name, model.getComplexity(), ComplexityCatalog.get(name), frames, stats);
   }
@@ -420,10 +423,21 @@ public class SimulationService {
     }
   }
 
-  private String winner(List<RaceLaneResponse> lanes) {
+  private String winner(String category, List<RaceLaneResponse> lanes) {
     return lanes.stream()
+        .filter(
+            lane -> {
+              if ("searching".equals(category) || "pathfinding".equals(category)) {
+                return lane.stats().found();
+              }
+              return true;
+            })
         .min(Comparator.comparingLong(lane -> lane.stats().timeMs()))
         .map(RaceLaneResponse::algorithm)
         .orElse(null);
+  }
+
+  private String winner(List<RaceLaneResponse> lanes) {
+    return winner(null, lanes);
   }
 }

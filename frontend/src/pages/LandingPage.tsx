@@ -1,4 +1,5 @@
 import { useState, useEffect, lazy, Suspense, useCallback } from 'react';
+import { useTheme } from '../context/ThemeContext';
 import { AlgoRaceLogo } from '../components/AlgoRaceLogo';
 import {
   BarChart3,
@@ -74,7 +75,11 @@ const SAMPLE_QUIZ_QUESTIONS: QuizQuestion[] = [
   },
 ];
 
-export function LandingPage({ onNavigate, darkMode = true, setDarkMode }: Props) {
+export function LandingPage({ onNavigate, darkMode, setDarkMode }: Props) {
+  const { themeMode, toggleTheme } = useTheme();
+  const isDark = darkMode !== undefined ? darkMode : themeMode === 'dark';
+  const handleToggleTheme = setDarkMode ? () => setDarkMode(!isDark) : toggleTheme;
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [bannerVisible, setBannerVisible] = useState(true);
   const [activeTab, setActiveTab] = useState<'sorting' | 'pathfinding' | 'dp' | 'quiz'>('sorting');
@@ -348,7 +353,7 @@ export function LandingPage({ onNavigate, darkMode = true, setDarkMode }: Props)
   };
 
   return (
-    <div className={`landing-page ${!darkMode ? 'light-mode' : ''} gitlab-landing`}>
+    <div className={`landing-page ${!isDark ? 'light-mode' : ''} gitlab-landing`}>
       <div className="gl-bg-mesh" />
       <div className="gl-grid-pattern" />
 
@@ -382,16 +387,15 @@ export function LandingPage({ onNavigate, darkMode = true, setDarkMode }: Props)
         </nav>
 
         <div className="gl-nav-actions">
-          {setDarkMode && (
-            <button
-              type="button"
-              className="gl-theme-toggle"
-              onClick={() => setDarkMode(!darkMode)}
-              title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            >
-              {darkMode ? <Sun size={17} className="text-amber-400" /> : <Moon size={17} />}
-            </button>
-          )}
+          <button
+            type="button"
+            className="gl-theme-toggle"
+            onClick={handleToggleTheme}
+            title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            aria-label={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          >
+            {isDark ? <Sun size={17} className="text-amber-400" /> : <Moon size={17} />}
+          </button>
 
           <button
             type="button"

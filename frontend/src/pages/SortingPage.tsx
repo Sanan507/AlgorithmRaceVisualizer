@@ -72,6 +72,7 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
   const hasStartedPlaybackRef = useRef(false);
   const requestIdRef = useRef(0);
   const initialized = useRef(false);
+  const cancelStreamRef = useRef<(() => void) | null>(null);
 
   // Filter out "Custom" from Dataset selection dropdown options
   const predefinedOptions = useMemo(
@@ -246,6 +247,11 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
     ) => {
       const requestId = ++requestIdRef.current;
       const isCurrent = () => requestId === requestIdRef.current;
+      // Cancel any active stream before starting a new run
+      if (cancelStreamRef.current) {
+        cancelStreamRef.current();
+        cancelStreamRef.current = null;
+      }
       load.markWaiting('Preparing simulation…', 'Asking the backend for a fresh dataset.');
       setFallbackNotice(null);
       winnerAnnouncedRef.current = false;
@@ -333,6 +339,9 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
           (startData: any) => {
             if (!isCurrent()) {
               cancelStream();
+              if (cancelStreamRef.current === cancelStream) {
+                cancelStreamRef.current = null;
+              }
               return;
             }
             const initialLanes: RaceLaneResponse[] = useAlgos.map((name) => ({
@@ -400,6 +409,9 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
           (frameEvent: any) => {
              if (!isCurrent()) {
                 cancelStream();
+                if (cancelStreamRef.current === cancelStream) {
+                  cancelStreamRef.current = null;
+                }
                 return;
              }
              setResponse((prev) => {
@@ -428,11 +440,17 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
              });
           },
           (endData: any) => {
+            if (cancelStreamRef.current === cancelStream) {
+              cancelStreamRef.current = null;
+            }
             if (!isCurrent()) return;
             setResponse(prev => prev ? { ...prev, winner: endData.winner } : endData);
             load.markReady();
           },
           (err: any) => {
+            if (cancelStreamRef.current === cancelStream) {
+              cancelStreamRef.current = null;
+            }
             const timedOut = err?.type === STREAM_TIMEOUT_EVENT;
             console.error('SSE Error, generating fallback simulation via Web Worker:', err);
             if (!isCurrent()) return;
@@ -454,7 +472,10 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
             );
 
             // Fallback to Web Worker for client simulation
-            const arrayFallback = sendCustomArray || dataset || generateDataset(useSize, useType);
+            const arrayFallback =
+              (sendCustomArray && sendCustomArray.length === useSize)
+                ? sendCustomArray
+                : (dataset && dataset.length === useSize ? dataset : generateDataset(useSize, useType));
             workerSimulationService.runSimulation(
               {
                 type: 'sorting',
@@ -482,6 +503,7 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
             });
           }
         );
+        cancelStreamRef.current = cancelStream;
       } catch (streamErr) {
         console.error('Could not open the simulation stream:', streamErr);
         if (isCurrent()) {
@@ -506,67 +528,71 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
   );
 
   useEffect(() => {
-    if (!initialized.current) {
-      initialized.current = true;
-      const sharedConfig = parseCurrentShareableConfig();
-      const params = getUrlParams();
+    const sharedConfig = parseCurrentShareableConfig();
+    const params = getUrlParams();
 
-      if (sharedConfig && (sharedConfig.arena === 'sorting' || (params && params.page === 'sorting'))) {
-        const urlAlgos = sharedConfig.algorithms || params?.algos;
-        const urlSize = sharedConfig.size || params?.size;
-        const urlMode = sharedConfig.datasetType || params?.mode;
+    if (sharedConfig && (sharedConfig.arena === 'sorting' || (params && params.page === 'sorting'))) {
+      const urlAlgos = sharedConfig.algorithms || params?.algos;
+      const urlSize = sharedConfig.size || params?.size;
+      const urlMode = sharedConfig.datasetType || params?.mode;
 
-        let newAlgos = [...algorithms];
-        let newMode = datasetType;
-        let newSize = size;
-        let loadedCustomArrayStr = customArrayStr;
+      let newAlgos = [...algorithms];
+      let newMode = datasetType;
+      let newSize = size;
+      let loadedCustomArrayStr = customArrayStr;
 
-        if (urlAlgos && urlAlgos.length > 0) {
-          newAlgos = [
-             urlAlgos[0] || algorithms[0],
-             urlAlgos[1] || algorithms[1],
-             urlAlgos[2] || algorithms[2]
-          ];
-          setAlgorithms(newAlgos);
-        }
-        if (urlSize) {
-           newSize = urlSize;
-           setSize(urlSize);
-        }
-        if (sharedConfig.customArray && sharedConfig.customArray.length > 0) {
-          newMode = 'Custom';
-          setIsCustomMode(true);
-          loadedCustomArrayStr = sharedConfig.customArray.join(', ');
-          setCustomArrayStr(loadedCustomArrayStr);
-          setDataset(sharedConfig.customArray);
-          newSize = sharedConfig.customArray.length;
-          setSize(newSize);
-        } else if (params?.cArray) {
-          newMode = 'Custom';
-          setIsCustomMode(true);
-          loadedCustomArrayStr = params.cArray;
-          setCustomArrayStr(params.cArray);
-          const parsed = parseCustomArrayInput(params.cArray);
-          setDataset(parsed);
-          if (parsed.length > 0) newSize = parsed.length;
-        } else if (urlMode) {
-           newMode = urlMode;
-           setDatasetType(urlMode);
-        }
-
-        setToastMessage(`✨ Shared Benchmark Loaded: Sorting Arena (${newMode} Dataset, N = ${newSize})`);
-        setTimeout(() => setToastMessage(null), 4000);
-
-        fetchSimulation(true, false, {
-          algos: newAlgos,
-          dType: newMode,
-          sz: newSize,
-          cArray: newMode === 'Custom' ? loadedCustomArrayStr : undefined,
-        });
-      } else {
-        fetchSimulation(true, false);
+      if (urlAlgos && urlAlgos.length > 0) {
+        newAlgos = [
+           urlAlgos[0] || algorithms[0],
+           urlAlgos[1] || algorithms[1],
+           urlAlgos[2] || algorithms[2]
+        ];
+        setAlgorithms(newAlgos);
       }
+      if (urlSize) {
+         newSize = urlSize;
+         setSize(urlSize);
+      }
+      if (sharedConfig.customArray && sharedConfig.customArray.length > 0) {
+        newMode = 'Custom';
+        setIsCustomMode(true);
+        loadedCustomArrayStr = sharedConfig.customArray.join(', ');
+        setCustomArrayStr(loadedCustomArrayStr);
+        setDataset(sharedConfig.customArray);
+        newSize = sharedConfig.customArray.length;
+        setSize(newSize);
+      } else if (params?.cArray) {
+        newMode = 'Custom';
+        setIsCustomMode(true);
+        loadedCustomArrayStr = params.cArray;
+        setCustomArrayStr(params.cArray);
+        const parsed = parseCustomArrayInput(params.cArray);
+        setDataset(parsed);
+        if (parsed.length > 0) newSize = parsed.length;
+      } else if (urlMode) {
+         newMode = urlMode;
+         setDatasetType(urlMode);
+      }
+
+      setToastMessage(`✨ Shared Benchmark Loaded: Sorting Arena (${newMode} Dataset, N = ${newSize})`);
+      setTimeout(() => setToastMessage(null), 4000);
+
+      void fetchSimulation(true, false, {
+        algos: newAlgos,
+        dType: newMode,
+        sz: newSize,
+        cArray: newMode === 'Custom' ? loadedCustomArrayStr : undefined,
+      });
+    } else {
+      void fetchSimulation(true, false);
     }
+
+    return () => {
+      if (cancelStreamRef.current) {
+        cancelStreamRef.current();
+        cancelStreamRef.current = null;
+      }
+    };
   }, []);
 
   function handleShareRun() {
@@ -614,6 +640,10 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
   async function handleReset() {
     setValidationError(null);
     debouncedFetch.cancel();
+    if (cancelStreamRef.current) {
+      cancelStreamRef.current();
+      cancelStreamRef.current = null;
+    }
     await fetchSimulation(true, false);
     setHasFreshDataset(true);
   }
@@ -649,6 +679,7 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
         fetchSimulation(true, false, { dType: 'Custom', cArray: customArrayStr, sz: parsed.length });
       } else {
         setValidationError('Custom Array is empty. Please enter comma-separated numbers.');
+        load.markReady();
       }
     } else {
       fetchSimulation(true, false, { dType: datasetType });
@@ -674,9 +705,11 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
     if (invalid.length > 0) {
       setValidationError(`Invalid entry "${invalid[0]}". Please enter numbers only.`);
       debouncedFetch.cancel();
+      load.markReady();
     } else if (parsed.length === 0) {
       setValidationError('Custom Array is empty. Please enter comma-separated numbers.');
       debouncedFetch.cancel();
+      load.markReady();
     } else {
       setValidationError(null);
       setSize(parsed.length);
@@ -715,7 +748,14 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
     return map;
   }, [activeResponse, playback.frameIndex]);
 
-  const isCompleted = !!(activeResponse && playback.frameIndex === playback.maxFrames - 1 && playback.maxFrames > 0);
+  const isCompleted = !!(
+    activeResponse &&
+    !isPlaceholder &&
+    playback.maxFrames > 1 &&
+    playback.frameIndex > 0 &&
+    playback.frameIndex === playback.maxFrames - 1 &&
+    activeResponse.lanes.every((lane) => lane.frames.length > 1 && lane.frames[lane.frames.length - 1]?.done === true)
+  );
   const winnerLane = activeResponse?.lanes.find((l) => l.name === activeResponse.winner);
 
   useEffect(() => {
@@ -916,6 +956,7 @@ export function SortingPage({ catalog }: { catalog: CatalogResponse }) {
                 if (raw === '') {
                   setSize('');
                   debouncedFetch.cancel();
+                  load.markReady();
                   return;
                 }
                 const parsed = parseInt(raw, 10);

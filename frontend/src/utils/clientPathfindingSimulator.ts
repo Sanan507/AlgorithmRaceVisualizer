@@ -111,8 +111,8 @@ export function simulateClientPathfinding(params: PathfindingParams): RaceRespon
     return simulateSingleLane(algoName, rows, cols, startRow, startCol, endRow, endCol, walls, weights);
   });
 
-  // Determine winner: fastest algorithm that found a path, or lowest steps
-  let winner = '';
+  // Determine winner: fastest algorithm that found a path
+  let winner: string | null = null;
   let minTime = Infinity;
   lanes.forEach((lane) => {
     if (lane.stats.pathFound && lane.stats.timeMs < minTime) {
@@ -120,10 +120,6 @@ export function simulateClientPathfinding(params: PathfindingParams): RaceRespon
       winner = lane.name;
     }
   });
-
-  if (!winner && lanes.length > 0) {
-    winner = lanes[0].name;
-  }
 
   return {
     type: 'pathfinding',

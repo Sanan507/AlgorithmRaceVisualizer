@@ -6,11 +6,12 @@ export function SettingsPage({
   darkMode,
   setDarkMode,
 }: {
-  darkMode: boolean;
-  setDarkMode: (value: boolean) => void;
-}) {
+  darkMode?: boolean;
+  setDarkMode?: (value: boolean) => void;
+} = {}) {
   const { audioSettings, setAudioSettings, play } = useAudio();
-  const { accessibilityMode, setAccessibilityMode } = useTheme();
+  const { themeMode, setThemeMode, accessibilityMode, setAccessibilityMode } = useTheme();
+  const isDarkMode = themeMode === 'dark';
 
   function handleVolumeChange(key: 'masterVolume' | 'effectsVolume', value: number) {
     setAudioSettings({ [key]: value });
@@ -45,8 +46,12 @@ export function SettingsPage({
           </div>
           <input
             type="checkbox"
-            checked={darkMode}
-            onChange={(event) => setDarkMode(event.target.checked)}
+            checked={isDarkMode}
+            onChange={(event) => {
+              const nextDark = event.target.checked;
+              setThemeMode(nextDark ? 'dark' : 'light');
+              setDarkMode?.(nextDark);
+            }}
           />
         </label>
 

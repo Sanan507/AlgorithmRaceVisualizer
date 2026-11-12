@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -51,8 +52,17 @@ public class StreamingService {
     executor.shutdown();
   }
 
-  public SseEmitter streamSorting(SortingSimulationRequest request) {
+  private SseEmitter createEmitter(AtomicBoolean isCancelled) {
     SseEmitter emitter = new SseEmitter(STREAM_TIMEOUT_MS);
+    emitter.onCompletion(() -> isCancelled.set(true));
+    emitter.onTimeout(() -> isCancelled.set(true));
+    emitter.onError(e -> isCancelled.set(true));
+    return emitter;
+  }
+
+  public SseEmitter streamSorting(SortingSimulationRequest request) {
+    AtomicBoolean isCancelled = new AtomicBoolean(false);
+    SseEmitter emitter = createEmitter(isCancelled);
     executor.execute(
         () -> {
           try {
@@ -60,27 +70,46 @@ public class StreamingService {
             List<String> algos = sanitizeAlgorithms(request.algorithms());
             RaceResponse initialResponse =
                 new RaceResponse("sorting", dataset, null, null, null, new ArrayList<>(), null);
+            if (isCancelled.get()) return;
             emitter.send(SseEmitter.event().name("START").data(initialResponse));
 
             List<RaceLaneResponse> lanes = new ArrayList<>();
             for (String algo : algos) {
-              lanes.add(streamSortingLane(algo, dataset.clone(), emitter));
+              if (isCancelled.get()) return;
+              RaceLaneResponse lane =
+                  streamSortingLane(algo, dataset.clone(), emitter, isCancelled);
+              if (lane != null) {
+                lanes.add(lane);
+              }
             }
 
+            if (isCancelled.get()) return;
             RaceResponse finalResponse =
                 new RaceResponse(
-                    "sorting", dataset, null, null, null, new ArrayList<>(), winner(lanes));
+                    "sorting",
+                    dataset,
+                    null,
+                    null,
+                    null,
+                    new ArrayList<>(),
+                    winner("sorting", lanes));
             emitter.send(SseEmitter.event().name("END").data(finalResponse));
             emitter.complete();
           } catch (Exception e) {
-            emitter.completeWithError(e);
+            if (!isCancelled.get()) {
+              try {
+                emitter.completeWithError(e);
+              } catch (Exception ignored) {
+              }
+            }
           }
         });
     return emitter;
   }
 
   public SseEmitter streamSearching(SearchingSimulationRequest request) {
-    SseEmitter emitter = new SseEmitter(STREAM_TIMEOUT_MS);
+    AtomicBoolean isCancelled = new AtomicBoolean(false);
+    SseEmitter emitter = createEmitter(isCancelled);
     executor.execute(
         () -> {
           try {
@@ -96,27 +125,46 @@ public class StreamingService {
             List<String> algos = sanitizeAlgorithms(request.algorithms());
             RaceResponse initialResponse =
                 new RaceResponse("searching", dataset, target, null, null, new ArrayList<>(), null);
+            if (isCancelled.get()) return;
             emitter.send(SseEmitter.event().name("START").data(initialResponse));
 
             List<RaceLaneResponse> lanes = new ArrayList<>();
             for (String algo : algos) {
-              lanes.add(streamSearchingLane(algo, dataset.clone(), target, emitter));
+              if (isCancelled.get()) return;
+              RaceLaneResponse lane =
+                  streamSearchingLane(algo, dataset.clone(), target, emitter, isCancelled);
+              if (lane != null) {
+                lanes.add(lane);
+              }
             }
 
+            if (isCancelled.get()) return;
             RaceResponse finalResponse =
                 new RaceResponse(
-                    "searching", dataset, target, null, null, new ArrayList<>(), winner(lanes));
+                    "searching",
+                    dataset,
+                    target,
+                    null,
+                    null,
+                    new ArrayList<>(),
+                    winner("searching", lanes));
             emitter.send(SseEmitter.event().name("END").data(finalResponse));
             emitter.complete();
           } catch (Exception e) {
-            emitter.completeWithError(e);
+            if (!isCancelled.get()) {
+              try {
+                emitter.completeWithError(e);
+              } catch (Exception ignored) {
+              }
+            }
           }
         });
     return emitter;
   }
 
   public SseEmitter streamPathfinding(PathfindingSimulationRequest request) {
-    SseEmitter emitter = new SseEmitter(STREAM_TIMEOUT_MS);
+    AtomicBoolean isCancelled = new AtomicBoolean(false);
+    SseEmitter emitter = createEmitter(isCancelled);
     executor.execute(
         () -> {
           try {
@@ -170,29 +218,56 @@ public class StreamingService {
             RaceResponse initialResponse =
                 new RaceResponse(
                     "pathfinding", null, null, walls, weights, new ArrayList<>(), null);
+            if (isCancelled.get()) return;
             emitter.send(SseEmitter.event().name("START").data(initialResponse));
 
             List<RaceLaneResponse> lanes = new ArrayList<>();
             for (String algo : algos) {
-              lanes.add(
+              if (isCancelled.get()) return;
+              RaceLaneResponse lane =
                   streamPathLane(
-                      algo, rows, cols, startRow, startCol, endRow, endCol, walls, weights,
-                      emitter));
+                      algo,
+                      rows,
+                      cols,
+                      startRow,
+                      startCol,
+                      endRow,
+                      endCol,
+                      walls,
+                      weights,
+                      emitter,
+                      isCancelled);
+              if (lane != null) {
+                lanes.add(lane);
+              }
             }
 
+            if (isCancelled.get()) return;
             RaceResponse finalResponse =
                 new RaceResponse(
-                    "pathfinding", null, null, walls, weights, new ArrayList<>(), winner(lanes));
+                    "pathfinding",
+                    null,
+                    null,
+                    walls,
+                    weights,
+                    new ArrayList<>(),
+                    winner("pathfinding", lanes));
             emitter.send(SseEmitter.event().name("END").data(finalResponse));
             emitter.complete();
           } catch (Exception e) {
-            emitter.completeWithError(e);
+            if (!isCancelled.get()) {
+              try {
+                emitter.completeWithError(e);
+              } catch (Exception ignored) {
+              }
+            }
           }
         });
     return emitter;
   }
 
-  private RaceLaneResponse streamSortingLane(String name, int[] dataset, SseEmitter emitter)
+  private RaceLaneResponse streamSortingLane(
+      String name, int[] dataset, SseEmitter emitter, AtomicBoolean isCancelled)
       throws IOException {
     AlgorithmModel model = SortingAlgorithmFactory.create(name);
     model.resetState(dataset);
@@ -200,26 +275,30 @@ public class StreamingService {
     List<SimulationFrame> frames = new ArrayList<>();
     SimulationFrame initialFrame = sortFrame(0, model);
     frames.add(initialFrame);
+    if (isCancelled.get()) return null;
     emitter.send(SseEmitter.event().name("FRAME").data(new LaneFrameEvent(name, initialFrame)));
 
     int frame = 1;
-    while (!model.isDone() && frame < MAX_FRAMES) {
+    while (!model.isDone() && frame < MAX_FRAMES && !isCancelled.get()) {
       model.step();
       model.setTimeMs((long) frame * SORT_FRAME_MS);
       SimulationFrame sFrame = sortFrame(frame, model);
       frames.add(sFrame);
+      if (isCancelled.get()) return null;
       emitter.send(SseEmitter.event().name("FRAME").data(new LaneFrameEvent(name, sFrame)));
       frame++;
     }
 
     LaneStats stats =
-        new LaneStats(model.getComparisons(), model.getSwaps(), 0, model.getTimeMs(), false, null);
+        new LaneStats(
+            model.getComparisons(), model.getSwaps(), 0, model.getTimeMs(), model.isDone(), null);
     return new RaceLaneResponse(
         name, model.getComplexity(), ComplexityCatalog.get(name), frames, stats);
   }
 
   private RaceLaneResponse streamSearchingLane(
-      String name, int[] dataset, int target, SseEmitter emitter) throws IOException {
+      String name, int[] dataset, int target, SseEmitter emitter, AtomicBoolean isCancelled)
+      throws IOException {
     SearchModel model = SearchingAlgorithmFactory.create(name);
     model.resetState(dataset);
     model.setTarget(target);
@@ -227,14 +306,16 @@ public class StreamingService {
     List<SimulationFrame> frames = new ArrayList<>();
     SimulationFrame initialFrame = searchFrame(0, model);
     frames.add(initialFrame);
+    if (isCancelled.get()) return null;
     emitter.send(SseEmitter.event().name("FRAME").data(new LaneFrameEvent(name, initialFrame)));
 
     int frame = 1;
-    while (!model.isDone() && frame < MAX_FRAMES) {
+    while (!model.isDone() && frame < MAX_FRAMES && !isCancelled.get()) {
       model.step();
       model.setTimeMs((long) frame * SEARCH_FRAME_MS);
       SimulationFrame sFrame = searchFrame(frame, model);
       frames.add(sFrame);
+      if (isCancelled.get()) return null;
       emitter.send(SseEmitter.event().name("FRAME").data(new LaneFrameEvent(name, sFrame)));
       frame++;
     }
@@ -261,7 +342,8 @@ public class StreamingService {
       int endCol,
       boolean[][] walls,
       int[][] weights,
-      SseEmitter emitter)
+      SseEmitter emitter,
+      AtomicBoolean isCancelled)
       throws IOException {
 
     PathfindingModel model = PathfindingFactory.create(name);
@@ -285,16 +367,18 @@ public class StreamingService {
     List<SimulationFrame> frames = new ArrayList<>();
     SimulationFrame initialFrame = pathFrame(0, model, 0);
     frames.add(initialFrame);
+    if (isCancelled.get()) return null;
     emitter.send(SseEmitter.event().name("FRAME").data(new LaneFrameEvent(name, initialFrame)));
 
     int frame = 1;
-    while (!model.isDone() && frame < MAX_FRAMES) {
+    while (!model.isDone() && frame < MAX_FRAMES && !isCancelled.get()) {
       model.step();
       if (model.isPathFound()) {
         markPath(model);
       }
       SimulationFrame sFrame = pathFrame(frame, model, (long) frame * PATH_FRAME_MS);
       frames.add(sFrame);
+      if (isCancelled.get()) return null;
       emitter.send(SseEmitter.event().name("FRAME").data(new LaneFrameEvent(name, sFrame)));
       frame++;
     }
@@ -462,10 +546,21 @@ public class StreamingService {
     }
   }
 
-  private String winner(List<RaceLaneResponse> lanes) {
+  private String winner(String category, List<RaceLaneResponse> lanes) {
     return lanes.stream()
+        .filter(
+            lane -> {
+              if ("searching".equals(category) || "pathfinding".equals(category)) {
+                return lane.stats().found();
+              }
+              return true;
+            })
         .min(Comparator.comparingLong(lane -> lane.stats().timeMs()))
         .map(RaceLaneResponse::algorithm)
         .orElse(null);
+  }
+
+  private String winner(List<RaceLaneResponse> lanes) {
+    return winner(null, lanes);
   }
 }

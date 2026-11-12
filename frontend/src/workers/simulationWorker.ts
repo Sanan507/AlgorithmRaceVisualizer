@@ -63,12 +63,26 @@ export interface WorkerSimulationResponse {
 self.onmessage = (event: MessageEvent<WorkerSimulationRequest>) => {
   const { id, type, algorithms, array, target, maxFramesBudget = 800 } = event.data;
 
-  if (type === 'sorting') {
-    const response = runSortingWorkerSimulation(algorithms, array, maxFramesBudget, id);
-    self.postMessage({ type: 'result', data: response });
-  } else if (type === 'searching') {
-    const response = runSearchingWorkerSimulation(algorithms, array, target ?? 0, maxFramesBudget, id);
-    self.postMessage({ type: 'result', data: response });
+  try {
+    if (type === 'sorting') {
+      const response = runSortingWorkerSimulation(algorithms, array, maxFramesBudget, id);
+      self.postMessage({ type: 'result', data: response });
+    } else if (type === 'searching') {
+      const response = runSearchingWorkerSimulation(algorithms, array, target ?? 0, maxFramesBudget, id);
+      self.postMessage({ type: 'result', data: response });
+    } else {
+      self.postMessage({
+        type: 'error',
+        id,
+        error: `Unknown simulation type: ${type}`,
+      });
+    }
+  } catch (err) {
+    self.postMessage({
+      type: 'error',
+      id,
+      error: err instanceof Error ? err.message : String(err),
+    });
   }
 };
 

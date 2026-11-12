@@ -553,6 +553,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
     if (Number.isNaN(newTarget)) {
       setValidationError('Please enter a valid target integer.');
       debouncedFetch.cancel();
+      load.markReady();
       return;
     }
     setValidationError(null);
@@ -594,6 +595,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
         fetchSimulation(true, false, target, algorithms, parsed.length, parsed);
       } else {
         setValidationError('Custom Array is empty. Please enter comma-separated numbers.');
+        load.markReady();
       }
     } else {
       fetchSimulation(true, false, target, algorithms, size, undefined);
@@ -612,9 +614,11 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
     if (invalid.length > 0) {
       setValidationError(`Invalid entry "${invalid[0]}". Please enter integers only.`);
       debouncedFetch.cancel();
+      load.markReady();
     } else if (parsed.length === 0) {
       setValidationError('Custom Array is empty. Please enter comma-separated numbers.');
       debouncedFetch.cancel();
+      load.markReady();
     } else {
       setValidationError(null);
       setDataset(parsed);
@@ -900,6 +904,7 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
                   if (raw === '') {
                     setSize('');
                     debouncedFetch.cancel();
+                    load.markReady();
                     return;
                   }
                   const parsed = parseInt(raw, 10);

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 import { Sun, Moon, Menu, Github } from 'lucide-react';
@@ -20,7 +20,7 @@ import { useAudioSettings } from './hooks/useAudioSettings';
 import { useSound } from './hooks/useSound';
 
 import { fallbackCatalog } from './data/fallbackCatalog';
-import { ThemeProvider } from './context/ThemeContext';
+import { ThemeProvider, useTheme } from './context/ThemeContext';
 
 type Page = 'landing' | 'sorting' | 'searching' | 'pathfinding' | 'dp' | 'trees' | 'quiz' | 'history' | 'settings';
 
@@ -51,23 +51,23 @@ const getPageFromHash = (): Page => {
   return 'landing';
 };
 
-export default function App() {
+function AppContent() {
   const [active, setActive] = useState<Page>(() => getPageFromHash());
   const [catalog, setCatalog] = useState<CatalogResponse>(fallbackCatalog);
   const [error] = useState<string | null>(null);
-  const [darkMode, setDarkMode] = useState(() => {
-    try {
-      const saved = localStorage.getItem('algorace_dark_mode');
-      return saved !== null ? JSON.parse(saved) : false;
-    } catch {
-      return false;
-    }
-  });
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  const { themeMode, toggleTheme } = useTheme();
+  const darkMode = themeMode === 'dark';
+
   const { settings: audioSettings, setSettings: setAudioSettings } = useAudioSettings();
   const { play, playToneForValue } = useSound(audioSettings);
+
+  const audioContextValue = useMemo(
+    () => ({ play, playToneForValue, audioSettings, setAudioSettings }),
+    [play, playToneForValue, audioSettings, setAudioSettings]
+  );
 
   // Listen to browser back/forward and URL hash updates
   useEffect(() => {
@@ -85,8 +85,6 @@ export default function App() {
     const currentUrl = new URL(window.location.href);
     const currentHash = currentUrl.hash;
 
-    // Only clear search params if we are navigating normally (not driven by initial search param)
-    // Actually we can keep search params if they are for the active page, but clear them if we switch pages
     const pageParam = currentUrl.searchParams.get('page')?.toLowerCase();
 
     if (active === 'landing') {
@@ -96,11 +94,11 @@ export default function App() {
         window.history.replaceState(null, '', currentUrl.href);
       }
     } else if (currentHash !== targetHash || (pageParam && pageParam !== active)) {
-       if (pageParam && pageParam !== active) {
-           currentUrl.search = '';
-       }
-       currentUrl.hash = targetHash;
-       window.history.replaceState(null, '', currentUrl.href);
+      if (pageParam && pageParam !== active) {
+        currentUrl.search = '';
+      }
+      currentUrl.hash = targetHash;
+      window.history.replaceState(null, '', currentUrl.href);
     }
   }, [active]);
 
@@ -111,15 +109,6 @@ export default function App() {
         console.warn('Catalog API background fetch warning (using fallback catalog):', err.message);
       });
   }, []);
-
-  useEffect(() => {
-    document.documentElement.dataset.theme = darkMode ? 'dark' : 'light';
-    try {
-      localStorage.setItem('algorace_dark_mode', JSON.stringify(darkMode));
-    } catch {
-      // ignore
-    }
-  }, [darkMode]);
 
   // Global Keyboard Shortcuts (0-5, H, S, T)
   useEffect(() => {
@@ -149,13 +138,13 @@ export default function App() {
       } else if (e.key === 's' || e.key === 'S') {
         setActive('settings');
       } else if (e.key === 't' || e.key === 'T') {
-        setDarkMode((prev: boolean) => !prev);
+        toggleTheme();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [toggleTheme]);
 
   const isEmbedMode = new URLSearchParams(window.location.search).get('embed') === 'true';
 
@@ -177,136 +166,138 @@ export default function App() {
   }
 
   return (
-    <ThemeProvider>
-      <AudioCtx.Provider value={{ play, playToneForValue, audioSettings, setAudioSettings }}>
-        {isEmbedMode ? (
-          <div className="embed-shell" style={{ minHeight: '100vh', padding: '16px', background: 'var(--color-bg-primary)', position: 'relative' }}>
-            <div className="content-shell" style={{ maxWidth: '100%', margin: 0, padding: 0 }}>
-              {active === 'sorting' && <SortingPage catalog={catalog} />}
-              {active === 'searching' && <SearchingPage catalog={catalog} />}
-              {active === 'pathfinding' && <PathfindingPage catalog={catalog} />}
-              {active === 'dp' && <DPPage />}
-              {active === 'trees' && <TreesPage />}
-              {active === 'quiz' && <QuizPage onNavigateArena={(page) => setActive(page as Page)} />}
-              {active === 'history' && <HistoryPage catalog={catalog} />}
-              {active === 'settings' && <SettingsPage darkMode={darkMode} setDarkMode={setDarkMode} />}
-            </div>
-            <a
-              href="https://github.com/Sanan507/AlgorithmRaceVisualizer"
-              target="_blank"
-              rel="noreferrer"
-              className="embed-brand-watermark"
-              style={{
-                position: 'fixed',
-                bottom: '12px',
-                right: '16px',
-                zIndex: 999,
-                background: 'rgba(10, 15, 30, 0.85)',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
-                backdropFilter: 'blur(12px)',
-                borderRadius: '8px',
-                padding: '4px 10px',
-                fontSize: '0.75rem',
-                fontFamily: 'var(--font-mono)',
-                color: 'var(--color-text-primary)',
-                textDecoration: 'none',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
-              }}
-            >
-              <span>AlgoRace</span>
-              <span style={{ color: '#38bdf8', fontWeight: 700 }}>⚡ Live</span>
-            </a>
+    <AudioCtx.Provider value={audioContextValue}>
+      {isEmbedMode ? (
+        <div className="embed-shell" style={{ minHeight: '100vh', padding: '16px', background: 'var(--color-bg-primary)', position: 'relative' }}>
+          <div className="content-shell" style={{ maxWidth: '100%', margin: 0, padding: 0 }}>
+            {active === 'sorting' && <SortingPage catalog={catalog} />}
+            {active === 'searching' && <SearchingPage catalog={catalog} />}
+            {active === 'pathfinding' && <PathfindingPage catalog={catalog} />}
+            {active === 'dp' && <DPPage />}
+            {active === 'trees' && <TreesPage />}
+            {active === 'quiz' && <QuizPage onNavigateArena={(page) => setActive(page as Page)} />}
+            {active === 'history' && <HistoryPage catalog={catalog} />}
+            {active === 'settings' && <SettingsPage />}
           </div>
-        ) : active === 'landing' ? (
-          <LandingPage onNavigate={setActive} darkMode={darkMode} setDarkMode={setDarkMode} />
-        ) : (
-          <div className={`app-shell ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
-            {/* Mobile Header Bar */}
-            <div className="mobile-header-bar">
-              <div className="mobile-brand" onClick={() => setActive('landing')} style={{ cursor: 'pointer' }}>
-                <AlgoRaceLogo size={26} showText={true} />
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <a
+            href="https://github.com/Sanan507/AlgorithmRaceVisualizer"
+            target="_blank"
+            rel="noreferrer"
+            className="embed-brand-watermark"
+            style={{
+              position: 'fixed',
+              bottom: '12px',
+              right: '16px',
+              zIndex: 999,
+              background: 'rgba(10, 15, 30, 0.85)',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              backdropFilter: 'blur(12px)',
+              borderRadius: '8px',
+              padding: '4px 10px',
+              fontSize: '0.75rem',
+              fontFamily: 'var(--font-mono)',
+              color: 'var(--color-text-primary)',
+              textDecoration: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+            }}
+          >
+            <span>AlgoRace</span>
+            <span style={{ color: '#38bdf8', fontWeight: 700 }}>⚡ Live</span>
+          </a>
+        </div>
+      ) : active === 'landing' ? (
+        <LandingPage onNavigate={setActive} />
+      ) : (
+        <div className={`app-shell ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+          {/* Mobile Header Bar */}
+          <div className="mobile-header-bar">
+            <div className="mobile-brand" onClick={() => setActive('landing')} style={{ cursor: 'pointer' }}>
+              <AlgoRaceLogo size={26} showText={true} />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button
+                type="button"
+                className="mobile-hamburger-btn"
+                onClick={toggleTheme}
+                aria-label={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              >
+                {darkMode ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} />}
+              </button>
+              <button
+                type="button"
+                className="mobile-hamburger-btn"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+                aria-expanded={mobileMenuOpen}
+              >
+                <Menu size={22} />
+              </button>
+            </div>
+          </div>
+
+          <Sidebar
+            active={active}
+            onChange={setActive}
+            collapsed={sidebarCollapsed}
+            onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+            mobileOpen={mobileMenuOpen}
+            onMobileClose={() => setMobileMenuOpen(false)}
+          />
+
+          <div className="content-shell">
+            <div className="desktop-top-bar">
+              <div className="desktop-top-bar-right">
                 <button
                   type="button"
-                  className="mobile-hamburger-btn"
-                  onClick={() => setDarkMode(!darkMode)}
+                  className="app-theme-toggle"
+                  onClick={() => {
+                    play('click');
+                    toggleTheme();
+                  }}
+                  title={darkMode ? 'Switch to Light Mode (T)' : 'Switch to Dark Mode (T)'}
                   aria-label={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
                 >
-                  {darkMode ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} />}
+                  {darkMode ? <Sun size={15} className="text-amber-400" /> : <Moon size={15} className="text-sky-600" />}
+                  <span>{darkMode ? 'Light' : 'Dark'}</span>
+                  <kbd className="theme-kbd">T</kbd>
                 </button>
-                <button
-                  type="button"
-                  className="mobile-hamburger-btn"
-                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
-                  aria-expanded={mobileMenuOpen}
+                <a
+                  href="https://github.com/Sanan507/AlgorithmRaceVisualizer"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="app-github-btn"
+                  title="View GitHub Repository"
+                  aria-label="GitHub Repository"
                 >
-                  <Menu size={22} />
-                </button>
+                  <Github size={16} />
+                </a>
               </div>
             </div>
 
-            <Sidebar
-              active={active}
-              onChange={setActive}
-              collapsed={sidebarCollapsed}
-              onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-              mobileOpen={mobileMenuOpen}
-              onMobileClose={() => setMobileMenuOpen(false)}
-              darkMode={darkMode}
-              setDarkMode={setDarkMode}
-            />
-
-            <div className="content-shell">
-              <div className="desktop-top-bar">
-                <div className="desktop-top-bar-right">
-                  <button
-                    type="button"
-                    className="app-theme-toggle"
-                    onClick={() => {
-                      play('click');
-                      setDarkMode(!darkMode);
-                    }}
-                    title={darkMode ? 'Switch to Light Mode (T)' : 'Switch to Dark Mode (T)'}
-                    aria-label={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-                  >
-                    {darkMode ? <Sun size={15} className="text-amber-400" /> : <Moon size={15} className="text-sky-600" />}
-                    <span>{darkMode ? 'Light' : 'Dark'}</span>
-                    <kbd className="theme-kbd">T</kbd>
-                  </button>
-                  <a
-                    href="https://github.com/Sanan507/AlgorithmRaceVisualizer"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="app-github-btn"
-                    title="View GitHub Repository"
-                    aria-label="GitHub Repository"
-                  >
-                    <Github size={16} />
-                  </a>
-                </div>
-              </div>
-
-              {active === 'sorting' && <SortingPage catalog={catalog} />}
-              {active === 'searching' && <SearchingPage catalog={catalog} />}
-              {active === 'pathfinding' && <PathfindingPage catalog={catalog} />}
-              {active === 'dp' && <DPPage />}
-              {active === 'trees' && <TreesPage />}
-              {active === 'quiz' && <QuizPage onNavigateArena={(page) => setActive(page as Page)} />}
-              {active === 'history' && <HistoryPage catalog={catalog} />}
-              {active === 'settings' && (
-                <SettingsPage darkMode={darkMode} setDarkMode={setDarkMode} />
-              )}
-            </div>
+            {active === 'sorting' && <SortingPage catalog={catalog} />}
+            {active === 'searching' && <SearchingPage catalog={catalog} />}
+            {active === 'pathfinding' && <PathfindingPage catalog={catalog} />}
+            {active === 'dp' && <DPPage />}
+            {active === 'trees' && <TreesPage />}
+            {active === 'quiz' && <QuizPage onNavigateArena={(page) => setActive(page as Page)} />}
+            {active === 'history' && <HistoryPage catalog={catalog} />}
+            {active === 'settings' && <SettingsPage />}
           </div>
-        )}
-        <Analytics />
-        <SpeedInsights />
-      </AudioCtx.Provider>
+        </div>
+      )}
+      <Analytics />
+      <SpeedInsights />
+    </AudioCtx.Provider>
+  );
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
     </ThemeProvider>
   );
 }

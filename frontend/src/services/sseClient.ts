@@ -10,16 +10,19 @@ const isLocalhost =
   isBrowser && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 const RENDER_BACKEND_URL = 'https://algorithmracevisualizer.onrender.com';
 const configuredBase = import.meta.env.VITE_API_BASE_URL !== undefined ? import.meta.env.VITE_API_BASE_URL.trim() : undefined;
-const API_BASE_URL = configuredBase !== undefined ? configuredBase : (isLocalhost ? 'http://localhost:8080' : RENDER_BACKEND_URL);
+const API_BASE_URL =
+  configuredBase && (!isLocalhost || !configuredBase.includes('onrender.com'))
+    ? configuredBase
+    : (isLocalhost ? 'http://localhost:8080' : RENDER_BACKEND_URL);
 
-/** How long to wait for the stream's first event before giving up on the backend. */
+/** How long to wait for events before considering the stream stalled. */
 export const DEFAULT_STREAM_TIMEOUT_MS = 8000;
 
 /** `onError` receives an Event of this type when the deadline expired. */
 export const STREAM_TIMEOUT_EVENT = 'algorace:stream-timeout';
 
 export type StreamOptions = {
-  /** Deadline for the first event. Frames that follow are not time-limited. */
+  /** Inactivity deadline between events. Defaults to 8000ms. */
   timeoutMs?: number;
 };
 
@@ -29,7 +32,7 @@ export function createSimulationStream(
   onStart: (initialResponse: RaceResponse) => void,
   onFrame: (event: LaneFrameEvent) => void,
   onEnd: (finalResponse: RaceResponse) => void,
-  onError: (error: Event) => void,
+  onError: (error: Event | Error) => void,
   options?: StreamOptions
 ): () => void {
   const finalParams = new URLSearchParams();
@@ -71,43 +74,75 @@ export function createSimulationStream(
     }
   };
 
+  const armTimer = () => {
+    clearTimer();
+    timer = window.setTimeout(() => {
+      timer = null;
+      if (closed) return;
+      close();
+      onError(new Event(STREAM_TIMEOUT_EVENT));
+    }, timeoutMs);
+  };
+
   const close = () => {
+    if (closed) return;
     closed = true;
     clearTimer();
+    eventSource.removeEventListener('START', handleStart);
+    eventSource.removeEventListener('FRAME', handleFrame);
+    eventSource.removeEventListener('END', handleEnd);
+    eventSource.onerror = null;
     eventSource.close();
   };
 
-  timer = window.setTimeout(() => {
-    timer = null;
+  const handleStart = (event: MessageEvent) => {
     if (closed) return;
-    close();
-    onError(new Event(STREAM_TIMEOUT_EVENT));
-  }, timeoutMs);
+    armTimer();
+    try {
+      const data = JSON.parse(event.data) as RaceResponse;
+      onStart(data);
+    } catch {
+      close();
+      onError(new Error('Invalid JSON received from server'));
+    }
+  };
 
-  eventSource.addEventListener('START', (event: MessageEvent) => {
+  const handleFrame = (event: MessageEvent) => {
     if (closed) return;
-    clearTimer();
-    onStart(JSON.parse(event.data) as RaceResponse);
-  });
+    armTimer();
+    try {
+      const data = JSON.parse(event.data) as LaneFrameEvent;
+      onFrame(data);
+    } catch {
+      close();
+      onError(new Error('Invalid JSON received from server'));
+    }
+  };
 
-  eventSource.addEventListener('FRAME', (event: MessageEvent) => {
+  const handleEnd = (event: MessageEvent) => {
     if (closed) return;
-    clearTimer();
-    onFrame(JSON.parse(event.data) as LaneFrameEvent);
-  });
+    try {
+      const payload = JSON.parse(event.data) as RaceResponse;
+      close();
+      onEnd(payload);
+    } catch {
+      close();
+      onError(new Error('Invalid JSON received from server'));
+    }
+  };
 
-  eventSource.addEventListener('END', (event: MessageEvent) => {
-    if (closed) return;
-    const payload = JSON.parse(event.data) as RaceResponse;
-    close();
-    onEnd(payload);
-  });
-
-  eventSource.onerror = (error) => {
+  const handleError = (error: Event) => {
     if (closed) return;
     close();
     onError(error);
   };
+
+  armTimer();
+
+  eventSource.addEventListener('START', handleStart);
+  eventSource.addEventListener('FRAME', handleFrame);
+  eventSource.addEventListener('END', handleEnd);
+  eventSource.onerror = handleError;
 
   return close;
 }

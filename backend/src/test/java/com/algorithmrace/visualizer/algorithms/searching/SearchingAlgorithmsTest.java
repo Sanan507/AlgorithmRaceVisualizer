@@ -102,4 +102,21 @@ class SearchingAlgorithmsTest {
                   4, lane.stats().foundIndex(), lane.algorithm() + " found index mismatch");
             });
   }
+
+  @Test
+  @DisplayName(
+      "Verify SimulationService searching simulation returns null winner when target is missing")
+  void testSimulationServiceSearching_targetNotFound_noWinner() {
+    int[] dataset = {2, 4, 6, 8, 10, 12, 14, 16};
+    int missingTarget = 99;
+    SearchingSimulationRequest request =
+        new SearchingSimulationRequest(
+            algorithms, dataset.length, missingTarget, Arrays.stream(dataset).boxed().toList());
+
+    RaceResponse response = simulationService.simulateSearching(request);
+
+    assertNotNull(response);
+    org.junit.jupiter.api.Assertions.assertNull(
+        response.winner(), "Winner should be null when target is not found by any algorithm");
+  }
 }

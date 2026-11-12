@@ -7,6 +7,8 @@
 import { RaceResponse } from '../models/types';
 import { WorkerSimulationRequest, WorkerSimulationResponse } from '../workers/simulationWorker';
 
+export const DEFAULT_WORKER_TIMEOUT_MS = 15000;
+
 class WorkerSimulationService {
   private worker: Worker | null = null;
   private currentRequestId = 0;
@@ -16,6 +18,7 @@ class WorkerSimulationService {
       resolve: (data: RaceResponse) => void;
       reject: (err: any) => void;
       onProgress?: (percent: number, algo: string) => void;
+      timer?: ReturnType<typeof setTimeout>;
     }
   > = new Map();
 
@@ -48,6 +51,9 @@ class WorkerSimulationService {
           const response: WorkerSimulationResponse = msg.data;
           const handler = this.pendingResolvers.get(response.id || '');
           if (handler) {
+            if (handler.timer) {
+              clearTimeout(handler.timer);
+            }
             this.pendingResolvers.delete(response.id || '');
             
             // Map worker response to RaceResponse format
@@ -76,11 +82,29 @@ class WorkerSimulationService {
 
             handler.resolve(raceResponse);
           }
+        } else if (msg.type === 'error') {
+          const { id, error } = msg;
+          const handler = this.pendingResolvers.get(id || '');
+          if (handler) {
+            if (handler.timer) {
+              clearTimeout(handler.timer);
+            }
+            this.pendingResolvers.delete(id || '');
+            handler.reject(new Error(error || 'Worker simulation failed'));
+          }
         }
       };
 
       this.worker.onerror = (err) => {
         console.error('Simulation Web Worker Error:', err);
+        const error = new Error('Simulation Web Worker encountered an error');
+        this.pendingResolvers.forEach((handler) => {
+          if (handler.timer) {
+            clearTimeout(handler.timer);
+          }
+          handler.reject(error);
+        });
+        this.pendingResolvers.clear();
       };
     } catch (e) {
       console.warn('Failed to initialize Web Worker (fallback will be used):', e);
@@ -114,7 +138,15 @@ class WorkerSimulationService {
         return;
       }
 
-      this.pendingResolvers.set(requestId, { resolve, reject, onProgress });
+      const timer = setTimeout(() => {
+        const handler = this.pendingResolvers.get(requestId);
+        if (handler) {
+          this.pendingResolvers.delete(requestId);
+          handler.reject(new Error(`Worker simulation timed out after ${DEFAULT_WORKER_TIMEOUT_MS}ms`));
+        }
+      }, DEFAULT_WORKER_TIMEOUT_MS);
+
+      this.pendingResolvers.set(requestId, { resolve, reject, onProgress, timer });
 
       const requestPayload: WorkerSimulationRequest = {
         id: requestId,
@@ -133,8 +165,15 @@ class WorkerSimulationService {
     if (this.worker) {
       this.worker.terminate();
       this.worker = null;
-      this.pendingResolvers.clear();
     }
+    const terminationError = new Error('Simulation Web Worker was terminated');
+    this.pendingResolvers.forEach((handler) => {
+      if (handler.timer) {
+        clearTimeout(handler.timer);
+      }
+      handler.reject(terminationError);
+    });
+    this.pendingResolvers.clear();
   }
 }
 

@@ -6,9 +6,10 @@ const isLocalhost =
 
 const RENDER_BACKEND_URL = 'https://algorithmracevisualizer.onrender.com';
 const configuredBase = import.meta.env.VITE_API_BASE_URL !== undefined ? import.meta.env.VITE_API_BASE_URL.trim() : undefined;
-
-export const isBackendAvailable = true;
-const API_BASE_URL = configuredBase !== undefined ? configuredBase : (isLocalhost ? 'http://localhost:8080' : RENDER_BACKEND_URL);
+const API_BASE_URL =
+  configuredBase && (!isLocalhost || !configuredBase.includes('onrender.com'))
+    ? configuredBase
+    : (isLocalhost ? 'http://localhost:8080' : RENDER_BACKEND_URL);
 
 /**
  * Every request gets a deadline. Without one a cold or sleeping backend leaves
@@ -83,7 +84,7 @@ async function request<T>(path: string, options?: RequestOptions): Promise<T> {
       }
       throw new Error(message);
     }
-    return response.json() as Promise<T>;
+    return await response.json();
   } catch (error) {
     // Distinguish "we gave up waiting" from "a newer request replaced this one".
     if (deadline.didTimeOut() && isAbortError(error)) {

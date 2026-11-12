@@ -31,7 +31,10 @@ public class TimSortModel extends AlgorithmModel {
     int[] arr = inputArr.clone();
     int n = arr.length;
 
-    if (n == 0) return;
+    if (n == 0) {
+      markDone();
+      return;
+    }
 
     recordFrame(arr, new int[0]);
 
@@ -128,7 +131,11 @@ public class TimSortModel extends AlgorithmModel {
 
   @Override
   public void step() {
-    if (isDone() || frames.isEmpty()) return;
+    if (isDone()) return;
+    if (frames.isEmpty()) {
+      markDone();
+      return;
+    }
 
     if (stepIdx < frames.size()) {
       array = frames.get(stepIdx);

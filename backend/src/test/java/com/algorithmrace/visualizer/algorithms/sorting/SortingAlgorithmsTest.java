@@ -81,6 +81,7 @@ class SortingAlgorithmsTest {
         modelEmpty.step();
         steps++;
       }
+      assertTrue(modelEmpty.isDone(), algoName + " should be done on empty array");
       assertArrayEquals(new int[0], modelEmpty.getArray(), algoName + " failed on empty array");
     }
   }
