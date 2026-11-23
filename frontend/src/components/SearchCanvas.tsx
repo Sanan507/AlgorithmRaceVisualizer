@@ -146,14 +146,50 @@ export const SearchCanvas = memo(function SearchCanvas({
         fillColor = COLORS.visit;
       }
 
-      // Bar rect
-      ctx.fillStyle = fillColor;
-      ctx.fillRect(x, y, barW, barH);
+      // Draw Bar Rect with rounded top corners and rich vertical gradient
+      const radius = Math.min(4, Math.max(1, Math.floor(barW / 3)));
+      const gradient = ctx.createLinearGradient(x, y, x, y + barH);
+
+      if (index === foundIndex) {
+        gradient.addColorStop(0, '#34d399');
+        gradient.addColorStop(1, '#059669');
+      } else if (highlights.includes(index) && (!isMultiBoundSearch || index === activeProbe)) {
+        gradient.addColorStop(0, '#fbbf24');
+        gradient.addColorStop(1, '#d97706');
+      } else if (searchPath.includes(index)) {
+        gradient.addColorStop(0, '#a855f7');
+        gradient.addColorStop(1, '#7e22ce');
+      } else if (isLight) {
+        gradient.addColorStop(0, '#6366f1');
+        gradient.addColorStop(1, '#4338ca');
+      } else {
+        gradient.addColorStop(0, '#6366f1');
+        gradient.addColorStop(1, '#312e81');
+      }
+
+      ctx.fillStyle = gradient;
+      if (typeof ctx.roundRect === 'function' && barH > 4 && barW > 2) {
+        ctx.beginPath();
+        ctx.roundRect(x, y, barW, barH, [radius, radius, 0, 0]);
+        ctx.fill();
+      } else {
+        ctx.fillRect(x, y, barW, barH);
+      }
 
       // Top glowing accent cap
       if (isGlow) {
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(x, y, barW, 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        if (typeof ctx.roundRect === 'function' && barW > 2) {
+          ctx.beginPath();
+          ctx.roundRect(x, y, barW, 2, [radius, radius, 0, 0]);
+          ctx.fill();
+        } else {
+          ctx.fillRect(x, y, barW, 2);
+        }
+      } else if (barW >= 6) {
+        // Subtle crisp 1px top highlight rim on inactive bars for tactile depth
+        ctx.fillStyle = isLight ? 'rgba(255, 255, 255, 0.45)' : 'rgba(255, 255, 255, 0.2)';
+        ctx.fillRect(x + 1, y, Math.max(1, barW - 2), 1);
       }
 
       // Value label

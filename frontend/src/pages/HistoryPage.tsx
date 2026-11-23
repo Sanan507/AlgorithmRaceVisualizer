@@ -21,7 +21,9 @@ import {
   BarChart2,
   X,
   Play,
-  RotateCcw
+  RotateCcw,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { 
   getHistory, 
@@ -508,6 +510,14 @@ export function HistoryPage({ catalog }: { catalog: CatalogResponse }) {
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(8);
+
+  // Reset pagination to first page when filtering or searching
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [historyFilter, searchQuery, sortOrder]);
+
   const reloadHistory = () => {
     setHistoryEntries(getHistory());
   };
@@ -615,6 +625,12 @@ export function HistoryPage({ catalog }: { catalog: CatalogResponse }) {
 
     return result;
   }, [historyEntries, historyFilter, searchQuery, sortOrder]);
+
+  const totalPages = Math.max(1, Math.ceil(processedHistory.length / pageSize));
+  const paginatedHistory = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return processedHistory.slice(start, start + pageSize);
+  }, [processedHistory, currentPage, pageSize]);
 
   const selectedData = algoDatabase[getNormalizedName(selectedAlgo)] || algoDatabase['Quick Sort'];
 
@@ -847,7 +863,7 @@ export function HistoryPage({ catalog }: { catalog: CatalogResponse }) {
                 <span>Winner</span>
                 <span>Actions</span>
               </div>
-              {processedHistory.map((entry) => (
+              {paginatedHistory.map((entry) => (
                 <div className="matrix-row" key={entry.id} style={{ gridTemplateColumns: '1.2fr 1fr 1.2fr 1.5fr 1fr' }}>
                   <strong>{new Date(entry.date).toLocaleString()}</strong>
                   <span style={{ textTransform: 'capitalize' }}>{entry.arenaType}</span>
@@ -883,6 +899,54 @@ export function HistoryPage({ catalog }: { catalog: CatalogResponse }) {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {processedHistory.length > 0 && (
+            <div className="history-pagination-bar">
+              <div className="history-pagination-info">
+                Showing <span>{(currentPage - 1) * pageSize + 1}</span>–<span>{Math.min(currentPage * pageSize, processedHistory.length)}</span> of <span>{processedHistory.length}</span> sessions
+              </div>
+              <div className="history-pagination-controls">
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  disabled={currentPage <= 1}
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                >
+                  <ChevronLeft size={14} /> Previous
+                </button>
+
+                <span className="history-page-indicator">
+                  Page {currentPage} of {totalPages}
+                </span>
+
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  disabled={currentPage >= totalPages}
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                >
+                  Next <ChevronRight size={14} />
+                </button>
+
+                <select
+                  className="select-dropdown"
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  style={{ padding: '4px 8px', fontSize: '0.8rem', marginLeft: '6px' }}
+                >
+                  <option value={8}>8 per page</option>
+                  <option value={15}>15 per page</option>
+                  <option value={25}>25 per page</option>
+                  <option value={50}>50 per page</option>
+                </select>
+              </div>
             </div>
           )}
         </section>

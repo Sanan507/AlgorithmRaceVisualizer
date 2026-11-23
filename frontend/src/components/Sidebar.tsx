@@ -58,7 +58,18 @@ export function Sidebar({
 
       <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
         <div className="sidebar-top">
-          <div className="brand-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '0 4px 24px', borderBottom: '1px solid var(--color-border-line)', marginBottom: '24px' }}>
+          <div 
+            className="brand-row" 
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: collapsed && !mobileOpen ? 'center' : 'space-between', 
+              width: '100%', 
+              padding: collapsed && !mobileOpen ? '0 0 16px' : '0 4px 24px', 
+              borderBottom: '1px solid var(--color-border-line)', 
+              marginBottom: collapsed && !mobileOpen ? '16px' : '24px' 
+            }}
+          >
             <div
               className="brand-link-wrapper"
               role="button"
@@ -66,10 +77,10 @@ export function Sidebar({
               aria-label="Go to Overview"
               onClick={() => handleNav('landing')}
               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleNav('landing'); } }}
-              style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+              style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
               <AlgoRaceLogo
-                size={collapsed && !mobileOpen ? 36 : 38}
+                size={collapsed && !mobileOpen ? 32 : 38}
                 showText={!collapsed || Boolean(mobileOpen)}
                 tagline="Benchmark Engine"
               />
@@ -90,8 +101,8 @@ export function Sidebar({
                 onClick={() => handleNav(id)}
                 title={collapsed ? `${label} (${hotkey})` : undefined}
                 aria-label={label}
-                whileHover={{ x: 3, transition: { type: 'spring', stiffness: 400, damping: 25 } }}
-                whileTap={{ scale: 0.97 }}
+                whileHover={collapsed ? { scale: 1.06 } : { x: 3, transition: { type: 'spring', stiffness: 400, damping: 25 } }}
+                whileTap={{ scale: 0.96 }}
               >
                 <div className="nav-item-glow" />
                 <span className={`sidebar-icon-pod sidebar-icon-pod-${color} ${active === id ? 'is-active' : ''}`}>
