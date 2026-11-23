@@ -381,7 +381,7 @@ export function PerformanceComparison({
             onClick={handleExportSnapshot}
             title="Export full race comparison snapshot as PNG image"
           >
-            <Camera size={15} style={{ color: '#c084fc', flexShrink: 0 }} /> 
+            <Camera size={14} strokeWidth={2} style={{ flexShrink: 0 }} /> 
             <span>Export Snapshot PNG</span>
           </button>
 
@@ -392,7 +392,7 @@ export function PerformanceComparison({
             disabled={!isCompleted}
             title={isCompleted ? "Export scientific benchmark report as CSV" : "Complete the race to export CSV report"}
           >
-            <Download size={15} style={{ color: isCompleted ? '#38bdf8' : 'currentColor', flexShrink: 0 }} /> 
+            <Download size={14} strokeWidth={2} style={{ flexShrink: 0 }} /> 
             <span>Export Benchmark CSV</span>
           </button>
         </div>

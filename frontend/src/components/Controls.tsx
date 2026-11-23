@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Pause, Play, RotateCcw, Shuffle, SkipBack, SkipForward } from 'lucide-react';
+import { Pause, Play, PlayCircle, RotateCcw, Shuffle, SkipBack, SkipForward } from 'lucide-react';
 import { useAudio } from '../context/AudioContext';
 
 export function Controls({
@@ -74,7 +74,7 @@ export function Controls({
           whileHover={disabled ? undefined : { scale: 1.03, transition: { type: 'spring', stiffness: 400, damping: 22 } }}
           whileTap={disabled ? undefined : { scale: 0.96 }}
         >
-          <Play size={15} fill="currentColor" /> {startLabel}
+          <PlayCircle size={16} strokeWidth={2.2} /> {startLabel}
         </motion.button>
         <motion.button 
           className="btn ghost" 
@@ -84,7 +84,7 @@ export function Controls({
           whileHover={disabled ? undefined : { scale: 1.03, transition: { type: 'spring', stiffness: 400, damping: 22 } }}
           whileTap={disabled ? undefined : { scale: 0.96 }}
         >
-          {playing ? <Pause size={15} fill="currentColor" /> : <Play size={15} fill="currentColor" />} {playing ? 'Pause' : 'Resume'}
+          {playing ? <Pause size={14} fill="currentColor" /> : <Play size={14} strokeWidth={2.4} />} {playing ? 'Pause' : 'Resume'}
         </motion.button>
         <motion.button 
           className="btn secondary" 

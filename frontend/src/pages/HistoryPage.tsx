@@ -787,7 +787,7 @@ export function HistoryPage({ catalog }: { catalog: CatalogResponse }) {
 
             <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
               <div style={{ position: 'relative' }}>
-                <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }} />
+                <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted, #64748b)' }} />
                 <input
                   type="text"
                   placeholder="Search history..."
@@ -797,9 +797,9 @@ export function HistoryPage({ catalog }: { catalog: CatalogResponse }) {
                     padding: '6px 12px 6px 32px',
                     fontSize: '0.85rem',
                     borderRadius: '6px',
-                    background: 'var(--panel)',
-                    border: '1px solid var(--line)',
-                    color: 'var(--text)',
+                    background: 'var(--color-bg-panel, #ffffff)',
+                    border: '1px solid var(--color-border-line, rgba(15, 23, 42, 0.12))',
+                    color: 'var(--color-text-primary, #0f172a)',
                     width: '180px'
                   }}
                 />
@@ -920,7 +920,7 @@ export function HistoryPage({ catalog }: { catalog: CatalogResponse }) {
                 {selectedEntryModal.lanes.map((lane, idx) => (
                   <div key={lane.name} className={`history-podium-card ${idx === 0 ? 'rank-1' : ''}`}>
                     <div className="history-podium-badge">
-                      {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`}
+                      {idx === 0 ? <Trophy size={14} style={{ color: '#f59e0b', display: 'inline', verticalAlign: 'middle' }} /> : `#${idx + 1}`}
                     </div>
                     <div className="history-podium-name">{lane.name}</div>
                     <div className="history-podium-stats">

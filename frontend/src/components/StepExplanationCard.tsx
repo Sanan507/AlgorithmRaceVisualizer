@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import type { RaceLaneResponse, SimulationFrame } from '../models/types';
-import { Code, Sparkles } from 'lucide-react';
+import { Code, Activity } from 'lucide-react';
 import { SORTING_META } from '../data/algorithmMetadata';
 import { fallbackCatalog } from '../data/fallbackCatalog';
 
@@ -587,7 +587,7 @@ export function StepExplanationCard({
       <div className="step-inspector-header">
         <div className="step-inspector-title-group">
           <span className="icon-pod icon-pod-xs icon-pod-orange">
-            <Sparkles size={11} />
+            <Activity size={12} strokeWidth={2.2} />
           </span>
           <span className="step-inspector-title">Step Explanation</span>
           <span className="step-inspector-counter">
