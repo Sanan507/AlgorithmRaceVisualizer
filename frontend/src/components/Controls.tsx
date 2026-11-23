@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { Pause, Play, RotateCcw, Shuffle, SkipBack, SkipForward } from 'lucide-react';
 import { useAudio } from '../context/AudioContext';
 
@@ -65,25 +66,62 @@ export function Controls({
   return (
     <div className="control-strip flex-wrap">
       <div className="control-group">
-        <button className="btn primary" onClick={handleStart} disabled={disabled} aria-label={startLabel}>
+        <motion.button 
+          className="btn primary" 
+          onClick={handleStart} 
+          disabled={disabled} 
+          aria-label={startLabel}
+          whileHover={disabled ? undefined : { scale: 1.03, transition: { type: 'spring', stiffness: 400, damping: 22 } }}
+          whileTap={disabled ? undefined : { scale: 0.96 }}
+        >
           <Play size={17} /> {startLabel}
-        </button>
-        <button className="btn ghost" onClick={handleToggle} disabled={disabled} aria-label={playing ? 'Pause' : 'Resume'}>
+        </motion.button>
+        <motion.button 
+          className="btn ghost" 
+          onClick={handleToggle} 
+          disabled={disabled} 
+          aria-label={playing ? 'Pause' : 'Resume'}
+          whileHover={disabled ? undefined : { scale: 1.03, transition: { type: 'spring', stiffness: 400, damping: 22 } }}
+          whileTap={disabled ? undefined : { scale: 0.96 }}
+        >
           {playing ? <Pause size={17} /> : <Play size={17} />} {playing ? 'Pause' : 'Resume'}
-        </button>
-        <button className="btn secondary" onClick={handleReset} disabled={disabled} aria-label={resetLabel}>
+        </motion.button>
+        <motion.button 
+          className="btn secondary" 
+          onClick={handleReset} 
+          disabled={disabled} 
+          aria-label={resetLabel}
+          whileHover={disabled ? undefined : { scale: 1.03, transition: { type: 'spring', stiffness: 400, damping: 22 } }}
+          whileTap={disabled ? undefined : { scale: 0.96 }}
+        >
           {resetLabel.includes('Random') ? <Shuffle size={17} /> : <RotateCcw size={17} />} {resetLabel}
-        </button>
+        </motion.button>
       </div>
 
       {maxFrames > 0 && (
         <div className="control-group step-group">
-          <button className="btn icon-btn" onClick={handleStepBack} disabled={disabled || frameIndex <= 0} title="Step Backward" aria-label="Step Backward">
+          <motion.button 
+            className="btn icon-btn" 
+            onClick={handleStepBack} 
+            disabled={disabled || frameIndex <= 0} 
+            title="Step Backward" 
+            aria-label="Step Backward"
+            whileHover={disabled || frameIndex <= 0 ? undefined : { scale: 1.08 }}
+            whileTap={disabled || frameIndex <= 0 ? undefined : { scale: 0.92 }}
+          >
             <SkipBack size={16} />
-          </button>
-          <button className="btn icon-btn" onClick={handleStepForward} disabled={disabled || frameIndex >= maxFrames - 1} title="Step Forward" aria-label="Step Forward">
+          </motion.button>
+          <motion.button 
+            className="btn icon-btn" 
+            onClick={handleStepForward} 
+            disabled={disabled || frameIndex >= maxFrames - 1} 
+            title="Step Forward" 
+            aria-label="Step Forward"
+            whileHover={disabled || frameIndex >= maxFrames - 1 ? undefined : { scale: 1.08 }}
+            whileTap={disabled || frameIndex >= maxFrames - 1 ? undefined : { scale: 0.92 }}
+          >
             <SkipForward size={16} />
-          </button>
+          </motion.button>
           {onSeek && (
             <div className="timeline-container">
               <input

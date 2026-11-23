@@ -8,7 +8,8 @@
  * - Sub-millisecond layout stability during high-frequency simulation playback.
  */
 
-import React, { useState, useMemo, memo, type ReactNode } from 'react';
+import React, { useState, memo, type ReactNode } from 'react';
+import { motion } from 'framer-motion';
 import type { RaceLaneResponse, SimulationFrame } from '../models/types';
 import { Clock, Activity, RotateCw, CheckCircle2, AlertCircle, Percent, Code, ChevronDown, ChevronUp } from 'lucide-react';
 import { PseudocodeViewer } from './PseudocodeViewer';
@@ -155,7 +156,11 @@ export const LaneCard = memo(function LaneCard({
   const pseudocodeText = lane.complexityInfo?.pseudocode ?? '';
 
   return (
-    <article className={`lane-card ${badgeState === 'finished' && !skeleton ? 'done' : ''} ${skeleton ? 'is-skeleton' : ''}`}>
+    <motion.article 
+      className={`lane-card ${badgeState === 'finished' && !skeleton ? 'done' : ''} ${skeleton ? 'is-skeleton' : ''}`}
+      whileHover={{ y: -4, transition: { type: 'spring', stiffness: 350, damping: 25 } }}
+      whileTap={{ scale: 0.99 }}
+    >
       <header className="lane-header">
         <div>
           <strong>{lane.name}</strong>
@@ -163,15 +168,17 @@ export const LaneCard = memo(function LaneCard({
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           {pseudocodeText && !skeleton && (
-            <button
+            <motion.button
               className={`btn ghost icon-btn ${isCodeActive ? 'code-toggle-active' : ''}`}
               onClick={handleToggleCode}
               title={isCodeActive ? 'Close Code Inspector' : 'Open in Code Inspector'}
               style={{ padding: '4px 8px', fontSize: '12px' }}
               aria-label={isCodeActive ? `Close ${lane.name} Code Inspector` : `Open ${lane.name} in Code Inspector`}
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 0.92 }}
             >
               <Code size={13} /> {isCodeActive ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-            </button>
+            </motion.button>
           )}
           <em className={`status-badge ${skeleton ? 'status-badge--loading' : `status-badge--${badgeState}`}`}>
             {badgeLabel}
@@ -184,9 +191,11 @@ export const LaneCard = memo(function LaneCard({
       </div>
 
       <div className="lane-progress-container" title={skeleton ? 'Waiting for simulation data' : `Progress: ${progress}%`}>
-        <div
+        <motion.div
           className={`lane-progress-bar ${badgeState === 'running' && !skeleton ? 'lane-progress-bar--animated' : ''}`}
-          style={{ width: skeleton ? '0%' : `${progress}%` }}
+          initial={false}
+          animate={{ width: skeleton ? '0%' : `${progress}%` }}
+          transition={{ type: 'spring', stiffness: 220, damping: 28 }}
         />
       </div>
 
@@ -204,19 +213,19 @@ export const LaneCard = memo(function LaneCard({
       <footer className="lane-stats-grid">
         <div className="metric-card">
           <span className="metric-label">
-            <Clock size={12} /> Time
+            <span className="icon-pod icon-pod-xs icon-pod-blue"><Clock size={11} /></span> Time
           </span>
           <strong className="metric-value tabular-nums">{skeleton ? '—' : `${frame.timeMs} ms`}</strong>
         </div>
         <div className="metric-card">
           <span className="metric-label">
-            <Activity size={12} /> {opLabel}
+            <span className="icon-pod icon-pod-xs icon-pod-amber"><Activity size={11} /></span> {opLabel}
           </span>
           <strong className="metric-value tabular-nums">{skeleton ? '—' : opValue.toLocaleString()}</strong>
         </div>
         <div className="metric-card">
           <span className="metric-label">
-            <ActionIcon size={12} /> {actionLabel}
+            <span className="icon-pod icon-pod-xs icon-pod-emerald"><ActionIcon size={11} /></span> {actionLabel}
           </span>
           <strong className="metric-value tabular-nums" style={{ fontSize: '0.8rem' }}>
             {skeleton ? '—' : actionValue}
@@ -224,11 +233,11 @@ export const LaneCard = memo(function LaneCard({
         </div>
         <div className="metric-card">
           <span className="metric-label">
-            <Percent size={12} /> Progress
+            <span className="icon-pod icon-pod-xs icon-pod-purple"><Percent size={11} /></span> Progress
           </span>
           <strong className="metric-value tabular-nums">{skeleton ? '—' : `${progress}%`}</strong>
         </div>
       </footer>
-    </article>
+    </motion.article>
   );
 });

@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import type { RaceLaneResponse, SimulationFrame } from '../models/types';
-import { Code } from 'lucide-react';
+import { Code, Sparkles } from 'lucide-react';
 import { SORTING_META } from '../data/algorithmMetadata';
 import { fallbackCatalog } from '../data/fallbackCatalog';
 
@@ -576,10 +577,18 @@ export function StepExplanationCard({
   };
 
   return (
-    <div className="step-inspector-card algobot-card">
+    <motion.div 
+      className="step-inspector-card algobot-card"
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ type: 'spring', stiffness: 350, damping: 26 }}
+    >
       {/* Header Row */}
       <div className="step-inspector-header">
         <div className="step-inspector-title-group">
+          <span className="icon-pod icon-pod-xs icon-pod-orange">
+            <Sparkles size={11} />
+          </span>
           <span className="step-inspector-title">Step Explanation</span>
           <span className="step-inspector-counter">
             Step {frameIndex + 1} of {totalFrames}
@@ -593,27 +602,31 @@ export function StepExplanationCard({
           {lanes.length > 1 && (
             <div className="step-inspector-lanes">
               {lanes.map((lane, index) => (
-                <button
+                <motion.button
                   key={lane.name + index}
                   type="button"
                   className={`step-inspector-lane-btn ${selectedLane === index ? 'active' : ''}`}
                   onClick={() => setSelectedLane(index)}
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.96 }}
                 >
                   {lane.name}
-                </button>
+                </motion.button>
               ))}
             </div>
           )}
 
           {onOpenCodeInspector && (
-            <button
+            <motion.button
               type="button"
               className="step-inspector-code-btn"
               onClick={handleOpenCodeInspector}
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.95 }}
             >
               <Code size={13} />
               View Code
-            </button>
+            </motion.button>
           )}
         </div>
       </div>
@@ -635,7 +648,7 @@ export function StepExplanationCard({
           ))}
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }
 

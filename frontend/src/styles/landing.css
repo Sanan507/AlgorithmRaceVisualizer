@@ -730,8 +730,19 @@ input, textarea, [contenteditable="true"], [contenteditable="true"] * {
   overflow: hidden;
   margin-bottom: 32px;
   scroll-margin-top: 88px;
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  transition: box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   animation: glWorkbenchFade 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.gl-stacking-card:hover {
+  border-color: rgba(252, 109, 38, 0.4);
+  box-shadow: 0 24px 54px rgba(0, 0, 0, 0.48), 0 0 24px rgba(252, 109, 38, 0.14);
+}
+
+:root[data-theme='light'] .gl-stacking-card:hover,
+.gitlab-landing.light-mode .gl-stacking-card:hover {
+  border-color: rgba(252, 109, 38, 0.35);
+  box-shadow: 0 20px 48px -10px rgba(15, 23, 42, 0.14), 0 0 20px rgba(252, 109, 38, 0.1);
 }
 
 @keyframes glWorkbenchFade {
@@ -1248,9 +1259,15 @@ input, textarea, [contenteditable="true"], [contenteditable="true"] * {
 }
 
 .gl-arch-card:hover {
-  border-color: var(--gl-border-strong);
+  border-color: rgba(252, 109, 38, 0.45);
   transform: translateY(-4px);
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.4), 0 0 20px rgba(252, 109, 38, 0.12);
+}
+
+:root[data-theme='light'] .gl-arch-card:hover,
+.gitlab-landing.light-mode .gl-arch-card:hover {
+  border-color: rgba(252, 109, 38, 0.35);
+  box-shadow: 0 16px 36px -8px rgba(15, 23, 42, 0.12), 0 0 16px rgba(252, 109, 38, 0.1);
 }
 
 .gl-arch-header-row {

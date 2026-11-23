@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { BarChart3, Search, Route, History, Settings, ChevronLeft, ChevronRight, LayoutGrid, X, Layers, Network, Trophy } from 'lucide-react';
 import { useAudio } from '../context/AudioContext';
 import { AlgoRaceLogo } from './AlgoRaceLogo';
@@ -82,21 +83,25 @@ export function Sidebar({
 
           <nav className="nav-list" role="navigation" aria-label="Main Navigation">
             {items.map(({ id, label, icon: Icon, hotkey }) => (
-              <button
+              <motion.button
                 key={id}
                 type="button"
                 className={`nav-item ${active === id ? 'active' : ''}`}
                 onClick={() => handleNav(id)}
                 title={collapsed ? `${label} (${hotkey})` : undefined}
                 aria-label={label}
+                whileHover={{ x: 3, transition: { type: 'spring', stiffness: 400, damping: 25 } }}
+                whileTap={{ scale: 0.97 }}
               >
                 <div className="nav-item-glow" />
-                <Icon size={18} className="nav-icon" />
+                <span className={`icon-pod icon-pod-xs ${active === id ? 'icon-pod-orange' : ''}`}>
+                  <Icon size={16} className="nav-icon" />
+                </span>
                 <span className="nav-label">{label}</span>
                 {(!collapsed || Boolean(mobileOpen)) && hotkey && (
                   <kbd className="sidebar-hotkey-badge">{hotkey}</kbd>
                 )}
-              </button>
+              </motion.button>
             ))}
           </nav>
         </div>
