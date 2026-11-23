@@ -6,15 +6,15 @@ import { AlgoRaceLogo } from './AlgoRaceLogo';
 type Page = 'landing' | 'sorting' | 'searching' | 'pathfinding' | 'dp' | 'trees' | 'quiz' | 'history' | 'settings';
 
 const items = [
-  { id: 'landing',     label: 'Overview',            icon: LayoutGrid, hotkey: '0' },
-  { id: 'sorting',     label: 'Sorting Arena',       icon: BarChart3,  hotkey: '1' },
-  { id: 'searching',   label: 'Search Arena',        icon: Search,     hotkey: '2' },
-  { id: 'pathfinding', label: 'Pathfinding Arena',   icon: Route,      hotkey: '3' },
-  { id: 'dp',          label: 'DP Arena',            icon: Layers,     hotkey: '4' },
-  { id: 'trees',       label: 'Tree Arena',          icon: Network,    hotkey: '5' },
-  { id: 'quiz',        label: 'AlgoGym Arena',       icon: Trophy,     hotkey: 'Q' },
-  { id: 'history',     label: 'Benchmarks',          icon: History,    hotkey: 'H' },
-  { id: 'settings',    label: 'Settings',            icon: Settings,   hotkey: 'S' },
+  { id: 'landing',     label: 'Overview',            icon: LayoutGrid, hotkey: '0', color: 'indigo' },
+  { id: 'sorting',     label: 'Sorting Arena',       icon: BarChart3,  hotkey: '1', color: 'orange' },
+  { id: 'searching',   label: 'Search Arena',        icon: Search,     hotkey: '2', color: 'sky' },
+  { id: 'pathfinding', label: 'Pathfinding Arena',   icon: Route,      hotkey: '3', color: 'emerald' },
+  { id: 'dp',          label: 'DP Arena',            icon: Layers,     hotkey: '4', color: 'purple' },
+  { id: 'trees',       label: 'Tree Arena',          icon: Network,    hotkey: '5', color: 'teal' },
+  { id: 'quiz',        label: 'AlgoGym Arena',       icon: Trophy,     hotkey: 'Q', color: 'amber' },
+  { id: 'history',     label: 'Benchmarks',          icon: History,    hotkey: 'H', color: 'rose' },
+  { id: 'settings',    label: 'Settings',            icon: Settings,   hotkey: 'S', color: 'slate' },
 ] as const;
 
 export function Sidebar({
@@ -82,7 +82,7 @@ export function Sidebar({
           </div>
 
           <nav className="nav-list" role="navigation" aria-label="Main Navigation">
-            {items.map(({ id, label, icon: Icon, hotkey }) => (
+            {items.map(({ id, label, icon: Icon, hotkey, color }) => (
               <motion.button
                 key={id}
                 type="button"
@@ -94,8 +94,8 @@ export function Sidebar({
                 whileTap={{ scale: 0.97 }}
               >
                 <div className="nav-item-glow" />
-                <span className={`icon-pod icon-pod-xs ${active === id ? 'icon-pod-orange' : ''}`}>
-                  <Icon size={16} className="nav-icon" />
+                <span className={`sidebar-icon-pod sidebar-icon-pod-${color} ${active === id ? 'is-active' : ''}`}>
+                  <Icon size={17} strokeWidth={1.85} className="nav-icon" />
                 </span>
                 <span className="nav-label">{label}</span>
                 {(!collapsed || Boolean(mobileOpen)) && hotkey && (

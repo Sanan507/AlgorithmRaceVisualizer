@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 import { Sun, Moon, Menu, Github } from 'lucide-react';
@@ -170,14 +171,25 @@ function AppContent() {
       {isEmbedMode ? (
         <div className="embed-shell" style={{ minHeight: '100vh', padding: '16px', background: 'var(--color-bg-primary)', position: 'relative' }}>
           <div className="content-shell" style={{ maxWidth: '100%', margin: 0, padding: 0 }}>
-            {active === 'sorting' && <SortingPage catalog={catalog} />}
-            {active === 'searching' && <SearchingPage catalog={catalog} />}
-            {active === 'pathfinding' && <PathfindingPage catalog={catalog} />}
-            {active === 'dp' && <DPPage />}
-            {active === 'trees' && <TreesPage />}
-            {active === 'quiz' && <QuizPage onNavigateArena={(page) => setActive(page as Page)} />}
-            {active === 'history' && <HistoryPage catalog={catalog} />}
-            {active === 'settings' && <SettingsPage />}
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={active}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                className="arena-page-wrapper"
+              >
+                {active === 'sorting' && <SortingPage catalog={catalog} />}
+                {active === 'searching' && <SearchingPage catalog={catalog} />}
+                {active === 'pathfinding' && <PathfindingPage catalog={catalog} />}
+                {active === 'dp' && <DPPage />}
+                {active === 'trees' && <TreesPage />}
+                {active === 'quiz' && <QuizPage onNavigateArena={(page) => setActive(page as Page)} />}
+                {active === 'history' && <HistoryPage catalog={catalog} />}
+                {active === 'settings' && <SettingsPage />}
+              </motion.div>
+            </AnimatePresence>
           </div>
           <a
             href="https://github.com/Sanan507/AlgorithmRaceVisualizer"
@@ -277,14 +289,25 @@ function AppContent() {
               </div>
             </div>
 
-            {active === 'sorting' && <SortingPage catalog={catalog} />}
-            {active === 'searching' && <SearchingPage catalog={catalog} />}
-            {active === 'pathfinding' && <PathfindingPage catalog={catalog} />}
-            {active === 'dp' && <DPPage />}
-            {active === 'trees' && <TreesPage />}
-            {active === 'quiz' && <QuizPage onNavigateArena={(page) => setActive(page as Page)} />}
-            {active === 'history' && <HistoryPage catalog={catalog} />}
-            {active === 'settings' && <SettingsPage />}
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={active}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                className="arena-page-wrapper"
+              >
+                {active === 'sorting' && <SortingPage catalog={catalog} />}
+                {active === 'searching' && <SearchingPage catalog={catalog} />}
+                {active === 'pathfinding' && <PathfindingPage catalog={catalog} />}
+                {active === 'dp' && <DPPage />}
+                {active === 'trees' && <TreesPage />}
+                {active === 'quiz' && <QuizPage onNavigateArena={(page) => setActive(page as Page)} />}
+                {active === 'history' && <HistoryPage catalog={catalog} />}
+                {active === 'settings' && <SettingsPage />}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       )}

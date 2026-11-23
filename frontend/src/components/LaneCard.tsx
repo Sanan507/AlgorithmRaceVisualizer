@@ -212,29 +212,41 @@ export const LaneCard = memo(function LaneCard({
 
       <footer className="lane-stats-grid">
         <div className="metric-card">
-          <span className="metric-label">
-            <span className="icon-pod icon-pod-xs icon-pod-blue"><Clock size={11} /></span> Time
-          </span>
+          <div className="metric-header-row">
+            <span className="metric-icon-pod metric-icon-pod-blue">
+              <Clock size={12} strokeWidth={2} />
+            </span>
+            <span className="metric-label">Time</span>
+          </div>
           <strong className="metric-value tabular-nums">{skeleton ? '—' : `${frame.timeMs} ms`}</strong>
         </div>
         <div className="metric-card">
-          <span className="metric-label">
-            <span className="icon-pod icon-pod-xs icon-pod-amber"><Activity size={11} /></span> {opLabel}
-          </span>
+          <div className="metric-header-row">
+            <span className="metric-icon-pod metric-icon-pod-amber">
+              <Activity size={12} strokeWidth={2} />
+            </span>
+            <span className="metric-label">{opLabel}</span>
+          </div>
           <strong className="metric-value tabular-nums">{skeleton ? '—' : opValue.toLocaleString()}</strong>
         </div>
         <div className="metric-card">
-          <span className="metric-label">
-            <span className="icon-pod icon-pod-xs icon-pod-emerald"><ActionIcon size={11} /></span> {actionLabel}
-          </span>
-          <strong className="metric-value tabular-nums" style={{ fontSize: '0.8rem' }}>
+          <div className="metric-header-row">
+            <span className="metric-icon-pod metric-icon-pod-emerald">
+              <ActionIcon size={12} strokeWidth={2} />
+            </span>
+            <span className="metric-label">{actionLabel}</span>
+          </div>
+          <strong className="metric-value tabular-nums" style={{ fontSize: '0.82rem' }}>
             {skeleton ? '—' : actionValue}
           </strong>
         </div>
         <div className="metric-card">
-          <span className="metric-label">
-            <span className="icon-pod icon-pod-xs icon-pod-purple"><Percent size={11} /></span> Progress
-          </span>
+          <div className="metric-header-row">
+            <span className="metric-icon-pod metric-icon-pod-purple">
+              <Percent size={12} strokeWidth={2} />
+            </span>
+            <span className="metric-label">Progress</span>
+          </div>
           <strong className="metric-value tabular-nums">{skeleton ? '—' : `${progress}%`}</strong>
         </div>
       </footer>

@@ -74,7 +74,7 @@ export function Controls({
           whileHover={disabled ? undefined : { scale: 1.03, transition: { type: 'spring', stiffness: 400, damping: 22 } }}
           whileTap={disabled ? undefined : { scale: 0.96 }}
         >
-          <Play size={17} /> {startLabel}
+          <Play size={15} fill="currentColor" /> {startLabel}
         </motion.button>
         <motion.button 
           className="btn ghost" 
@@ -84,7 +84,7 @@ export function Controls({
           whileHover={disabled ? undefined : { scale: 1.03, transition: { type: 'spring', stiffness: 400, damping: 22 } }}
           whileTap={disabled ? undefined : { scale: 0.96 }}
         >
-          {playing ? <Pause size={17} /> : <Play size={17} />} {playing ? 'Pause' : 'Resume'}
+          {playing ? <Pause size={15} fill="currentColor" /> : <Play size={15} fill="currentColor" />} {playing ? 'Pause' : 'Resume'}
         </motion.button>
         <motion.button 
           className="btn secondary" 
@@ -94,7 +94,7 @@ export function Controls({
           whileHover={disabled ? undefined : { scale: 1.03, transition: { type: 'spring', stiffness: 400, damping: 22 } }}
           whileTap={disabled ? undefined : { scale: 0.96 }}
         >
-          {resetLabel.includes('Random') ? <Shuffle size={17} /> : <RotateCcw size={17} />} {resetLabel}
+          {resetLabel.includes('Random') ? <Shuffle size={16} strokeWidth={2} /> : <RotateCcw size={16} strokeWidth={2.2} />} {resetLabel}
         </motion.button>
       </div>
 
@@ -109,7 +109,7 @@ export function Controls({
             whileHover={disabled || frameIndex <= 0 ? undefined : { scale: 1.08 }}
             whileTap={disabled || frameIndex <= 0 ? undefined : { scale: 0.92 }}
           >
-            <SkipBack size={16} />
+            <SkipBack size={15} strokeWidth={2} />
           </motion.button>
           <motion.button 
             className="btn icon-btn" 
@@ -120,7 +120,7 @@ export function Controls({
             whileHover={disabled || frameIndex >= maxFrames - 1 ? undefined : { scale: 1.08 }}
             whileTap={disabled || frameIndex >= maxFrames - 1 ? undefined : { scale: 0.92 }}
           >
-            <SkipForward size={16} />
+            <SkipForward size={15} strokeWidth={2} />
           </motion.button>
           {onSeek && (
             <div className="timeline-container">

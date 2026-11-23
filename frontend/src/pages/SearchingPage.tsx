@@ -20,7 +20,7 @@ import { StepExplanationCard } from '../components/StepExplanationCard';
 import { CustomDatasetModal } from '../components/CustomDatasetModal';
 import { ShareBenchmarkModal } from '../components/ShareBenchmarkModal';
 import { CsvUploader } from '../components/CsvUploader';
-import { Share2, Cpu } from 'lucide-react';
+import { Share2, Cpu, Zap, SlidersHorizontal, Check } from 'lucide-react';
 import { getUrlParams } from '../utils/urlParams';
 import { parseCurrentShareableConfig } from '../utils/shareableBenchmark';
 import { workerSimulationService } from '../services/workerSimulationService';
@@ -853,15 +853,17 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
               type="button"
               className={`btn-custom-toggle ${isCustomMode ? 'active' : ''}`}
               onClick={handleToggleCustomMode}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             >
-              {isCustomMode ? '✓ Custom Mode' : 'Custom Array'}
+              {isCustomMode ? <><Check size={14} /> Custom Mode</> : <><SlidersHorizontal size={14} /> Custom Array</>}
             </button>
             <button
               type="button"
               className="btn btn-secondary math-suite-btn"
               onClick={() => setIsModalOpen(true)}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             >
-              ⚡ Math Suite
+              <Zap size={14} className="text-amber-500" fill="currentColor" /> Math Suite
             </button>
           </div>
         </div>

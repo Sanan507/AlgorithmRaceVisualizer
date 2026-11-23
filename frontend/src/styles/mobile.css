@@ -807,6 +807,21 @@
     width: 100% !important;
   }
 
+  .metric-header-row {
+    gap: 4px !important;
+  }
+
+  .metric-icon-pod {
+    width: 18px !important;
+    height: 18px !important;
+    border-radius: 5px !important;
+  }
+
+  .metric-icon-pod svg {
+    width: 10px !important;
+    height: 10px !important;
+  }
+
   /* Performance Comparison Mobile Stacking & Touch Architecture */
   .performance-comparison-panel {
     padding: 14px 12px !important;
