@@ -80,7 +80,7 @@ export function Sidebar({
               style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
               <AlgoRaceLogo
-                size={collapsed && !mobileOpen ? 32 : 38}
+                size={collapsed && !mobileOpen ? 28 : 38}
                 showText={!collapsed || Boolean(mobileOpen)}
                 tagline="Benchmark Engine"
               />
@@ -101,7 +101,7 @@ export function Sidebar({
                 onClick={() => handleNav(id)}
                 title={collapsed ? `${label} (${hotkey})` : undefined}
                 aria-label={label}
-                whileHover={collapsed ? { scale: 1.06 } : { x: 3, transition: { type: 'spring', stiffness: 400, damping: 25 } }}
+                whileHover={collapsed ? undefined : { x: 3, transition: { type: 'spring', stiffness: 400, damping: 25 } }}
                 whileTap={{ scale: 0.96 }}
               >
                 <div className="nav-item-glow" />

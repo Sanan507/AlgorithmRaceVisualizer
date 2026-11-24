@@ -818,8 +818,91 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
           />
         ))}
 
+        <SelectField
+          label="Dataset"
+          value={isCustomMode ? 'Custom' : datasetType}
+          options={availableDatasetTypes}
+          onChange={handleDatasetTypeChange}
+        />
+
+        <div className="field">
+          <span>Dataset Mode</span>
+          <div className="dataset-mode-btn-row">
+            <button
+              type="button"
+              className={`btn-custom-toggle ${isCustomMode ? 'active' : ''}`}
+              onClick={handleToggleCustomMode}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+            >
+              {isCustomMode ? <><Check size={14} /> Custom Mode</> : <><SlidersHorizontal size={14} /> Custom Array</>}
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary math-suite-btn"
+              onClick={() => setIsModalOpen(true)}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+            >
+              <Zap size={14} className="text-amber-500" fill="currentColor" /> Math Suite
+            </button>
+          </div>
+        </div>
+
+        {isCustomMode ? (
+          <div className="field custom-values-field" style={{ gridColumn: 'span 2' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', flexWrap: 'wrap', gap: '4px' }}>
+              <span>Custom Values (comma-separated or file upload)</span>
+              <span className="field-hint-text">Accepts .csv / .txt</span>
+            </div>
+            <div className="custom-array-input-row" style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+              <input
+                type="text"
+                className={`custom-input-inline ${hasInvalidTokens || isCustomEmpty ? 'input-error' : ''}`}
+                value={customArrayStr}
+                placeholder="e.g. 10, 5, 20, 15, 30"
+                onChange={(e) => handleCustomArrayTextChange(e.target.value)}
+                style={{ flex: '1 1 180px', height: '40px', minWidth: '0' }}
+              />
+              <CsvUploader onUploadSuccess={(parsed) => handleCustomArrayTextChange(parsed.join(', '))} />
+            </div>
+          </div>
+        ) : (
+          <label className="field">
+            <span>Array Size</span>
+            <input
+              type="number"
+              min={5}
+              max={160}
+              value={size}
+              onChange={(event) => {
+                const raw = event.target.value;
+                if (raw === '') {
+                  setSize('');
+                  debouncedFetch.cancel();
+                  load.markReady();
+                  return;
+                }
+                const parsed = parseInt(raw, 10);
+                if (!Number.isNaN(parsed)) {
+                  handleSizeChange(parsed);
+                }
+              }}
+              onBlur={() => {
+                if (size === '' || size < 5) {
+                  const fallback = 42;
+                  setSize(fallback);
+                  handleSizeChange(fallback);
+                } else if (size > 160) {
+                  const clamped = 160;
+                  setSize(clamped);
+                  handleSizeChange(clamped);
+                }
+              }}
+            />
+          </label>
+        )}
+
         <label className="field">
-          <span>Target</span>
+          <span>Search Target</span>
           <input
             type="number"
             className={isTargetInvalid ? 'input-error' : ''}
@@ -845,90 +928,6 @@ export function SearchingPage({ catalog }: { catalog: CatalogResponse }) {
             }}
           />
         </label>
-
-        <div className="field">
-          <span>Dataset Mode</span>
-          <div className="dataset-mode-btn-row">
-            <button
-              type="button"
-              className={`btn-custom-toggle ${isCustomMode ? 'active' : ''}`}
-              onClick={handleToggleCustomMode}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-            >
-              {isCustomMode ? <><Check size={14} /> Custom Mode</> : <><SlidersHorizontal size={14} /> Custom Array</>}
-            </button>
-            <button
-              type="button"
-              className="btn btn-secondary math-suite-btn"
-              onClick={() => setIsModalOpen(true)}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-            >
-              <Zap size={14} className="text-amber-500" fill="currentColor" /> Math Suite
-            </button>
-          </div>
-        </div>
-
-        {isCustomMode ? (
-          <div className="field custom-values-field" style={{ gridColumn: '1 / -1' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', flexWrap: 'wrap', gap: '4px' }}>
-              <span>Custom Values (comma-separated or file upload)</span>
-              <span className="field-hint-text">Accepts .csv / .txt</span>
-            </div>
-            <div className="custom-array-input-row" style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-              <input
-                type="text"
-                className={`custom-input-inline ${hasInvalidTokens || isCustomEmpty ? 'input-error' : ''}`}
-                value={customArrayStr}
-                placeholder="e.g. 10, 5, 20, 15, 30"
-                onChange={(e) => handleCustomArrayTextChange(e.target.value)}
-                style={{ flex: '1 1 180px', height: '40px', minWidth: '0' }}
-              />
-              <CsvUploader onUploadSuccess={(parsed) => handleCustomArrayTextChange(parsed.join(', '))} />
-            </div>
-          </div>
-        ) : (
-          <>
-            <SelectField
-              label="Dataset Distribution"
-              value={datasetType}
-              options={availableDatasetTypes}
-              onChange={handleDatasetTypeChange}
-            />
-            <label className="field">
-              <span>Array Size</span>
-              <input
-                type="number"
-                min={5}
-                max={160}
-                value={size}
-                onChange={(event) => {
-                  const raw = event.target.value;
-                  if (raw === '') {
-                    setSize('');
-                    debouncedFetch.cancel();
-                    load.markReady();
-                    return;
-                  }
-                  const parsed = parseInt(raw, 10);
-                  if (!Number.isNaN(parsed)) {
-                    handleSizeChange(parsed);
-                  }
-                }}
-                onBlur={() => {
-                  if (size === '' || size < 5) {
-                    const fallback = 42;
-                    setSize(fallback);
-                    handleSizeChange(fallback);
-                  } else if (size > 160) {
-                    const clamped = 160;
-                    setSize(clamped);
-                    handleSizeChange(clamped);
-                  }
-                }}
-              />
-            </label>
-          </>
-        )}
       </section>
 
       <Controls

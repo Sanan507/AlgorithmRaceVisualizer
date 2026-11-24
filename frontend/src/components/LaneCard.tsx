@@ -236,7 +236,7 @@ export const LaneCard = memo(function LaneCard({
             </span>
             <span className="metric-label">{actionLabel}</span>
           </div>
-          <strong className="metric-value tabular-nums" style={{ fontSize: '0.82rem' }}>
+          <strong className="metric-value tabular-nums">
             {skeleton ? '—' : actionValue}
           </strong>
         </div>
